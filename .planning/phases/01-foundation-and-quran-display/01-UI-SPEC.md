@@ -42,7 +42,6 @@ Declared values (must be multiples of 4):
 | 3xl | 64px | Page-level spacing, onboarding screen top/bottom padding |
 
 Exceptions:
-- Ayah-to-ayah vertical spacing: 12px (between consecutive ayahs within a surah for comfortable reading density without excessive whitespace)
 - Touch targets: minimum 44px height on all tappable elements (iOS HIG and Android accessibility requirement)
 
 ---
@@ -121,12 +120,12 @@ This app uses a single unified 4-size, 2-weight type scale that serves both Lati
 | TabBar (Surah/Juz) | Segmented control at top of home screen to switch between surah list and juz list | surah-active, juz-active |
 | BottomTabBar | Bottom navigation with 2 tabs: Home (surah list) and Settings | home-active, settings-active |
 | SurahHeaderBanner | Ornamental banner between surahs showing surah name, ayah count, revelation type in decorative frame | default only |
-| AyahText | Block of Arabic text for one ayah, with ayah end marker | default, selected-start, selected-end, in-range |
+| AyahText | Block of Arabic text for one ayah, with ayah end marker. Internal layout: consecutive AyahText components are spaced 12px apart vertically within the QuranReader container. This is an internal component layout detail, not a spacing scale token. | default, selected-start, selected-end, in-range |
 | AyahEndMarker | Ornamental ۝ symbol with Arabic-Indic ayah number inside | default, selected |
 | QuranReader | Full-screen scrollable Quran text view containing AyahText components | loading, loaded, error |
 | RangeSelectionBar | Fixed bottom bar that appears when user has selected an ayah range; shows range summary and "Start Practice" button | one-selected (waiting for end), range-complete |
 | Bismillah | Decorative Bismillah display at the start of each surah (except At-Tawbah) | default only |
-| LoadingSkeleton | Placeholder shimmer while Quran text loads from SQLite | animating |
+| LoadingSkeleton | Placeholder shimmer while Quran text loads from SQLite. Internal layout: skeleton blocks are stacked with 12px vertical gaps to approximate ayah text density. This is an internal component layout detail, not a spacing scale token. | animating |
 | OnboardingScreen | Full-screen swipeable card with illustration, title, body text | screen-1, screen-2, screen-3 |
 | OnboardingDots | Page indicator dots for onboarding | 3 states (active dot position) |
 | EmptySearchResult | Shown when search query matches no surahs | default only |
@@ -193,6 +192,8 @@ This app uses a single unified 4-size, 2-weight type scale that serves both Lati
 
 **Primary visual focal point:** The Quran body text (Display size, 28px, bold, RTL) is the dominant visual element. It occupies the majority of viewport height and width, with generous line height (2.2) creating a calm, readable reading experience. The ornamental surah header draws the eye on entry but yields to the text as the user scrolls.
 
+Ayah-to-ayah vertical spacing within this screen uses 12px gaps -- an internal layout detail of the AyahText component (see Component Inventory above), not a spacing scale token.
+
 ```
 +------------------------------------------+
 |  [Status Bar]                            |
@@ -208,10 +209,10 @@ This app uses a single unified 4-size, 2-weight type scale that serves both Lati
 |  بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ    |  <- Bismillah (decorative)
 |                                          |  <- 24px spacing
 |  الٓمٓ ۝١                                |  <- AyahText + end marker
-|                                          |  <- 12px ayah spacing
+|                                          |  <- 12px (internal AyahText spacing)
 |  ذَٰلِكَ ٱلْكِتَـٰبُ لَا رَيْبَ ۛ فِيهِ ۛ  |
 |  هُدًى لِّلْمُتَّقِينَ ۝٢              |
-|                                          |  <- 12px ayah spacing
+|                                          |  <- 12px (internal AyahText spacing)
 |  ٱلَّذِينَ يُؤْمِنُونَ بِٱلْغَيْبِ       |
 |  وَيُقِيمُونَ ٱلصَّلَوٰةَ وَمِمَّا         |
 |  رَزَقْنَـٰهُمْ يُنفِقُونَ ۝٣            |
@@ -302,7 +303,7 @@ Phase 1 has no destructive actions. No data deletion, no account removal, no irr
 
 ### Loading Skeleton Design
 
-Loading skeletons use 3 rectangular blocks with rounded corners (8px radius) stacked vertically with 12px gaps:
+The LoadingSkeleton component uses 3 rectangular blocks with rounded corners (8px radius) stacked vertically. The vertical gap between blocks is 12px -- an internal layout detail of this component to approximate ayah text density (see Component Inventory note on LoadingSkeleton):
 - Block 1: 100% width, 20px height (simulates a full-width ayah line)
 - Block 2: 85% width, 20px height (simulates a shorter line)
 - Block 3: 60% width, 20px height (simulates end of ayah)
