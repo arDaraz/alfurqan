@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-03-20
+revised: 2026-03-20
 ---
 
 # Phase 1 — UI Design Contract
@@ -48,25 +49,22 @@ Exceptions:
 
 ## Typography
 
-### Latin Text (UI chrome, navigation, onboarding English)
+This app uses a single unified 4-size, 2-weight type scale that serves both Latin (UI chrome) and Arabic (Quran text) rendering. The same size tokens apply to both scripts; the font family changes per script (system sans-serif for Latin, KFGQPC Uthmani Hafs for Arabic).
 
-| Role | Size | Weight | Line Height | Usage |
-|------|------|--------|-------------|-------|
-| Body | 16px | 400 (regular) | 1.5 | Onboarding descriptions, settings labels, surah metadata |
-| Label | 14px | 500 (medium) | 1.4 | Tab labels, search placeholder, secondary metadata (ayah count, revelation type) |
-| Heading | 20px | 600 (semibold) | 1.3 | Screen titles, surah list item name (English), section headers |
-| Display | 28px | 700 (bold) | 1.2 | Onboarding hero text only |
+| Role | Size | Weight | Line Height (Latin) | Line Height (Arabic) | Usage |
+|------|------|--------|---------------------|----------------------|-------|
+| Label | 14px | 400 (regular) | 1.4 | 1.0 | Tab labels, search placeholder, secondary metadata (ayah count, revelation type), Arabic-Indic numerals inside ayah end markers (۝) |
+| Body | 18px | 400 (regular) | 1.5 | 1.6 | Onboarding descriptions, settings labels, surah metadata, Arabic onboarding text, Arabic search input, Bismillah |
+| Heading | 24px | 700 (bold) | 1.3 | 1.6 | Screen titles, surah list item name (English), section headers, surah name in ornamental header banner |
+| Display | 28px | 700 (bold) | 1.2 | 2.2 | Onboarding hero text, primary Quran text display |
 
-### Arabic Text (Quran display, surah names, onboarding Arabic)
+**Line-height split rationale:** Latin and Arabic share the same size tokens but require different line heights due to script geometry. Arabic line heights are declared separately because (a) Uthmani script with full tashkeel (diacritics) has vertical extenders above and below the baseline that Latin does not, and (b) at Display size (28px) used for Quran body text, a 2.2 line height prevents diacritical marks from one line colliding with marks on the adjacent line. Standard 1.5 causes visual collision of vowel marks. The Latin line heights follow conventional web/mobile typographic ratios.
 
-| Role | Size | Weight | Line Height | Usage |
-|------|------|--------|-------------|-------|
-| Quran Body | 26px | 400 (regular) | 2.2 | Primary Quran text display — optimized for readability with full diacritics |
-| Surah Title | 24px | 400 (regular) | 1.6 | Surah name in ornamental header banner |
-| Arabic UI | 18px | 400 (regular) | 1.6 | Arabic onboarding text, Arabic search input, Bismillah |
-| Ayah Number | 14px | 400 (regular) | 1.0 | Arabic-Indic numerals inside ayah end markers (۝) |
+**Weight usage:**
+- 400 (regular): All body text, labels, and all Arabic text at Body and Label sizes
+- 700 (bold): Headings (screen titles, surah names in list) and Display (onboarding hero, Quran body text)
 
-**Quran text line-height rationale:** 2.2 is required for Uthmani script with full tashkeel (diacritics). Arabic diacritical marks extend above and below the baseline. At 2.2, marks from one line never collide with marks from the adjacent line. Standard 1.5 causes visual collision of vowel marks.
+**Quran body text note:** Quran text renders at Display size (28px) with weight 700. In the KFGQPC Uthmani Hafs font, "bold" weight does not produce a heavy appearance — it produces the standard mushaf stroke weight that readers expect. This weight maps to the font's primary face. If the bundled font file only includes a single weight, NativeWind/React Native will render the available weight regardless of the declared value. The 700 declaration ensures that if a multi-weight font is used in the future, Quran text remains visually prominent.
 
 **Text alignment:** Quran body text is right-aligned with `writingDirection: 'rtl'` set on all Arabic text containers. Do NOT use justified alignment — Arabic word spacing with NativeWind/React Native text layout produces inconsistent kashida and gaps that look worse than ragged-left.
 
@@ -139,8 +137,8 @@ Exceptions:
 
 **AyahText tap-to-select flow:**
 1. User taps first ayah -- AyahText transitions to `selected-start` state (teal left border, subtle teal background tint at 12% opacity). RangeSelectionBar slides up from bottom showing "Ayah X selected -- tap another ayah to set range end."
-2. User taps second ayah -- second AyahText transitions to `selected-end`. All ayahs between start and end transition to `in-range` (same teal tint). RangeSelectionBar updates to show "Ayahs X-Y selected" with a "Start Practice" button and a "Clear" text button.
-3. User taps "Clear" -- all ayahs return to default. RangeSelectionBar slides down.
+2. User taps second ayah -- second AyahText transitions to `selected-end`. All ayahs between start and end transition to `in-range` (same teal tint). RangeSelectionBar updates to show "Ayahs X-Y selected" with a "Start Practice" button and a "Clear Selection" text button.
+3. User taps "Clear Selection" -- all ayahs return to default. RangeSelectionBar slides down.
 4. User taps "Start Practice" -- currently a no-op stub in Phase 1 (recitation is Phase 3). Show a brief toast: "Recitation coming soon."
 
 **SurahListItem layout:**
@@ -163,11 +161,13 @@ Exceptions:
 
 ### Screen: Home (Surah List)
 
+**Primary visual focal point:** The surah list dominates the screen. Each SurahListItem's Arabic surah name (Heading size, bold) is the most visually prominent element, drawing the eye to content the user will tap.
+
 ```
 +------------------------------------------+
 |  [Status Bar]                            |
 |------------------------------------------|
-|  Tasmi'                          [logo]  |  <- Screen title, 20px heading
+|  Tasmi'                          [logo]  |  <- Screen title, 24px heading
 |------------------------------------------|
 |  [Search bar: "Search surahs..."]        |  <- 16px vertical padding
 |------------------------------------------|
@@ -190,6 +190,8 @@ Exceptions:
 ```
 
 ### Screen: Quran Reader
+
+**Primary visual focal point:** The Quran body text (Display size, 28px, bold, RTL) is the dominant visual element. It occupies the majority of viewport height and width, with generous line height (2.2) creating a calm, readable reading experience. The ornamental surah header draws the eye on entry but yields to the text as the user scrolls.
 
 ```
 +------------------------------------------+
@@ -223,6 +225,8 @@ Exceptions:
 
 ### Screen: Onboarding (3 screens, swipeable)
 
+**Primary visual focal point:** The hero heading (Display size, 28px, bold, centered) anchored below the illustration area. The bilingual heading pair (English then Arabic) creates a visual axis that communicates the app's purpose at a glance.
+
 ```
 +------------------------------------------+
 |                                          |
@@ -231,7 +235,7 @@ Exceptions:
 |                                          |
 |                                          |
 |    Your Digital Memorization Partner     |  <- Display size, bold, centered
-|    شريكك الرقمي في الحفظ                 |  <- Arabic UI size, centered
+|    شريكك الرقمي في الحفظ                 |  <- Display size (Arabic), centered
 |                                          |
 |    Practice your Quran memorization      |  <- Body size, centered
 |    anytime, anywhere — receive instant   |
@@ -269,7 +273,7 @@ Exceptions:
 | Error state — retry button | "Try Again" | "حاول مرة أخرى" |
 | Range selection — one selected | "Ayah {N} selected — tap another ayah to set range end" | "تم اختيار الآية {N} — اضغط آية أخرى لتحديد نهاية المقطع" |
 | Range selection — range complete | "Ayahs {start}–{end} selected" | "الآيات {start}–{end} محددة" |
-| Range selection — clear | "Clear" | "مسح" |
+| Range selection — clear | "Clear Selection" | "مسح الاختيار" |
 | Practice stub toast | "Recitation coming soon" | "ميزة التلاوة قريبًا" |
 | Resume FAB label | "Continue reading" | "تابع القراءة" |
 | Tab — Surah | "Surah" | "سورة" |
@@ -282,7 +286,7 @@ Exceptions:
 
 ### Destructive Actions
 
-Phase 1 has no destructive actions. No data deletion, no account removal, no irreversible operations. The "Clear" action in range selection is non-destructive (user can re-select immediately).
+Phase 1 has no destructive actions. No data deletion, no account removal, no irreversible operations. The "Clear Selection" action in range selection is non-destructive (user can re-select immediately).
 
 ---
 
