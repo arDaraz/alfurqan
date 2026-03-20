@@ -95,13 +95,39 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (Populated during roadmap creation) | | |
+| QTEXT-01 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-02 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-03 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-04 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-05 | Phase 3: Core Recitation Loop | Pending |
+| ASR-01 | Phase 2: On-Device Speech Recognition | Pending |
+| ASR-02 | Phase 2: On-Device Speech Recognition | Pending |
+| ASR-03 | Phase 3: Core Recitation Loop | Pending |
+| ASR-04 | Phase 3: Core Recitation Loop | Pending |
+| ASR-05 | Phase 3: Core Recitation Loop | Pending |
+| ASR-06 | Phase 4: Sheikh Audio Corrections | Pending |
+| ASR-07 | Phase 3: Core Recitation Loop | Pending |
+| AUDIO-01 | Phase 4: Sheikh Audio Corrections | Pending |
+| AUDIO-02 | Phase 4: Sheikh Audio Corrections | Pending |
+| AUDIO-03 | Phase 4: Sheikh Audio Corrections | Pending |
+| PROG-01 | Phase 5: Progress Tracking | Pending |
+| PROG-02 | Phase 5: Progress Tracking | Pending |
+| PROG-03 | Phase 5: Progress Tracking | Pending |
+| PROG-04 | Phase 5: Progress Tracking | Pending |
+| AUTH-01 | Phase 6: Accounts and Polish | Pending |
+| AUTH-02 | Phase 6: Accounts and Polish | Pending |
+| AUTH-03 | Phase 6: Accounts and Polish | Pending |
+| AUTH-04 | Phase 6: Accounts and Polish | Pending |
+| UI-01 | Phase 1: Foundation and Quran Display | Pending |
+| UI-02 | Phase 6: Accounts and Polish | Pending |
+| UI-03 | Phase 6: Accounts and Polish | Pending |
+| UI-04 | Phase 1: Foundation and Quran Display | Pending |
 
 **Coverage:**
-- v1 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22 (pending roadmap)
+- v1 requirements: 27 total
+- Mapped to phases: 27
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after initial definition*
+*Last updated: 2026-03-20 after roadmap creation*
