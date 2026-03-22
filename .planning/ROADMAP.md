@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold, Quran data layer, types, theme, stores, hooks, test scaffold
+- [x] 01-01-PLAN.md — Project scaffold, Quran data layer, types, theme, stores, hooks, test scaffold
 - [ ] 01-02-PLAN.md — Home screen with surah/juz lists, search, tabs, and navigation
 - [ ] 01-03-PLAN.md — Quran reader with Arabic text rendering, ornamental elements, ayah selection, auto-bookmark
 - [ ] 01-04-PLAN.md — Onboarding flow and end-to-end verification
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Quran Display | 0/4 | Planning complete | - |
+| 1. Foundation and Quran Display | 1/4 | In Progress | - |
 | 2. On-Device Speech Recognition | 0/0 | Not started | - |
 | 3. Core Recitation Loop | 0/0 | Not started | - |
 | 4. Sheikh Audio Corrections | 0/0 | Not started | - |

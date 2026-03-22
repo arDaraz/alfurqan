@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Quran Text & Navigation
 
-- [ ] **QTEXT-01**: User can view the full Quran in Uthmani script with proper Arabic diacritics rendering
-- [ ] **QTEXT-02**: User can navigate by surah, ayah, and juz
+- [x] **QTEXT-01**: User can view the full Quran in Uthmani script with proper Arabic diacritics rendering
+- [x] **QTEXT-02**: User can navigate by surah, ayah, and juz
 - [ ] **QTEXT-03**: User can select a specific ayah range within a surah for recitation practice
-- [ ] **QTEXT-04**: User can bookmark their position and resume from where they left off
+- [x] **QTEXT-04**: User can bookmark their position and resume from where they left off
 - [ ] **QTEXT-05**: App highlights each word in real-time as the user recites, showing current position
 
 ### Speech Recognition & Correction
@@ -47,7 +47,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### UI/UX
 
-- [ ] **UI-01**: App has a polished, reverent design appropriate for Quranic context (calm colors, elegant typography)
+- [x] **UI-01**: App has a polished, reverent design appropriate for Quranic context (calm colors, elegant typography)
 - [ ] **UI-02**: App supports dark mode
 - [ ] **UI-03**: All core features (recitation, recognition, correction, progress) work fully offline
 - [ ] **UI-04**: App provides clear onboarding for first-time users
@@ -95,10 +95,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| QTEXT-01 | Phase 1: Foundation and Quran Display | Pending |
-| QTEXT-02 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-01 | Phase 1: Foundation and Quran Display | Complete |
+| QTEXT-02 | Phase 1: Foundation and Quran Display | Complete |
 | QTEXT-03 | Phase 1: Foundation and Quran Display | Pending |
-| QTEXT-04 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-04 | Phase 1: Foundation and Quran Display | Complete |
 | QTEXT-05 | Phase 3: Core Recitation Loop | Pending |
 | ASR-01 | Phase 2: On-Device Speech Recognition | Pending |
 | ASR-02 | Phase 2: On-Device Speech Recognition | Pending |
@@ -118,7 +118,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | Phase 6: Accounts and Polish | Pending |
 | AUTH-03 | Phase 6: Accounts and Polish | Pending |
 | AUTH-04 | Phase 6: Accounts and Polish | Pending |
-| UI-01 | Phase 1: Foundation and Quran Display | Pending |
+| UI-01 | Phase 1: Foundation and Quran Display | Complete |
 | UI-02 | Phase 6: Accounts and Polish | Pending |
 | UI-03 | Phase 6: Accounts and Polish | Pending |
 | UI-04 | Phase 1: Foundation and Quran Display | Pending |
