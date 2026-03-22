@@ -50,7 +50,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **UI-01**: App has a polished, reverent design appropriate for Quranic context (calm colors, elegant typography)
 - [ ] **UI-02**: App supports dark mode
 - [ ] **UI-03**: All core features (recitation, recognition, correction, progress) work fully offline
-- [ ] **UI-04**: App provides clear onboarding for first-time users
+- [x] **UI-04**: App provides clear onboarding for first-time users
 
 ## v2 Requirements
 
@@ -121,7 +121,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-01 | Phase 1: Foundation and Quran Display | Complete |
 | UI-02 | Phase 6: Accounts and Polish | Pending |
 | UI-03 | Phase 6: Accounts and Polish | Pending |
-| UI-04 | Phase 1: Foundation and Quran Display | Pending |
+| UI-04 | Phase 1: Foundation and Quran Display | Complete |
 
 **Coverage:**
 - v1 requirements: 27 total
