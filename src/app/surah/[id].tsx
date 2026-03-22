@@ -49,8 +49,8 @@ export default function SurahScreen() {
 
   // Last read position
   const { lastRead } = useLastRead();
-  const initialScrollOffset =
-    lastRead && lastRead.surahNumber === surahNumber ? lastRead.scrollOffset : undefined;
+  const initialAyahNumber =
+    lastRead && lastRead.surahNumber === surahNumber ? lastRead.ayahNumber : undefined;
 
   // Loading state
   const isLoading = ayahsLoading || surahLoading;
@@ -86,7 +86,7 @@ export default function SurahScreen() {
           surahNumber={surahNumber}
           surah={surah}
           ayahs={ayahs}
-          initialScrollOffset={initialScrollOffset}
+          initialAyahNumber={initialAyahNumber}
         />
       ) : null}
     </View>

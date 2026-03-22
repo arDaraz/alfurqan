@@ -20,7 +20,7 @@ interface QuranReaderProps {
   surahNumber: number;
   surah: Surah;
   ayahs: Ayah[];
-  initialScrollOffset?: number;
+  initialAyahNumber?: number;
 }
 
 /**
@@ -32,7 +32,7 @@ export function QuranReader({
   surahNumber,
   surah,
   ayahs,
-  initialScrollOffset,
+  initialAyahNumber,
 }: QuranReaderProps) {
   const flashListRef = useRef<FlashList<ReaderItem>>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -60,20 +60,6 @@ export function QuranReader({
     };
   }, [clearSelection]);
 
-  // Scroll to initial offset on mount
-  useEffect(() => {
-    if (initialScrollOffset && initialScrollOffset > 0 && flashListRef.current) {
-      // Small delay to ensure FlashList is ready
-      const timer = setTimeout(() => {
-        flashListRef.current?.scrollToOffset({
-          offset: initialScrollOffset,
-          animated: false,
-        });
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [initialScrollOffset]);
-
   // Build data array with header, bismillah (if applicable), and ayahs
   const data = useMemo((): ReaderItem[] => {
     const items: ReaderItem[] = [];
@@ -93,6 +79,26 @@ export function QuranReader({
 
     return items;
   }, [surah, surahNumber, ayahs]);
+
+  // Scroll to last-read ayah on mount
+  useEffect(() => {
+    if (initialAyahNumber && flashListRef.current) {
+      // Find the index of the target ayah in the data array
+      const targetIndex = data.findIndex(
+        (item) => item.type === 'ayah' && item.ayah.ayahNumber === initialAyahNumber
+      );
+      if (targetIndex > 0) {
+        // Small delay to ensure FlashList has laid out
+        const timer = setTimeout(() => {
+          flashListRef.current?.scrollToIndex({
+            index: targetIndex,
+            animated: false,
+          });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [initialAyahNumber, data]);
 
   // Determine selection state for each ayah
   const getSelectionState = useCallback(
@@ -168,7 +174,7 @@ export function QuranReader({
             clearTimeout(debounceTimerRef.current);
           }
           debounceTimerRef.current = setTimeout(() => {
-            setLastRead(surahNumber, readerItem.ayah.ayahNumber, 0);
+            setLastRead(surahNumber, readerItem.ayah.ayahNumber);
           }, 500);
         }
       }

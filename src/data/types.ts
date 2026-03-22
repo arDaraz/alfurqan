@@ -35,5 +35,4 @@ export interface AyahRange {
 export interface LastReadPosition {
   surahNumber: number;
   ayahNumber: number;
-  scrollOffset: number;
 }

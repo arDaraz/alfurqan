@@ -4,7 +4,6 @@ import type { LastReadPosition } from '../data/types';
 export function useLastRead() {
   const lastReadSurah = useReadingStore((s) => s.lastReadSurah);
   const lastReadAyah = useReadingStore((s) => s.lastReadAyah);
-  const lastReadScrollOffset = useReadingStore((s) => s.lastReadScrollOffset);
   const setLastRead = useReadingStore((s) => s.setLastRead);
 
   const hasLastRead = lastReadSurah !== null && lastReadAyah !== null;
@@ -13,12 +12,11 @@ export function useLastRead() {
     ? {
         surahNumber: lastReadSurah!,
         ayahNumber: lastReadAyah!,
-        scrollOffset: lastReadScrollOffset,
       }
     : null;
 
-  const savePosition = (surah: number, ayah: number, offset: number) => {
-    setLastRead(surah, ayah, offset);
+  const savePosition = (surah: number, ayah: number) => {
+    setLastRead(surah, ayah);
   };
 
   return { lastRead, savePosition, hasLastRead };

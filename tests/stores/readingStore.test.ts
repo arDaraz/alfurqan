@@ -24,7 +24,6 @@ describe('readingStore', () => {
     useReadingStore.setState({
       lastReadSurah: null,
       lastReadAyah: null,
-      lastReadScrollOffset: 0,
       hasCompletedOnboarding: false,
     });
   });
@@ -33,16 +32,14 @@ describe('readingStore', () => {
     const state = useReadingStore.getState();
     expect(state.lastReadSurah).toBeNull();
     expect(state.lastReadAyah).toBeNull();
-    expect(state.lastReadScrollOffset).toBe(0);
     expect(state.hasCompletedOnboarding).toBe(false);
   });
 
-  it('setLastRead persists surah, ayah, and offset', () => {
-    useReadingStore.getState().setLastRead(2, 5, 120.5);
+  it('setLastRead persists surah and ayah', () => {
+    useReadingStore.getState().setLastRead(2, 5);
     const state = useReadingStore.getState();
     expect(state.lastReadSurah).toBe(2);
     expect(state.lastReadAyah).toBe(5);
-    expect(state.lastReadScrollOffset).toBe(120.5);
   });
 
   it('completeOnboarding sets hasCompletedOnboarding to true', () => {
@@ -51,11 +48,10 @@ describe('readingStore', () => {
   });
 
   it('setLastRead updates existing values', () => {
-    useReadingStore.getState().setLastRead(1, 1, 0);
-    useReadingStore.getState().setLastRead(3, 10, 500);
+    useReadingStore.getState().setLastRead(1, 1);
+    useReadingStore.getState().setLastRead(3, 10);
     const state = useReadingStore.getState();
     expect(state.lastReadSurah).toBe(3);
     expect(state.lastReadAyah).toBe(10);
-    expect(state.lastReadScrollOffset).toBe(500);
   });
 });
