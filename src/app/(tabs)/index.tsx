@@ -23,8 +23,8 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<'surah' | 'juz'>('surah');
 
   // Data hooks
-  const { surahs, loading: surahsLoading, error: surahsError } = useSurahList();
-  const { juzList, loading: juzLoading, error: juzError } = useJuzList();
+  const { surahs, loading: surahsLoading, error: surahsError, retry: surahRetry } = useSurahList();
+  const { juzList, loading: juzLoading, error: juzError, retry: juzRetry } = useJuzList();
   const { query, setQuery, filtered } = useSearch(surahs);
 
   // Reading store for FAB
@@ -62,11 +62,9 @@ export default function HomeScreen() {
 
   // Retry handler for error state
   const handleRetry = useCallback(() => {
-    // Hooks re-run on remount; for now, a simple approach
-    // is to force re-render via a key change on the parent
-    // In practice, useSurahList/useJuzList re-fetch on mount
-    // The user can pull-to-refresh or navigate away and back
-  }, []);
+    surahRetry();
+    juzRetry();
+  }, [surahRetry, juzRetry]);
 
   // Loading state
   const isLoading = surahsLoading || juzLoading;
