@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase-complete
-stopped_at: Completed 01-04-PLAN.md (Phase 1 complete)
-last_updated: "2026-03-22T12:44:35.204Z"
+status: unknown
+stopped_at: Completed 01-05-PLAN.md (Phase 1 gap closure complete)
+last_updated: "2026-03-22T19:56:09.735Z"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** A user can recite any portion of the Quran and receive immediate, accurate correction -- like having a personal teacher available anytime, anywhere, without an internet connection.
-**Current focus:** Phase 01 -- foundation-and-quran-display
+**Current focus:** Phase 01 — foundation-and-quran-display
 
 ## Current Position
 
-Phase: 01 (foundation-and-quran-display) -- COMPLETE
-Plan: 4 of 4 (all complete)
+Phase: 01 (foundation-and-quran-display) — COMPLETE
+Plan: 5 of 5
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Plan: 4 of 4 (all complete)
 - Trend: Accelerating
 
 *Updated after each plan completion*
+| Phase 01 P05 | 3min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [01-03]: Used onViewableItemsChanged with 500ms debounce for auto-bookmark instead of onScroll for performance
 - [01-04]: Used ScrollView with pagingEnabled for onboarding swipe instead of third-party carousel -- native paging provides smooth cross-platform swipe
 - [01-04]: Language ordering in bilingual components reads from settingsStore -- Arabic-first when device language is Arabic
+- [Phase 01-05]: Removed scrollOffset entirely from store/types/hooks -- ayah-index-based restoration via scrollToIndex is deterministic across devices
+- [Phase 01-05]: Used useCallback for load functions in data hooks to enable both mount-time fetch and external retry with stable references
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T12:44:35.202Z
-Stopped at: Completed 01-04-PLAN.md (Phase 1 complete)
+Last session: 2026-03-22T19:56:09.733Z
+Stopped at: Completed 01-05-PLAN.md (Phase 1 gap closure complete)
 Resume file: None
