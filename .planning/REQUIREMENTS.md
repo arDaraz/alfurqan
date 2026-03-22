@@ -11,7 +11,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **QTEXT-01**: User can view the full Quran in Uthmani script with proper Arabic diacritics rendering
 - [x] **QTEXT-02**: User can navigate by surah, ayah, and juz
-- [ ] **QTEXT-03**: User can select a specific ayah range within a surah for recitation practice
+- [x] **QTEXT-03**: User can select a specific ayah range within a surah for recitation practice
 - [x] **QTEXT-04**: User can bookmark their position and resume from where they left off
 - [ ] **QTEXT-05**: App highlights each word in real-time as the user recites, showing current position
 
@@ -97,7 +97,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | QTEXT-01 | Phase 1: Foundation and Quran Display | Complete |
 | QTEXT-02 | Phase 1: Foundation and Quran Display | Complete |
-| QTEXT-03 | Phase 1: Foundation and Quran Display | Pending |
+| QTEXT-03 | Phase 1: Foundation and Quran Display | Complete |
 | QTEXT-04 | Phase 1: Foundation and Quran Display | Complete |
 | QTEXT-05 | Phase 3: Core Recitation Loop | Pending |
 | ASR-01 | Phase 2: On-Device Speech Recognition | Pending |
