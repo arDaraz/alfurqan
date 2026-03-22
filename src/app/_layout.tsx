@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Redirect, Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
@@ -38,6 +38,39 @@ export default function RootLayout() {
     return null;
   }
 
+  // Redirect first-time users to onboarding
+  if (!hasCompletedOnboarding) {
+    return (
+      <>
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: '#FAF8F2' },
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen
+            name="onboarding"
+            options={{
+              headerShown: false,
+              gestureEnabled: false,
+            }}
+          />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="surah/[id]"
+            options={{
+              headerShown: true,
+              headerStyle: { backgroundColor: '#FFFFFF' },
+              headerTintColor: '#1A1A2E',
+            }}
+          />
+        </Stack>
+        <Redirect href="/onboarding" />
+        <StatusBar style="dark" />
+      </>
+    );
+  }
+
   return (
     <>
       <Stack
@@ -59,6 +92,7 @@ export default function RootLayout() {
           name="onboarding"
           options={{
             headerShown: false,
+            gestureEnabled: false,
           }}
         />
       </Stack>
