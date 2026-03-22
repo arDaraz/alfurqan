@@ -12,7 +12,7 @@ Tasmi' delivers a digital Quran memorization partner that listens to live recita
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Foundation and Quran Display** - Project scaffold, Quran data layer, text rendering with navigation (completed 2026-03-22)
+- [ ] **Phase 1: Foundation and Quran Display** - Project scaffold, Quran data layer, text rendering with navigation (gap closure in progress)
 - [ ] **Phase 2: On-Device Speech Recognition** - Microphone capture and Arabic Quran ASR running locally on device
 - [ ] **Phase 3: Core Recitation Loop** - Word matching, mistake detection, haptic feedback, real-time highlighting
 - [ ] **Phase 4: Sheikh Audio Corrections** - Word-level correction audio playback, progressive download, multiple Qaris
@@ -31,13 +31,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can select a start and end ayah within a surah to define a recitation range
   4. User can bookmark their current position and return to it later
   5. First-time user sees a clear onboarding flow explaining how the app works
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, Quran data layer, types, theme, stores, hooks, test scaffold
 - [x] 01-02-PLAN.md — Home screen with surah/juz lists, search, tabs, and navigation
 - [x] 01-03-PLAN.md — Quran reader with Arabic text rendering, ornamental elements, ayah selection, auto-bookmark
 - [x] 01-04-PLAN.md — Onboarding flow and end-to-end verification
+- [ ] 01-05-PLAN.md — Gap closure: fix bookmark scroll restore and home screen retry
 
 ### Phase 2: On-Device Speech Recognition
 **Goal**: The app can capture microphone audio and transcribe Arabic Quranic recitation entirely on-device without internet
@@ -121,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Quran Display | 4/4 | Complete   | 2026-03-22 |
+| 1. Foundation and Quran Display | 4/5 | Gap closure | - |
 | 2. On-Device Speech Recognition | 0/0 | Not started | - |
 | 3. Core Recitation Loop | 0/0 | Not started | - |
 | 4. Sheikh Audio Corrections | 0/0 | Not started | - |
