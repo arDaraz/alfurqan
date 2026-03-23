@@ -38,6 +38,11 @@ yarn-error.*
 
 app-example
 
+# SQLite WAL/journal files
+*.db-shm
+*.db-wal
+*.db-journal
+
 # generated native folders
 /ios
 /android
