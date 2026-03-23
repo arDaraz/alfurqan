@@ -8,9 +8,11 @@
     "scheme": "tasmi",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.tasmi.app",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.tasmi.app",
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F2",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
