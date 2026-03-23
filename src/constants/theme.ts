@@ -29,5 +29,6 @@ export const theme = {
   },
   fonts: {
     arabic: 'KFGQPC-Uthmani',
+    quran: 'AmiriQuran',
   },
 } as const;

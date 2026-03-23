@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { theme } from '../../constants/theme';
+import { useStrings } from '../../constants/strings';
 
 interface TabBarProps {
   activeTab: 'surah' | 'juz';
@@ -8,6 +9,8 @@ interface TabBarProps {
 }
 
 export function TabBar({ activeTab, onTabChange }: TabBarProps) {
+  const strings = useStrings();
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -26,7 +29,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             activeTab === 'surah' && styles.activeTabText,
           ]}
         >
-          Surah
+          {strings.tabSurah}
         </Text>
       </Pressable>
 
@@ -46,7 +49,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             activeTab === 'juz' && styles.activeTabText,
           ]}
         >
-          Juz
+          {strings.tabJuz}
         </Text>
       </Pressable>
     </View>

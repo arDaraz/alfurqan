@@ -12,45 +12,24 @@ import { useRouter } from 'expo-router';
 import { OnboardingScreen } from '../components/onboarding/OnboardingScreen';
 import { OnboardingDots } from '../components/onboarding/OnboardingDots';
 import { useReadingStore } from '../stores/readingStore';
+import { useStrings } from '../constants/strings';
 import { theme } from '../constants/theme';
 
-const SCREENS = [
-  {
-    headingEn: 'Your Digital Memorization Partner',
-    headingAr: 'شريكك الرقمي في الحفظ',
-    bodyEn:
-      'Practice your Quran memorization anytime, anywhere — receive instant correction like a real teacher.',
-    bodyAr:
-      'تدرّب على حفظ القرآن في أي وقت ومكان — تصحيح فوري كالمعلم الحقيقي',
-    illustrationIcon: 'book-open-variant',
-    isLastScreen: false,
-  },
-  {
-    headingEn: 'Recite. We Listen. Instant Feedback.',
-    headingAr: 'اقرأ. نسمع. تصحيح فوري.',
-    bodyEn:
-      'Select any surah and ayah range. Recite from memory while the app follows along word by word.',
-    bodyAr:
-      'اختر أي سورة ومجموعة آيات. اقرأ من حفظك والتطبيق يتابعك كلمة بكلمة.',
-    illustrationIcon: 'microphone',
-    isLastScreen: false,
-  },
-  {
-    headingEn: 'Begin Your Journey',
-    headingAr: 'ابدأ رحلتك',
-    bodyEn:
-      'Choose a surah to start reading. Your progress is saved automatically.',
-    bodyAr: 'اختر سورة لتبدأ القراءة. يُحفظ تقدمك تلقائيًا.',
-    illustrationIcon: 'rocket-launch',
-    isLastScreen: true,
-  },
-];
+const ILLUSTRATION_ICONS = ['book-open-variant', 'microphone', 'rocket-launch'];
 
 export default function Onboarding() {
   const { width } = useWindowDimensions();
   const router = useRouter();
+  const strings = useStrings();
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const screens = strings.onboarding.map((s, i) => ({
+    heading: s.heading,
+    body: s.body,
+    illustrationIcon: ILLUSTRATION_ICONS[i],
+    isLastScreen: i === strings.onboarding.length - 1,
+  }));
 
   const handleMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -86,13 +65,11 @@ export default function Onboarding() {
         decelerationRate={reduceMotion ? 'normal' : 'fast'}
         scrollEventThrottle={16}
       >
-        {SCREENS.map((screen, index) => (
+        {screens.map((screen, index) => (
           <OnboardingScreen
             key={index}
-            headingEn={screen.headingEn}
-            headingAr={screen.headingAr}
-            bodyEn={screen.bodyEn}
-            bodyAr={screen.bodyAr}
+            heading={screen.heading}
+            body={screen.body}
             illustrationIcon={screen.illustrationIcon}
             isLastScreen={screen.isLastScreen}
             onGetStarted={screen.isLastScreen ? handleGetStarted : undefined}
@@ -102,7 +79,7 @@ export default function Onboarding() {
 
       {/* Page dots positioned at bottom */}
       <View style={styles.dotsContainer}>
-        <OnboardingDots total={SCREENS.length} active={activeIndex} />
+        <OnboardingDots total={screens.length} active={activeIndex} />
       </View>
     </View>
   );

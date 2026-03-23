@@ -11,6 +11,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     'KFGQPC-Uthmani': require('../../assets/fonts/KFGQPCUthmanicScriptHAFS.ttf'),
+    'AmiriQuran': require('../../assets/fonts/AmiriQuran.ttf'),
   });
 
   const hasCompletedOnboarding = useReadingStore((s) => s.hasCompletedOnboarding);

@@ -17,25 +17,23 @@ export function JuzListItem({ juz, surahNames, onPress }: JuzListItemProps) {
   return (
     <Pressable
       onPress={() => onPress(juz.number)}
-      accessibilityLabel={`Juz ${juz.number}, starts at Surah ${surahName}, Ayah ${juz.startAyah}`}
+      accessibilityLabel={`الجزء ${juz.number}`}
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.container,
         pressed && styles.pressed,
       ]}
     >
-      {/* Left: Juz number in circle */}
-      <View style={styles.circleContainer}>
-        <View style={styles.circle}>
-          <Text style={styles.circleText}>{arabicNumber}</Text>
-        </View>
+      {/* Circle with number */}
+      <View style={styles.circle}>
+        <Text style={styles.circleText}>{arabicNumber}</Text>
       </View>
 
-      {/* Center: Juz heading + start position */}
-      <View style={styles.centerContent}>
-        <Text style={styles.heading}>Juz {arabicNumber}</Text>
+      {/* Juz info */}
+      <View style={styles.textContent}>
+        <Text style={styles.heading}>الجزء {arabicNumber}</Text>
         <Text style={styles.subtitle} numberOfLines={1}>
-          Starts at Surah {surahName}, Ayah {juz.startAyah}
+          يبدأ من سورة {surahName}، الآية {toArabicIndic(juz.startAyah)}
         </Text>
       </View>
     </Pressable>
@@ -44,56 +42,48 @@ export function JuzListItem({ juz, surahNames, onPress }: JuzListItemProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
-    minHeight: 64,
+    height: 64,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
     backgroundColor: 'transparent',
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.divider,
-    marginLeft: theme.spacing.md,
   },
   pressed: {
     opacity: 0.7,
     backgroundColor: `${theme.colors.divider}40`,
   },
-  circleContainer: {
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
   circle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#C9A84C',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    marginLeft: theme.spacing.md,
   },
   circleText: {
-    fontSize: theme.typography.label.size,
-    fontWeight: '400',
+    fontSize: 13,
     color: theme.colors.text,
     textAlign: 'center',
   },
-  centerContent: {
+  textContent: {
     flex: 1,
-    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingRight: theme.spacing.sm,
   },
   heading: {
-    fontSize: theme.typography.body.size,
+    fontSize: 16,
     fontWeight: '600',
     color: theme.colors.text,
+    writingDirection: 'rtl',
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: theme.typography.label.size,
-    fontWeight: '400',
+    fontSize: 13,
     color: theme.colors.textSecondary,
+    writingDirection: 'rtl',
   },
 });

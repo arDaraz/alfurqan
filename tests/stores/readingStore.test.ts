@@ -1,18 +1,10 @@
-// Mock react-native-mmkv and zustand-mmkv-storage before imports
+// Mock react-native-mmkv before imports
 jest.mock('react-native-mmkv', () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
+  createMMKV: jest.fn(() => ({
     getString: jest.fn(),
     set: jest.fn(),
-    delete: jest.fn(),
+    remove: jest.fn(),
     getAllKeys: jest.fn().mockReturnValue([]),
-  })),
-}));
-
-jest.mock('zustand-mmkv-storage', () => ({
-  createMMKVStorage: jest.fn(() => ({
-    getItem: jest.fn().mockReturnValue(null),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
   })),
 }));
 

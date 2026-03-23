@@ -2,12 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import { useStrings } from '../../constants/strings';
 
 interface EmptySearchResultProps {
   query?: string;
 }
 
 export function EmptySearchResult({ query }: EmptySearchResultProps) {
+  const strings = useStrings();
+
   return (
     <View style={styles.container}>
       <Ionicons
@@ -16,8 +19,8 @@ export function EmptySearchResult({ query }: EmptySearchResultProps) {
         color={theme.colors.textDisabled}
         style={styles.icon}
       />
-      <Text style={styles.heading}>No surahs found</Text>
-      <Text style={styles.body}>Try searching by surah name or number.</Text>
+      <Text style={styles.heading}>{strings.noResults}</Text>
+      <Text style={styles.body}>{strings.noResultsHint}</Text>
     </View>
   );
 }

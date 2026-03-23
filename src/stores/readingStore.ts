@@ -1,8 +1,20 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { createMMKVStorage } from 'zustand-mmkv-storage';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+import { createMMKV } from 'react-native-mmkv';
 
-const mmkvStorage = createMMKVStorage({ id: 'reading-store' });
+const mmkv = createMMKV({ id: 'reading-store' });
+
+const mmkvStorage: StateStorage = {
+  setItem: (name, value) => {
+    mmkv.set(name, value);
+  },
+  getItem: (name) => {
+    return mmkv.getString(name) ?? null;
+  },
+  removeItem: (name) => {
+    mmkv.remove(name);
+  },
+};
 
 interface ReadingState {
   lastReadSurah: number | null;
@@ -24,7 +36,7 @@ export const useReadingStore = create<ReadingState>()(
     }),
     {
       name: 'reading-store',
-      storage: mmkvStorage,
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );

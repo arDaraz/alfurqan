@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
+import { useStrings } from '../../constants/strings';
 
 interface RangeSelectionBarProps {
   startAyah: number | null;
@@ -29,6 +30,7 @@ export function RangeSelectionBar({
   onClearSelection,
 }: RangeSelectionBarProps) {
   const insets = useSafeAreaInsets();
+  const strings = useStrings();
 
   // Not visible when no selection
   if (startAyah === null) {
@@ -47,13 +49,13 @@ export function RangeSelectionBar({
       {!isRangeComplete ? (
         // State 1: one-selected
         <Text style={styles.selectionText}>
-          Ayah {startAyah} selected — tap another ayah to set range end
+          {strings.ayahSelected(startAyah)}
         </Text>
       ) : (
         // State 2: range-complete
         <View style={styles.rangeCompleteRow}>
           <Text style={styles.selectionText}>
-            Ayahs {startAyah}–{endAyah} selected
+            {strings.ayahsSelected(startAyah!, endAyah!)}
           </Text>
 
           <View style={styles.buttonsRow}>
@@ -63,7 +65,7 @@ export function RangeSelectionBar({
               accessibilityLabel="Clear Selection"
               accessibilityRole="button"
             >
-              <Text style={styles.clearButtonText}>Clear Selection</Text>
+              <Text style={styles.clearButtonText}>{strings.clearSelection}</Text>
             </Pressable>
 
             <Pressable
@@ -75,7 +77,7 @@ export function RangeSelectionBar({
               accessibilityLabel="Start Practice"
               accessibilityRole="button"
             >
-              <Text style={styles.startPracticeText}>Start Practice</Text>
+              <Text style={styles.startPracticeText}>{strings.startPractice}</Text>
             </Pressable>
           </View>
         </View>

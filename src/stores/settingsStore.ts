@@ -1,9 +1,21 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { createMMKVStorage } from 'zustand-mmkv-storage';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+import { createMMKV } from 'react-native-mmkv';
 import type { AppLanguage } from '../utils/locale';
 
-const mmkvStorage = createMMKVStorage({ id: 'settings-store' });
+const mmkv = createMMKV({ id: 'settings-store' });
+
+const mmkvStorage: StateStorage = {
+  setItem: (name, value) => {
+    mmkv.set(name, value);
+  },
+  getItem: (name) => {
+    return mmkv.getString(name) ?? null;
+  },
+  removeItem: (name) => {
+    mmkv.remove(name);
+  },
+};
 
 interface SettingsState {
   language: AppLanguage;
@@ -13,12 +25,12 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      language: 'en',
+      language: 'ar',
       setLanguage: (lang) => set({ language: lang }),
     }),
     {
       name: 'settings-store',
-      storage: mmkvStorage,
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );

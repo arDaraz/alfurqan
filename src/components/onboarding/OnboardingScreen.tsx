@@ -1,38 +1,26 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useStrings } from '../../constants/strings';
 
 interface OnboardingScreenProps {
-  headingEn: string;
-  headingAr: string;
-  bodyEn: string;
-  bodyAr: string;
+  heading: string;
+  body: string;
   illustrationIcon: string;
   isLastScreen: boolean;
   onGetStarted?: () => void;
 }
 
 export function OnboardingScreen({
-  headingEn,
-  headingAr,
-  bodyEn,
-  bodyAr,
+  heading,
+  body,
   illustrationIcon,
   isLastScreen,
   onGetStarted,
 }: OnboardingScreenProps) {
   const { width } = useWindowDimensions();
-  const language = useSettingsStore((s) => s.language);
-  const isArabicFirst = language === 'ar';
-
-  const headingPrimary = isArabicFirst ? headingAr : headingEn;
-  const headingSecondary = isArabicFirst ? headingEn : headingAr;
-  const bodyPrimary = isArabicFirst ? bodyAr : bodyEn;
-  const bodySecondary = isArabicFirst ? bodyEn : bodyAr;
-
-  const isPrimaryArabic = isArabicFirst;
+  const strings = useStrings();
 
   return (
     <View style={[styles.container, { width }]}>
@@ -47,68 +35,29 @@ export function OnboardingScreen({
 
       {/* Text content */}
       <View style={styles.textContent}>
-        {/* Primary heading */}
-        <Text
-          style={[
-            styles.heading,
-            isPrimaryArabic && styles.arabicText,
-          ]}
-        >
-          {headingPrimary}
+        <Text style={styles.heading}>
+          {heading}
         </Text>
 
-        {/* Secondary heading */}
-        <Text
-          style={[
-            styles.heading,
-            styles.headingSecondary,
-            !isPrimaryArabic && styles.arabicText,
-          ]}
-        >
-          {headingSecondary}
-        </Text>
-
-        {/* Primary body */}
-        <Text
-          style={[
-            styles.body,
-            isPrimaryArabic && styles.arabicBody,
-          ]}
-        >
-          {bodyPrimary}
-        </Text>
-
-        {/* Secondary body */}
-        <Text
-          style={[
-            styles.body,
-            styles.bodySecondary,
-            !isPrimaryArabic && styles.arabicBody,
-          ]}
-        >
-          {bodySecondary}
+        <Text style={styles.body}>
+          {body}
         </Text>
       </View>
 
       {/* Bottom area */}
       <View style={styles.bottomArea}>
         {isLastScreen ? (
-          <Pressable
+          <TouchableOpacity
             onPress={onGetStarted}
-            accessibilityLabel="Get Started"
+            accessibilityLabel={strings.getStarted}
             accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.getStartedButton,
-              pressed && styles.getStartedButtonPressed,
-            ]}
+            activeOpacity={0.7}
+            style={styles.getStartedButton}
           >
-            <Text style={styles.getStartedText}>Get Started</Text>
-            <Text style={[styles.getStartedTextAr, styles.arabicText]}>
-              ابدأ الآن
-            </Text>
-          </Pressable>
+            <Text style={styles.getStartedText}>{strings.getStarted}</Text>
+          </TouchableOpacity>
         ) : (
-          <Text style={styles.swipeHint}>Swipe to continue</Text>
+          <Text style={styles.swipeHint}>{strings.swipeToContinue}</Text>
         )}
       </View>
     </View>
@@ -140,14 +89,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: theme.typography.display.size * theme.typography.display.latinLineHeight,
   },
-  headingSecondary: {
-    marginTop: theme.spacing.sm,
-  },
-  arabicText: {
-    fontFamily: theme.fonts.arabic,
-    writingDirection: 'rtl',
-    lineHeight: theme.typography.display.size * theme.typography.display.arabicLineHeight,
-  },
   body: {
     fontSize: theme.typography.body.size,
     fontWeight: theme.typography.body.weight,
@@ -155,14 +96,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: theme.spacing.md,
     lineHeight: theme.typography.body.size * theme.typography.body.latinLineHeight,
-  },
-  bodySecondary: {
-    marginTop: theme.spacing.sm,
-  },
-  arabicBody: {
-    fontFamily: theme.fonts.arabic,
-    writingDirection: 'rtl',
-    lineHeight: theme.typography.body.size * theme.typography.body.arabicLineHeight,
   },
   bottomArea: {
     paddingBottom: theme.spacing.xl,
@@ -178,18 +111,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  getStartedButtonPressed: {
-    backgroundColor: theme.colors.primaryDark,
   },
   getStartedText: {
-    fontSize: theme.typography.body.size,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  getStartedTextAr: {
     fontSize: theme.typography.body.size,
     fontWeight: '600',
     color: '#FFFFFF',

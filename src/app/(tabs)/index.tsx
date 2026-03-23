@@ -8,6 +8,7 @@ import { useSurahList } from '../../hooks/useSurahList';
 import { useJuzList } from '../../hooks/useJuzList';
 import { useSearch } from '../../hooks/useSearch';
 import { useReadingStore } from '../../stores/readingStore';
+import { useStrings } from '../../constants/strings';
 import { SurahListItem } from '../../components/home/SurahListItem';
 import { JuzListItem } from '../../components/home/JuzListItem';
 import { SearchBar } from '../../components/home/SearchBar';
@@ -20,6 +21,7 @@ import type { Surah, Juz } from '../../data/types';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const strings = useStrings();
   const [activeTab, setActiveTab] = useState<'surah' | 'juz'>('surah');
 
   // Data hooks
@@ -109,7 +111,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Screen Title */}
-      <Text style={styles.title}>Tasmi'</Text>
+      <Text style={styles.title}>{strings.appTitle}</Text>
 
       {/* Search Bar - only visible for surah tab */}
       {activeTab === 'surah' && (
@@ -128,7 +130,7 @@ export default function HomeScreen() {
             data={filtered}
             renderItem={renderSurahItem}
             keyExtractor={surahKeyExtractor}
-            estimatedItemSize={72}
+            estimatedItemSize={64}
             ListEmptyComponent={
               query.length > 0 ? <EmptySearchResult query={query} /> : null
             }
@@ -171,6 +173,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   searchContainer: {
     paddingHorizontal: theme.spacing.xl,

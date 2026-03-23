@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import { useStrings } from '../../constants/strings';
 
 interface SearchBarProps {
   value: string;
@@ -12,8 +13,10 @@ interface SearchBarProps {
 export function SearchBar({
   value,
   onChangeText,
-  placeholder = 'Search surahs...',
+  placeholder,
 }: SearchBarProps) {
+  const strings = useStrings();
+  const resolvedPlaceholder = placeholder ?? strings.searchPlaceholder;
   const [isFocused, setIsFocused] = useState(false);
 
   return (
@@ -33,7 +36,7 @@ export function SearchBar({
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         placeholderTextColor={theme.colors.textDisabled}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -87,5 +90,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     height: 44,
     padding: 0,
+    textAlign: 'right',
   },
 });

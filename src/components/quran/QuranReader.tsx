@@ -1,20 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Alert, StyleSheet } from 'react-native';
-import { FlashList, type ViewToken } from '@shopify/flash-list';
+import { View, ScrollView, Text, Alert, StyleSheet, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSelectionStore } from '../../stores/selectionStore';
 import { useReadingStore } from '../../stores/readingStore';
-import { AyahText, type AyahSelectionState } from './AyahText';
+import { type AyahSelectionState } from './AyahText';
 import { SurahHeaderBanner } from './SurahHeaderBanner';
 import { Bismillah } from './Bismillah';
 import { RangeSelectionBar } from './RangeSelectionBar';
+import { toArabicIndic, cleanUthmaniForDisplay } from '../../utils/arabic';
 import { theme } from '../../constants/theme';
+import { useStrings } from '../../constants/strings';
 import type { Ayah, Surah } from '../../data/types';
-
-// Discriminated union for FlashList data items
-type ReaderItem =
-  | { type: 'header'; surah: Surah }
-  | { type: 'bismillah' }
-  | { type: 'ayah'; ayah: Ayah };
 
 interface QuranReaderProps {
   surahNumber: number;
@@ -23,19 +18,17 @@ interface QuranReaderProps {
   initialAyahNumber?: number;
 }
 
-/**
- * Full-screen scrollable Quran text view.
- * Uses FlashList with interleaved surah header, Bismillah, and ayah items.
- * Manages ayah selection, auto-bookmark, and range selection bar.
- */
 export function QuranReader({
   surahNumber,
   surah,
   ayahs,
   initialAyahNumber,
 }: QuranReaderProps) {
-  const flashListRef = useRef<FlashList<ReaderItem>>(null);
+  const strings = useStrings();
+  const scrollRef = useRef<ScrollView>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Store Y positions of ayah layout markers for scroll-to-ayah
+  const ayahPositionsRef = useRef<Map<number, number>>(new Map());
 
   // Selection store
   const startSurah = useSelectionStore((s) => s.startSurah);
@@ -60,46 +53,6 @@ export function QuranReader({
     };
   }, [clearSelection]);
 
-  // Build data array with header, bismillah (if applicable), and ayahs
-  const data = useMemo((): ReaderItem[] => {
-    const items: ReaderItem[] = [];
-
-    // Surah header banner
-    items.push({ type: 'header', surah });
-
-    // Bismillah: NOT for surah 1 (Al-Fatiha - it's ayah 1) or surah 9 (At-Tawbah - no Bismillah)
-    if (surahNumber !== 1 && surahNumber !== 9) {
-      items.push({ type: 'bismillah' });
-    }
-
-    // All ayahs
-    for (const ayah of ayahs) {
-      items.push({ type: 'ayah', ayah });
-    }
-
-    return items;
-  }, [surah, surahNumber, ayahs]);
-
-  // Scroll to last-read ayah on mount
-  useEffect(() => {
-    if (initialAyahNumber && flashListRef.current) {
-      // Find the index of the target ayah in the data array
-      const targetIndex = data.findIndex(
-        (item) => item.type === 'ayah' && item.ayah.ayahNumber === initialAyahNumber
-      );
-      if (targetIndex > 0) {
-        // Small delay to ensure FlashList has laid out
-        const timer = setTimeout(() => {
-          flashListRef.current?.scrollToIndex({
-            index: targetIndex,
-            animated: false,
-          });
-        }, 100);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [initialAyahNumber, data]);
-
   // Determine selection state for each ayah
   const getSelectionState = useCallback(
     (ayahNumber: number): AyahSelectionState => {
@@ -123,22 +76,17 @@ export function QuranReader({
   const handleAyahPress = useCallback(
     (ayahNumber: number) => {
       if (!startAyah || (startAyah && endAyah)) {
-        // Start new selection (or restart after complete selection)
         clearSelection();
         setStart(surahNumber, ayahNumber);
       } else {
-        // Complete the range
         if (ayahNumber < startAyah) {
-          // Tapped before start - swap
           const currentStart = startAyah;
           clearSelection();
           setStart(surahNumber, ayahNumber);
-          // Need a microtask to ensure clearSelection processes first
           setTimeout(() => {
             setEnd(surahNumber, currentStart);
           }, 0);
         } else if (ayahNumber === startAyah) {
-          // Tapped same ayah - deselect
           clearSelection();
         } else {
           setEnd(surahNumber, ayahNumber);
@@ -148,102 +96,90 @@ export function QuranReader({
     [startAyah, endAyah, surahNumber, clearSelection, setStart, setEnd]
   );
 
-  // Handle "Start Practice" button
   const handleStartPractice = useCallback(() => {
-    Alert.alert('Recitation coming soon', 'This feature will be available in a future update.');
+    Alert.alert(strings.practiceComingSoon, strings.practiceComingSoonMsg);
   }, []);
 
-  // Handle "Clear Selection" button
   const handleClearSelection = useCallback(() => {
     clearSelection();
   }, [clearSelection]);
 
-  // Auto-bookmark: track visible ayahs on scroll
-  const handleViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      // Find the first visible ayah
-      const firstVisibleAyah = viewableItems.find(
-        (item) => item.isViewable && (item.item as ReaderItem).type === 'ayah'
-      );
-
-      if (firstVisibleAyah && firstVisibleAyah.item) {
-        const readerItem = firstVisibleAyah.item as ReaderItem;
-        if (readerItem.type === 'ayah') {
-          // Debounce the save to avoid excessive writes
-          if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
-          }
-          debounceTimerRef.current = setTimeout(() => {
-            setLastRead(surahNumber, readerItem.ayah.ayahNumber);
-          }, 500);
-        }
+  // Auto-bookmark on scroll — save the surah + approximate ayah position
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const scrollY = event.nativeEvent.contentOffset.y;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
+      debounceTimerRef.current = setTimeout(() => {
+        // Find the ayah closest to the current scroll position
+        let closestAyah = 1;
+        for (const [ayahNum, yPos] of ayahPositionsRef.current.entries()) {
+          if (yPos <= scrollY + 100) {
+            closestAyah = ayahNum;
+          }
+        }
+        setLastRead(surahNumber, closestAyah);
+      }, 500);
     },
     [surahNumber, setLastRead]
   );
 
-  const viewabilityConfig = useMemo(
-    () => ({
-      itemVisiblePercentThreshold: 50,
-    }),
-    []
-  );
-
-  // FlashList renderItem
-  const renderItem = useCallback(
-    ({ item }: { item: ReaderItem }) => {
-      switch (item.type) {
-        case 'header':
-          return <SurahHeaderBanner surah={item.surah} />;
-        case 'bismillah':
-          return <Bismillah />;
-        case 'ayah':
-          return (
-            <AyahText
-              ayah={item.ayah}
-              selectionState={getSelectionState(item.ayah.ayahNumber)}
-              onPress={handleAyahPress}
-            />
-          );
-        default:
-          return null;
+  // Get highlight style for selected ayahs in flowing text
+  const getAyahHighlight = useCallback(
+    (ayahNumber: number) => {
+      const state = getSelectionState(ayahNumber);
+      if (state === 'selected-start' || state === 'selected-end') {
+        return { backgroundColor: theme.colors.selectedRange };
       }
+      if (state === 'in-range') {
+        return { backgroundColor: theme.colors.selectedRange };
+      }
+      return {};
     },
-    [getSelectionState, handleAyahPress]
+    [getSelectionState]
   );
 
-  // FlashList item type for optimization
-  const getItemType = useCallback((item: ReaderItem) => {
-    return item.type;
-  }, []);
+  const getMarkerColor = useCallback(
+    (ayahNumber: number) => {
+      const state = getSelectionState(ayahNumber);
+      return state !== 'default' ? theme.colors.primary : theme.colors.accent;
+    },
+    [getSelectionState]
+  );
 
-  // Key extractor
-  const keyExtractor = useCallback((item: ReaderItem, index: number) => {
-    switch (item.type) {
-      case 'header':
-        return `header-${item.surah.number}`;
-      case 'bismillah':
-        return 'bismillah';
-      case 'ayah':
-        return `ayah-${item.ayah.surahNumber}-${item.ayah.ayahNumber}`;
-      default:
-        return `item-${index}`;
-    }
-  }, []);
+  // Show Bismillah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
+  const showBismillah = surahNumber !== 1 && surahNumber !== 9;
 
   return (
     <View style={styles.container}>
-      <FlashList
-        ref={flashListRef}
-        data={data}
-        renderItem={renderItem}
-        estimatedItemSize={80}
-        getItemType={getItemType}
-        keyExtractor={keyExtractor}
-        onViewableItemsChanged={handleViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        contentContainerStyle={styles.listContent}
-      />
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={handleScroll}
+        scrollEventThrottle={200}
+        showsVerticalScrollIndicator={false}
+      >
+        <SurahHeaderBanner surah={surah} />
+        {showBismillah && <Bismillah />}
+
+        {/* Flowing Mushaf-style text — all ayahs in a single paragraph */}
+        <Text style={styles.mushafText}>
+          {ayahs.map((ayah) => (
+            <Text
+              key={ayah.ayahNumber}
+              onPress={() => handleAyahPress(ayah.ayahNumber)}
+              style={getAyahHighlight(ayah.ayahNumber)}
+            >
+              {ayah.textUthmani}
+              <Text style={[styles.endMarker, { color: getMarkerColor(ayah.ayahNumber) }]}>
+                {' \u06DD'}{toArabicIndic(ayah.ayahNumber)}{' '}
+              </Text>
+            </Text>
+          ))}
+        </Text>
+      </ScrollView>
 
       <RangeSelectionBar
         startAyah={startSurah === surahNumber ? startAyah : null}
@@ -259,10 +195,25 @@ export function QuranReader({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background, // #FAF8F2 cream
+    backgroundColor: theme.colors.background,
   },
-  listContent: {
-    backgroundColor: theme.colors.background, // #FAF8F2 cream
-    paddingBottom: 80, // Extra padding for RangeSelectionBar
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  mushafText: {
+    fontFamily: theme.fonts.quran,
+    fontSize: 26,
+    lineHeight: 52,
+    color: theme.colors.text,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+  },
+  endMarker: {
+    fontSize: 18,
   },
 });

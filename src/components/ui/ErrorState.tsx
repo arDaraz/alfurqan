@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import { useStrings } from '../../constants/strings';
 
 interface ErrorStateProps {
   message?: string;
@@ -9,9 +10,12 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  message = 'Unable to load Quran text. Please restart the app.',
+  message,
   onRetry,
 }: ErrorStateProps) {
+  const strings = useStrings();
+  const resolvedMessage = message ?? strings.errorDefault;
+
   return (
     <View style={styles.container}>
       <MaterialCommunityIcons
@@ -20,7 +24,7 @@ export function ErrorState({
         color="#DC2626"
         style={styles.icon}
       />
-      <Text style={styles.heading}>{message}</Text>
+      <Text style={styles.heading}>{resolvedMessage}</Text>
       <Pressable
         onPress={onRetry}
         style={({ pressed }) => [
@@ -30,7 +34,7 @@ export function ErrorState({
         accessibilityLabel="Try Again"
         accessibilityRole="button"
       >
-        <Text style={styles.buttonText}>Try Again</Text>
+        <Text style={styles.buttonText}>{strings.tryAgain}</Text>
       </Pressable>
     </View>
   );
