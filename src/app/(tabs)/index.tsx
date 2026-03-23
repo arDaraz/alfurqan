@@ -48,12 +48,9 @@ export default function HomeScreen() {
 
   const handleJuzPress = useCallback(
     (juzNumber: number) => {
-      const juz = juzList.find((j) => j.number === juzNumber);
-      if (juz) {
-        router.push(`/surah/${juz.startSurah}`);
-      }
+      router.push(`/juz/${juzNumber}`);
     },
-    [router, juzList]
+    [router]
   );
 
   const handleResumeFABPress = useCallback(() => {

@@ -1,48 +1,34 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { getSurahByNumber, getPageForSurah } from '../../data/quranRepository';
-import { useLastRead } from '../../hooks/useLastRead';
+import { getPageForJuz } from '../../data/quranRepository';
 import { MushafReader } from '../../components/quran/MushafReader';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ErrorState } from '../../components/ui/ErrorState';
+import { useStrings } from '../../constants/strings';
 import { theme } from '../../constants/theme';
-import type { Surah } from '../../data/types';
 
-/**
- * Surah reader screen.
- * Opens the QCF Mushaf page renderer at the surah's starting page,
- * or at the last-read page if one was saved.
- */
-export default function SurahScreen() {
+export default function JuzScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const surahNumber = parseInt(id || '1', 10);
+  const juzNumber = parseInt(id || '1', 10);
+  const strings = useStrings();
 
-  // Fetch surah metadata for header
-  const [surah, setSurah] = useState<Surah | null>(null);
   const [initialPage, setInitialPage] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const { lastReadPage } = useLastRead();
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const [surahData, surahStartPage] = await Promise.all([
-        getSurahByNumber(surahNumber),
-        getPageForSurah(surahNumber),
-      ]);
-      setSurah(surahData);
-      // Use lastReadPage if available, otherwise use surah's starting page
-      setInitialPage(lastReadPage ?? surahStartPage);
+      const juzStartPage = await getPageForJuz(juzNumber);
+      setInitialPage(juzStartPage);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load surah');
+      setError(err instanceof Error ? err.message : 'Failed to load juz');
     } finally {
       setLoading(false);
     }
-  }, [surahNumber]); // intentionally exclude lastReadPage to use initial value only
+  }, [juzNumber]);
 
   useEffect(() => {
     loadData();
@@ -55,7 +41,7 @@ export default function SurahScreen() {
           headerShown: true,
           headerTitle: () => (
             <Text style={styles.headerTitle}>
-              {surah?.nameArabic || ''}
+              {strings.tabJuz} {juzNumber}
             </Text>
           ),
           headerStyle: { backgroundColor: '#FFFFFF' },
@@ -77,11 +63,11 @@ export default function SurahScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF8F2',
+    backgroundColor: theme.colors.background,
   },
   headerTitle: {
-    fontFamily: 'KFGQPC-Uthmani',
     fontSize: theme.typography.body.size,
+    fontWeight: '600',
     color: theme.colors.text,
   },
 });
