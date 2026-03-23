@@ -4,7 +4,9 @@ import type { LastReadPosition } from '../data/types';
 export function useLastRead() {
   const lastReadSurah = useReadingStore((s) => s.lastReadSurah);
   const lastReadAyah = useReadingStore((s) => s.lastReadAyah);
+  const lastReadPage = useReadingStore((s) => s.lastReadPage);
   const setLastRead = useReadingStore((s) => s.setLastRead);
+  const setLastReadPage = useReadingStore((s) => s.setLastReadPage);
 
   const hasLastRead = lastReadSurah !== null && lastReadAyah !== null;
 
@@ -19,5 +21,9 @@ export function useLastRead() {
     setLastRead(surah, ayah);
   };
 
-  return { lastRead, savePosition, hasLastRead };
+  const savePagePosition = (page: number) => {
+    setLastReadPage(page);
+  };
+
+  return { lastRead, savePosition, hasLastRead, lastReadPage, savePagePosition };
 }

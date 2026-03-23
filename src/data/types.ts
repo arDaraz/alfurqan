@@ -36,3 +36,26 @@ export interface LastReadPosition {
   surahNumber: number;
   ayahNumber: number;
 }
+
+export interface MushafWord {
+  id: number;
+  surahNumber: number;
+  ayahNumber: number;
+  wordPosition: number;
+  pageNumber: number;
+  lineNumber: number;
+  codeV2: string;
+  charType: 'word' | 'end' | 'pause';
+}
+
+export interface MushafLine {
+  lineNumber: number;
+  words: MushafWord[];
+  isCentered: boolean;
+}
+
+export interface MushafPageData {
+  pageNumber: number;
+  words: MushafWord[];
+  fontBase64: string;
+}

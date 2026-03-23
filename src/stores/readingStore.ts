@@ -19,8 +19,10 @@ const mmkvStorage: StateStorage = {
 interface ReadingState {
   lastReadSurah: number | null;
   lastReadAyah: number | null;
+  lastReadPage: number | null;
   hasCompletedOnboarding: boolean;
   setLastRead: (surah: number, ayah: number) => void;
+  setLastReadPage: (page: number) => void;
   completeOnboarding: () => void;
 }
 
@@ -29,9 +31,11 @@ export const useReadingStore = create<ReadingState>()(
     (set) => ({
       lastReadSurah: null,
       lastReadAyah: null,
+      lastReadPage: null,
       hasCompletedOnboarding: false,
       setLastRead: (surah, ayah) =>
         set({ lastReadSurah: surah, lastReadAyah: ayah }),
+      setLastReadPage: (page) => set({ lastReadPage: page }),
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
     }),
     {

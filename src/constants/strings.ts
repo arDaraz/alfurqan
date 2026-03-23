@@ -52,6 +52,11 @@ const ar = {
   // Reader
   continueReading: 'متابعة القراءة',
   back: 'رجوع',
+
+  // Mushaf
+  mushafPageIndicator: (n: number) => `صفحة ${n} من ٦٠٤`,
+  mushafPageLoadError: 'تعذّر تحميل هذه الصفحة. يرجى المحاولة مرة أخرى.',
+  mushafFontLoadError: 'تعذّر تحميل خط المصحف. يرجى إعادة تشغيل التطبيق.',
 } as const;
 
 const en = {
@@ -98,6 +103,11 @@ const en = {
 
   continueReading: 'Continue reading',
   back: 'Back',
+
+  // Mushaf
+  mushafPageIndicator: (n: number) => `Page ${n} of 604`,
+  mushafPageLoadError: 'Unable to load this page. Please try again.',
+  mushafFontLoadError: 'Unable to load Mushaf font. Please restart the app.',
 } as const;
 
 export type Strings = {
@@ -125,6 +135,9 @@ export type Strings = {
   swipeToContinue: string;
   continueReading: string;
   back: string;
+  mushafPageIndicator: (n: number) => string;
+  mushafPageLoadError: string;
+  mushafFontLoadError: string;
 };
 
 const strings: Record<AppLanguage, Strings> = { ar, en };
