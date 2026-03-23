@@ -13,6 +13,7 @@ Tasmi' delivers a digital Quran memorization partner that listens to live recita
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation and Quran Display** - Project scaffold, Quran data layer, text rendering with navigation (gap closure in progress)
+- [ ] **Phase 01.1: QCF Mushaf Page Renderer** (INSERTED) - Replace flowing text with pixel-perfect Mushaf page rendering using QCF v2 page fonts
 - [ ] **Phase 2: On-Device Speech Recognition** - Microphone capture and Arabic Quran ASR running locally on device
 - [ ] **Phase 3: Core Recitation Loop** - Word matching, mistake detection, haptic feedback, real-time highlighting
 - [ ] **Phase 4: Sheikh Audio Corrections** - Word-level correction audio playback, progressive download, multiple Qaris
@@ -42,13 +43,14 @@ Plans:
 
 ### Phase 01.1: QCF Mushaf Page Renderer (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Replace the flowing-text QuranReader with a page-based Mushaf renderer using QCF v2 page fonts in WebViews, with horizontal RTL page swiping across all 604 Mushaf pages
+**Requirements**: QTEXT-01, UI-01
 **Depends on:** Phase 1
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 01.1 to break down)
+- [ ] 01.1-01-PLAN.md — QCF Mushaf data layer: types, seed script, repository, store, strings, dependencies
+- [ ] 01.1-02-PLAN.md — Mushaf UI components and surah screen wiring with device verification
 
 ### Phase 2: On-Device Speech Recognition
 **Goal**: The app can capture microphone audio and transcribe Arabic Quranic recitation entirely on-device without internet
@@ -128,11 +130,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 01.1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Quran Display | 4/5 | Gap closure | - |
+| 01.1. QCF Mushaf Page Renderer | 0/2 | Planned | - |
 | 2. On-Device Speech Recognition | 0/0 | Not started | - |
 | 3. Core Recitation Loop | 0/0 | Not started | - |
 | 4. Sheikh Audio Corrections | 0/0 | Not started | - |
