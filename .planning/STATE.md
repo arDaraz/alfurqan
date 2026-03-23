@@ -74,6 +74,10 @@ Recent decisions affecting current work:
 
 None yet.
 
+### Roadmap Evolution
+
+- Phase 01.1 inserted after Phase 01: QCF Mushaf Page Renderer (URGENT) — replace flowing text with pixel-perfect Mushaf page rendering using QCF v2 page fonts in WebViews
+
 ### Blockers/Concerns
 
 - [Phase 2]: On-device ASR integration (whisper.rn + tarteel-ai model in GGML) has limited production precedent -- highest risk component

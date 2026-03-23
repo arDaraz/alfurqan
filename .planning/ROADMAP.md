@@ -40,6 +40,16 @@ Plans:
 - [x] 01-04-PLAN.md — Onboarding flow and end-to-end verification
 - [ ] 01-05-PLAN.md — Gap closure: fix bookmark scroll restore and home screen retry
 
+### Phase 01.1: QCF Mushaf Page Renderer (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 1
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 01.1 to break down)
+
 ### Phase 2: On-Device Speech Recognition
 **Goal**: The app can capture microphone audio and transcribe Arabic Quranic recitation entirely on-device without internet
 **Depends on**: Phase 1
