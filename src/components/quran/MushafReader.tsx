@@ -1,30 +1,68 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import { MushafPage } from './MushafPage';
 import { PageIndicator } from './PageIndicator';
+import { AyahPopup } from './AyahPopup';
 import { useReadingStore } from '../../stores/readingStore';
+import type { AyahSelection, AyahActionType } from '../../data/types';
 
 const TOTAL_PAGES = 604;
+const PAGE_RENDER_BUFFER = 2;
 
 interface MushafReaderProps {
-  initialPage: number; // Mushaf page 1-604
+  initialPage: number;
+  onPageChange?: (pageNumber: number) => void;
+  onAyahAction?: (action: AyahActionType, selection: AyahSelection) => void;
 }
 
-export function MushafReader({ initialPage }: MushafReaderProps) {
+export function MushafReader({ initialPage, onPageChange, onAyahAction }: MushafReaderProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const pagerRef = useRef<PagerView>(null);
   const setLastReadPage = useReadingStore((s) => s.setLastReadPage);
 
+  // Selection state
+  const [selection, setSelection] = useState<AyahSelection | null>(null);
+  const [popupPos, setPopupPos] = useState({ x: 0, y: 0 });
+  const clearSelectionRef = useRef<(() => void) | null>(null);
+
   const handlePageSelected = useCallback(
     (event: PagerViewOnPageSelectedEvent) => {
-      // PagerView uses 0-based index, Mushaf pages are 1-based
       const pageNumber = event.nativeEvent.position + 1;
       setCurrentPage(pageNumber);
       setLastReadPage(pageNumber);
+      onPageChange?.(pageNumber);
+      // Clear selection on page change
+      setSelection(null);
+      clearSelectionRef.current?.();
     },
-    [setLastReadPage]
+    [setLastReadPage, onPageChange]
   );
+
+  const handleSelectionEvent = useCallback((data: any) => {
+    if (data.type === 'select') {
+      setSelection({
+        startSurah: data.startSurah,
+        startAyah: data.startAyah,
+        endSurah: data.endSurah,
+        endAyah: data.endAyah,
+      });
+      setPopupPos({ x: data.x, y: data.y });
+    } else if (data.type === 'deselect') {
+      setSelection(null);
+    }
+  }, []);
+
+  const handleAction = useCallback((action: AyahActionType, sel: AyahSelection) => {
+    onAyahAction?.(action, sel);
+    setSelection(null);
+    clearSelectionRef.current?.();
+  }, [onAyahAction]);
+
+  const handleDismiss = useCallback(() => {
+    setSelection(null);
+    clearSelectionRef.current?.();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -36,12 +74,38 @@ export function MushafReader({ initialPage }: MushafReaderProps) {
         layoutDirection="rtl"
         onPageSelected={handlePageSelected}
       >
-        {Array.from({ length: TOTAL_PAGES }, (_, index) => (
-          <View key={`page-${index + 1}`} style={styles.pageContainer}>
-            <MushafPage pageNumber={index + 1} />
-          </View>
-        ))}
+        {Array.from({ length: TOTAL_PAGES }, (_, index) => {
+          const pageNumber = index + 1;
+          const isNearby = Math.abs(pageNumber - currentPage) <= PAGE_RENDER_BUFFER;
+          return (
+            <View key={`page-${pageNumber}`} style={styles.pageContainer}>
+              {isNearby ? (
+                <MushafPage
+                  pageNumber={pageNumber}
+                  onSelectionEvent={pageNumber === currentPage ? handleSelectionEvent : undefined}
+                  clearSelectionRef={pageNumber === currentPage ? clearSelectionRef : undefined}
+                />
+              ) : (
+                <View style={styles.placeholder}>
+                  <ActivityIndicator size="small" color="#C8A96E" />
+                </View>
+              )}
+            </View>
+          );
+        })}
       </PagerView>
+
+      {/* Ayah context popup overlay */}
+      {selection && (
+        <AyahPopup
+          selection={selection}
+          x={popupPos.x}
+          y={popupPos.y}
+          onAction={handleAction}
+          onDismiss={handleDismiss}
+        />
+      )}
+
       <PageIndicator currentPage={currentPage} />
     </View>
   );
@@ -57,5 +121,11 @@ const styles = StyleSheet.create({
   },
   pageContainer: {
     flex: 1,
+  },
+  placeholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FAF8F2',
   },
 });
