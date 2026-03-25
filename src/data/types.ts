@@ -54,6 +54,21 @@ export interface MushafLine {
   isCentered: boolean;
 }
 
+export interface PageMarker {
+  type: 'juz' | 'hizb' | 'quarter';
+  lineNumber: number;
+  label: string; // Arabic label e.g., "الجزء ٢" or "الحزب ٥" or "الربع"
+}
+
+export interface AyahSelection {
+  startSurah: number;
+  startAyah: number;
+  endSurah: number;
+  endAyah: number;
+}
+
+export type AyahActionType = 'play' | 'tafsir' | 'bookmark' | 'copy' | 'share' | 'wordByWord';
+
 export interface MushafPageData {
   pageNumber: number;
   words: MushafWord[];
