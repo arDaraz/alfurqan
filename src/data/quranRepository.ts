@@ -81,6 +81,21 @@ export async function getSurahByNumber(surahNumber: number): Promise<Surah | nul
   return mapSurahRow(row);
 }
 
+// TODO: Currently fetches within a single surah. Add cross-surah support when
+// the selection UI allows spanning across surah boundaries.
+export async function getAyahTextRange(
+  surahNumber: number,
+  startAyah: number,
+  endAyah: number
+): Promise<string> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<{ text_uthmani: string }>(
+    'SELECT text_uthmani FROM ayahs WHERE surah_number = ? AND ayah_number >= ? AND ayah_number <= ? ORDER BY ayah_number',
+    [surahNumber, startAyah, endAyah]
+  );
+  return rows.map((r) => r.text_uthmani).join(' ');
+}
+
 export async function getAyahsBySurah(surahNumber: number): Promise<Ayah[]> {
   const db = await getDatabase();
   const rows = await db.getAllAsync<AyahRow>(
