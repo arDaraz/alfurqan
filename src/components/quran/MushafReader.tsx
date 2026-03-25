@@ -5,6 +5,7 @@ import { MushafPage } from './MushafPage';
 import { PageIndicator } from './PageIndicator';
 import { AyahPopup } from './AyahPopup';
 import { useReadingStore } from '../../stores/readingStore';
+import { theme } from '../../constants/theme';
 import type { AyahSelection, AyahActionType } from '../../data/types';
 
 const TOTAL_PAGES = 604;
@@ -87,7 +88,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
                 />
               ) : (
                 <View style={styles.placeholder}>
-                  <ActivityIndicator size="small" color="#C8A96E" />
+                  <ActivityIndicator size="small" color={theme.colors.accent} />
                 </View>
               )}
             </View>
@@ -114,7 +115,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF8F2',
+    backgroundColor: theme.colors.background,
   },
   pager: {
     flex: 1,
@@ -126,6 +127,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FAF8F2',
+    backgroundColor: theme.colors.background,
   },
 });

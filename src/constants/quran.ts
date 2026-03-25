@@ -2,6 +2,16 @@ export const TOTAL_SURAHS = 114;
 export const TOTAL_AYAHS = 6236;
 export const TOTAL_JUZ = 30;
 
+export const SURAH_AL_FATIHA = 1;
+export const SURAH_AT_TAWBAH = 9;
+
+/** Al-Fatiha has no Bismillah (it IS the Bismillah), At-Tawbah omits it by tradition. */
+export function surahHasBismillah(surahNumber: number): boolean {
+  return surahNumber !== SURAH_AL_FATIHA && surahNumber !== SURAH_AT_TAWBAH;
+}
+
+export const QUARTER_LABELS: Record<number, string> = { 1: 'الربع', 2: 'النصف', 3: 'الثلاثة' };
+
 export interface SurahMetadata {
   number: number;
   nameArabic: string;

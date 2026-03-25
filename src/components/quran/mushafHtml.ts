@@ -1,18 +1,22 @@
 import type { MushafWord, MushafLine, PageMarker } from '../../data/types';
+import { surahHasBismillah } from '../../constants/quran';
 
 export interface BismillahData {
   codes: string; // QCF v2 codes for Bismillah from page 1
   fontBase64: string; // Page 1 font data
 }
 
-export function generateMushafHtml(
-  pageNumber: number,
-  words: MushafWord[],
-  fontBase64: string,
-  surahNumber?: number,
-  bismillah?: BismillahData,
-  markers?: PageMarker[]
-): string {
+export interface MushafHtmlOptions {
+  pageNumber: number;
+  words: MushafWord[];
+  fontBase64: string;
+  surahNumber?: number;
+  bismillah?: BismillahData;
+  markers?: PageMarker[];
+}
+
+export function generateMushafHtml(opts: MushafHtmlOptions): string {
+  const { pageNumber, words, fontBase64, surahNumber, bismillah, markers } = opts;
   const lineMap = new Map<number, MushafWord[]>();
   for (const word of words) {
     const existing = lineMap.get(word.lineNumber);
@@ -71,7 +75,7 @@ export function generateMushafHtml(
 
   if (isSurahStart && !isFullPage) {
     // Compact layout (e.g., Al-Fatiha, Al-Baqarah) — single surah, centered
-    const hasBismillah = surahNumber !== 1 && surahNumber !== 9 && !!bismillah;
+    const hasBismillah = surahHasBismillah(surahNumber!) && !!bismillah;
     const banner = buildBanner(surahCode);
     const bsm = hasBismillah ? buildBismillah() : '';
     const textLines = lines.map(buildLine).join('\n');
@@ -104,7 +108,7 @@ export function generateMushafHtml(
       }
 
       const code = `surah${String(sn).padStart(3, '0')}`;
-      const needsBismillah = sn !== 1 && sn !== 9 && !!bismillah;
+      const needsBismillah = surahHasBismillah(sn) && !!bismillah;
 
       if (emptyBefore.length >= 2) {
         // 2+ empty slots: banner + bismillah (use last two, closest to text)

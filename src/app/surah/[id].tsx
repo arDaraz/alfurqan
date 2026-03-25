@@ -1,87 +1,19 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import React, { useCallback } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { getSurahByNumber, getPageForSurah } from '../../data/quranRepository';
-import { useLastRead } from '../../hooks/useLastRead';
-import { MushafReader } from '../../components/quran/MushafReader';
-import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
-import { ErrorState } from '../../components/ui/ErrorState';
-import { theme } from '../../constants/theme';
-import type { Surah } from '../../data/types';
+import { MushafScreenLayout } from '../../components/quran/MushafScreenLayout';
 
-/**
- * Surah reader screen.
- * Opens the QCF Mushaf page renderer at the surah's starting page,
- * or at the last-read page if one was saved.
- */
 export default function SurahScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const surahNumber = parseInt(id || '1', 10);
 
-  // Fetch surah metadata for header
-  const [surah, setSurah] = useState<Surah | null>(null);
-  const [initialPage, setInitialPage] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const loadInitialPage = useCallback(async () => {
+    const [surah, page] = await Promise.all([
+      getSurahByNumber(surahNumber),
+      getPageForSurah(surahNumber),
+    ]);
+    return { page, surahName: surah?.nameArabic ?? '' };
+  }, [surahNumber]);
 
-  const { lastReadPage } = useLastRead();
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [surahData, surahStartPage] = await Promise.all([
-        getSurahByNumber(surahNumber),
-        getPageForSurah(surahNumber),
-      ]);
-      setSurah(surahData);
-      // Use lastReadPage if available, otherwise use surah's starting page
-      setInitialPage(lastReadPage ?? surahStartPage);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load surah');
-    } finally {
-      setLoading(false);
-    }
-  }, [surahNumber]); // intentionally exclude lastReadPage to use initial value only
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  return (
-    <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: () => (
-            <Text style={styles.headerTitle}>
-              {surah?.nameArabic || ''}
-            </Text>
-          ),
-          headerStyle: { backgroundColor: '#FFFFFF' },
-          headerTintColor: '#1A1A2E',
-        }}
-      />
-
-      {loading ? (
-        <LoadingSkeleton />
-      ) : error ? (
-        <ErrorState message={error} onRetry={loadData} />
-      ) : initialPage !== null ? (
-        <MushafReader initialPage={initialPage} />
-      ) : null}
-    </View>
-  );
+  return <MushafScreenLayout loadInitialPage={loadInitialPage} errorMessage="Failed to load surah" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAF8F2',
-  },
-  headerTitle: {
-    fontFamily: 'KFGQPC-Uthmani',
-    fontSize: theme.typography.body.size,
-    color: theme.colors.text,
-  },
-});

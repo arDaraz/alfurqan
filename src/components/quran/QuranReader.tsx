@@ -8,6 +8,7 @@ import { Bismillah } from './Bismillah';
 import { RangeSelectionBar } from './RangeSelectionBar';
 import { toArabicIndic, cleanUthmaniForDisplay } from '../../utils/arabic';
 import { theme } from '../../constants/theme';
+import { surahHasBismillah } from '../../constants/quran';
 import { useStrings } from '../../constants/strings';
 import type { Ayah, Surah } from '../../data/types';
 
@@ -100,10 +101,6 @@ export function QuranReader({
     Alert.alert(strings.practiceComingSoon, strings.practiceComingSoonMsg);
   }, []);
 
-  const handleClearSelection = useCallback(() => {
-    clearSelection();
-  }, [clearSelection]);
-
   // Auto-bookmark on scroll — save the surah + approximate ayah position
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -129,10 +126,7 @@ export function QuranReader({
   const getAyahHighlight = useCallback(
     (ayahNumber: number) => {
       const state = getSelectionState(ayahNumber);
-      if (state === 'selected-start' || state === 'selected-end') {
-        return { backgroundColor: theme.colors.selectedRange };
-      }
-      if (state === 'in-range') {
+      if (state !== 'default') {
         return { backgroundColor: theme.colors.selectedRange };
       }
       return {};
@@ -148,8 +142,7 @@ export function QuranReader({
     [getSelectionState]
   );
 
-  // Show Bismillah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
-  const showBismillah = surahNumber !== 1 && surahNumber !== 9;
+  const showBismillah = surahHasBismillah(surahNumber);
 
   return (
     <View style={styles.container}>
@@ -186,7 +179,7 @@ export function QuranReader({
         endAyah={endSurah === surahNumber ? endAyah : null}
         isRangeComplete={isRangeComplete && startSurah === surahNumber}
         onStartPractice={handleStartPractice}
-        onClearSelection={handleClearSelection}
+        onClearSelection={clearSelection}
       />
     </View>
   );

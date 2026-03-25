@@ -5,6 +5,7 @@ import { useMushafPage } from '../../hooks/useMushafPage';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
 import { useStrings } from '../../constants/strings';
+import { theme } from '../../constants/theme';
 
 interface MushafPageProps {
   pageNumber: number;
@@ -65,7 +66,7 @@ export function MushafPage({ pageNumber, onSelectionEvent, clearSelectionRef }: 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF8F2',
+    backgroundColor: theme.colors.background,
   },
   webview: {
     flex: 1,

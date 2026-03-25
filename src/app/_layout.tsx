@@ -4,9 +4,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import '../../global.css';
+import { theme } from '../constants/theme';
 import { useReadingStore } from '../stores/readingStore';
 
 SplashScreen.preventAutoHideAsync();
+
+const readerScreenOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: theme.colors.surface },
+  headerTintColor: theme.colors.text,
+} as const;
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -45,7 +52,7 @@ export default function RootLayout() {
       <>
         <Stack
           screenOptions={{
-            contentStyle: { backgroundColor: '#FAF8F2' },
+            contentStyle: { backgroundColor: theme.colors.background },
             headerShown: false,
           }}
         >
@@ -57,14 +64,8 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="surah/[id]"
-            options={{
-              headerShown: true,
-              headerStyle: { backgroundColor: '#FFFFFF' },
-              headerTintColor: '#1A1A2E',
-            }}
-          />
+          <Stack.Screen name="surah/[id]" options={readerScreenOptions} />
+          <Stack.Screen name="juz/[id]" options={readerScreenOptions} />
         </Stack>
         <Redirect href="/onboarding" />
         <StatusBar style="dark" />
@@ -76,19 +77,13 @@ export default function RootLayout() {
     <>
       <Stack
         screenOptions={{
-          contentStyle: { backgroundColor: '#FAF8F2' },
+          contentStyle: { backgroundColor: theme.colors.background },
           headerShown: false,
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="surah/[id]"
-          options={{
-            headerShown: true,
-            headerStyle: { backgroundColor: '#FFFFFF' },
-            headerTintColor: '#1A1A2E',
-          }}
-        />
+        <Stack.Screen name="surah/[id]" options={{ ...readerScreenOptions, headerBackVisible: false }} />
+        <Stack.Screen name="juz/[id]" options={{ ...readerScreenOptions, headerBackVisible: false }} />
         <Stack.Screen
           name="onboarding"
           options={{

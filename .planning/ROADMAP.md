@@ -46,7 +46,7 @@ Plans:
 **Goal:** Replace the flowing-text QuranReader with a page-based Mushaf renderer using QCF v2 page fonts in WebViews, with horizontal RTL page swiping across all 604 Mushaf pages
 **Requirements**: QTEXT-01, UI-01
 **Depends on:** Phase 1
-**Plans:** 2 plans
+**Plans:** 0/2 plans executed
 
 Plans:
 - [ ] 01.1-01-PLAN.md — QCF Mushaf data layer: types, seed script, repository, store, strings, dependencies
@@ -135,7 +135,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Quran Display | 4/5 | Gap closure | - |
-| 01.1. QCF Mushaf Page Renderer | 0/2 | Planned | - |
+| 01.1. QCF Mushaf Page Renderer | 0/2 | Planned    |  |
 | 2. On-Device Speech Recognition | 0/0 | Not started | - |
 | 3. Core Recitation Loop | 0/0 | Not started | - |
 | 4. Sheikh Audio Corrections | 0/0 | Not started | - |
