@@ -38,18 +38,25 @@ export function AyahPopup({ selection, x, y, onAction, onDismiss }: AyahPopupPro
         showBelow ? styles.arrowUp : styles.arrowDown,
         { left: Math.max(20, x - clampedLeft - ARROW_SIZE) },
       ]} />
-      {/* Actions row */}
+      {/* Popup body */}
       <View style={styles.popup}>
-        {actions.map((a) => (
-          <Pressable
-            key={a.key}
-            style={styles.actionBtn}
-            onPress={() => onAction(a.key, selection)}
-          >
-            <MaterialCommunityIcons name={a.icon as any} size={20} color="#5C4033" />
-            <Text style={styles.actionLabel}>{a.label}</Text>
-          </Pressable>
-        ))}
+        {/* X close button */}
+        <Pressable onPress={onDismiss} style={styles.closeBtn} hitSlop={8}>
+          <MaterialCommunityIcons name="close" size={16} color="#9CA3AF" />
+        </Pressable>
+        {/* Actions row */}
+        <View style={styles.actionsRow}>
+          {actions.map((a) => (
+            <Pressable
+              key={a.key}
+              style={styles.actionBtn}
+              onPress={() => onAction(a.key, selection)}
+            >
+              <MaterialCommunityIcons name={a.icon as any} size={20} color="#5C4033" />
+              <Text style={styles.actionLabel}>{a.label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -61,18 +68,32 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   popup: {
-    flexDirection: 'row',
     backgroundColor: '#FFF8F0',
     borderWidth: 1,
     borderColor: '#B8965A',
     borderRadius: 10,
-    paddingVertical: 6,
+    paddingTop: 2,
+    paddingBottom: 6,
     paddingHorizontal: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 4,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    marginTop: 16,
   },
   actionBtn: {
     alignItems: 'center',
