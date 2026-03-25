@@ -1,16 +1,18 @@
-import type { MushafWord, MushafLine } from '../../data/types';
+import type { MushafWord, MushafLine, PageMarker } from '../../data/types';
 
-/**
- * Generates a complete HTML document for rendering a single Mushaf page
- * using QCF v2 page fonts. The HTML is designed for display in a WebView
- * with no scrolling, no JavaScript, and no user interaction.
- */
+export interface BismillahData {
+  codes: string; // QCF v2 codes for Bismillah from page 1
+  fontBase64: string; // Page 1 font data
+}
+
 export function generateMushafHtml(
   pageNumber: number,
   words: MushafWord[],
-  fontBase64: string
+  fontBase64: string,
+  surahNumber?: number,
+  bismillah?: BismillahData,
+  markers?: PageMarker[]
 ): string {
-  // Group words by line number into MushafLine[]
   const lineMap = new Map<number, MushafWord[]>();
   for (const word of words) {
     const existing = lineMap.get(word.lineNumber);
@@ -21,72 +23,247 @@ export function generateMushafHtml(
     }
   }
 
-  // Build MushafLine array ordered by line number (1-15)
   const lines: MushafLine[] = [];
   const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => a - b);
   for (const lineNum of sortedKeys) {
     const lineWords = lineMap.get(lineNum)!;
-    // A line is centered if it has fewer than 4 words and all words are non-'word' type
     const isCentered =
-      lineWords.length < 4 &&
+      lineWords.length <= 2 &&
       lineWords.every((w) => w.charType !== 'word');
-    lines.push({
-      lineNumber: lineNum,
-      words: lineWords,
-      isCentered,
-    });
+    lines.push({ lineNumber: lineNum, words: lineWords, isCentered });
   }
 
-  // Generate line divs
-  const lineDivs = lines
-    .map((line) => {
-      const className = line.isCentered ? 'line-centered' : 'line';
-      const text = line.words.map((w) => w.codeV2).join(' ');
-      return `  <div class="${className}">${text}</div>`;
-    })
-    .join('\n');
+  const isSurahStart = surahNumber !== undefined;
+  const isFullPage = lines.length >= 9;
+  const surahCode = surahNumber !== undefined
+    ? `surah${String(surahNumber).padStart(3, '0')}`
+    : '';
+
+  const frameSvg = `<svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5e6c8"/><stop offset="50%" stop-color="#efe0c0"/><stop offset="100%" stop-color="#f5e6c8"/></linearGradient></defs><rect x="8" y="4" width="384" height="42" rx="3" fill="url(#bg)" stroke="#B8965A" stroke-width="1"/><rect x="4" y="1" width="392" height="48" rx="5" fill="none" stroke="#B8965A" stroke-width="0.8"/><circle cx="24" cy="25" r="8" fill="none" stroke="#C8A96E" stroke-width="0.6"/><circle cx="24" cy="25" r="4" fill="none" stroke="#C8A96E" stroke-width="0.4"/><circle cx="376" cy="25" r="8" fill="none" stroke="#C8A96E" stroke-width="0.6"/><circle cx="376" cy="25" r="4" fill="none" stroke="#C8A96E" stroke-width="0.4"/><path d="M36,25 C40,18 44,15 50,15 C44,15 40,12 36,5" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M36,25 C40,32 44,35 50,35 C44,35 40,38 36,45" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M364,25 C360,18 356,15 350,15 C356,15 360,12 364,5" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M364,25 C360,32 356,35 350,35 C356,35 360,38 364,45" fill="none" stroke="#C8A96E" stroke-width="0.5"/></svg>`;
+
+  const buildLine = (line: MushafLine) => {
+    const cls = line.isCentered ? 'lc' : 'l';
+    const text = line.words.map((w) => {
+      const ds = w.surahNumber;
+      const da = w.ayahNumber;
+      // Detect ۞ rub al-hizb glyph: first word of an ayah with space-separated code
+      if (w.wordPosition === 1 && w.codeV2.includes(' ')) {
+        const parts = w.codeV2.split(' ');
+        return `<span class="rub" data-s="${ds}" data-a="${da}">۞</span> <span class="w" data-s="${ds}" data-a="${da}">${parts.slice(1).join(' ')}</span>`;
+      }
+      return `<span class="w" data-s="${ds}" data-a="${da}">${w.codeV2}</span>`;
+    }).join(' ');
+    return `<div class="${cls}">${text}</div>`;
+  };
+
+  const buildBanner = (code: string, inSlot = false) =>
+    `<div class="sb${inSlot ? ' slot' : ''}">${frameSvg}<span class="sn">${code}</span></div>`;
+
+  const buildBismillah = (inSlot = false) =>
+    `<div class="bsm${inSlot ? ' slot' : ''}">${bismillah?.codes ?? ''}</div>`;
+
+  // Include page 1 font face if bismillah data is available
+  const bismillahFontFace = bismillah
+    ? `@font-face{font-family:'QCF1';src:url(data:font/woff2;base64,${bismillah.fontBase64});font-display:block}`
+    : '';
+
+  let bodyContent: string;
+
+  if (isSurahStart && !isFullPage) {
+    // Compact layout (e.g., Al-Fatiha, Al-Baqarah) — single surah, centered
+    const hasBismillah = surahNumber !== 1 && surahNumber !== 9 && !!bismillah;
+    const banner = buildBanner(surahCode);
+    const bsm = hasBismillah ? buildBismillah() : '';
+    const textLines = lines.map(buildLine).join('\n');
+    bodyContent = `<div class="group">\n${banner}\n${bsm}\n${textLines}\n</div>`;
+  } else {
+    // Full 15-slot layout — handles multiple surahs, trailing banners
+    const slotOverrides = new Map<number, string>();
+
+    // Find all distinct surah starts (ayah 1) on this page
+    const surahStarts: number[] = [];
+    for (const word of words) {
+      if (word.ayahNumber === 1 && word.wordPosition === 1 && !surahStarts.includes(word.surahNumber)) {
+        surahStarts.push(word.surahNumber);
+      }
+    }
+
+    // For each surah start, assign banner + bismillah to empty slots before it
+    for (const sn of surahStarts) {
+      const firstLine = lines.find(
+        (l) => l.words.some((w) => w.surahNumber === sn && w.ayahNumber === 1)
+      );
+      if (!firstLine) continue;
+
+      // Collect unassigned empty slots before this surah's first line
+      const emptyBefore: number[] = [];
+      for (let s = 1; s < firstLine.lineNumber; s++) {
+        if (!lines.find((l) => l.lineNumber === s) && !slotOverrides.has(s)) {
+          emptyBefore.push(s);
+        }
+      }
+
+      const code = `surah${String(sn).padStart(3, '0')}`;
+      const needsBismillah = sn !== 1 && sn !== 9 && !!bismillah;
+
+      if (emptyBefore.length >= 2) {
+        // 2+ empty slots: banner + bismillah (use last two, closest to text)
+        slotOverrides.set(emptyBefore[emptyBefore.length - 2], buildBanner(code, true));
+        if (needsBismillah) {
+          slotOverrides.set(emptyBefore[emptyBefore.length - 1], buildBismillah(true));
+        }
+      } else if (emptyBefore.length === 1) {
+        // 1 empty slot: banner was on previous page, bismillah only
+        if (needsBismillah) {
+          slotOverrides.set(emptyBefore[0], buildBismillah(true));
+        }
+      }
+    }
+
+    // Trailing banner: if page ends before line 15, show next surah's banner
+    const maxLineWithData = Math.max(...lines.map((l) => l.lineNumber));
+    if (maxLineWithData < 15) {
+      const lastSurahOnPage = Math.max(...words.map((w) => w.surahNumber));
+      const nextSurah = lastSurahOnPage + 1;
+      if (nextSurah <= 114) {
+        const trailingSlot = maxLineWithData + 1;
+        if (!slotOverrides.has(trailingSlot)) {
+          const code = `surah${String(nextSurah).padStart(3, '0')}`;
+          slotOverrides.set(trailingSlot, buildBanner(code, true));
+        }
+      }
+    }
+
+    const slots: string[] = [];
+    for (let slot = 1; slot <= 15; slot++) {
+      const line = lines.find((l) => l.lineNumber === slot);
+      if (line) {
+        slots.push(buildLine(line));
+      } else if (slotOverrides.has(slot)) {
+        slots.push(slotOverrides.get(slot)!);
+      } else {
+        slots.push('<div class="empty"></div>');
+      }
+    }
+    bodyContent = slots.join('\n');
+  }
+
+  // Only show border on compact surah pages (Al-Fatiha style), not full 15-line pages
+  const border = (isSurahStart && !isFullPage) ? 'border:2px solid #C8A96E;border-radius:4px;' : '';
 
   return `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <style>
-    @font-face {
-      font-family: 'QCF_P${pageNumber}';
-      src: url(data:font/woff2;base64,${fontBase64});
-      font-display: block;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background-color: #FAF8F2;
-      color: #1A1A2E;
-      font-family: 'QCF_P${pageNumber}';
-      font-size: 28px;
-      line-height: 1.9;
-      word-spacing: -2px;
-      direction: rtl;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 16px;
-      -webkit-user-select: none;
-      user-select: none;
-      overflow: hidden;
-    }
-    .line {
-      text-align: justify;
-      width: 100%;
-    }
-    .line-centered {
-      text-align: center;
-      width: 100%;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<style>
+@font-face{font-family:'QCF';src:url(data:font/woff2;base64,${fontBase64});font-display:block}
+@font-face{font-family:'SurahNames';src:url('https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf') format('truetype');font-display:swap}
+${bismillahFontFace}
+*{margin:0;padding:0;box-sizing:border-box}
+html{height:100%;overflow:hidden}
+body{height:100%;background:#FAF8F2;color:#1A1A2E;font-family:'QCF';font-size:7vw;direction:rtl;display:flex;flex-direction:column;padding:0 4vw;-webkit-user-select:none;user-select:none;position:relative;${border}}
+.l,.lc,.empty{height:calc(100%/15);display:flex;align-items:center;white-space:nowrap;transform-origin:right center}
+.l{justify-content:flex-start}
+.lc{justify-content:center;transform-origin:center center}
+.group{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh;margin-bottom:10vh}
+.group .l,.group .lc{height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:min(7vw,28px)}
+.sb{position:relative;text-align:center;direction:ltr;margin:0 2vw 0.5vh}
+.sb svg{width:100%;height:auto;display:block}
+.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(7vw,30px);color:#5C4033;white-space:nowrap}
+.sb.slot{height:calc(100%/15);display:flex;align-items:center;justify-content:center;margin:0}
+.sb.slot svg{height:90%;width:auto}
+.bsm{display:flex;align-items:center;justify-content:center;color:#1A1A2E;font-family:'QCF1';font-size:min(5.5vw,24px);white-space:nowrap}
+.bsm.slot{height:calc(100%/15)}
+.rub{font-family:'Noto Naskh Arabic',serif;color:#B8965A;font-size:1.8em;line-height:0.5;vertical-align:middle}
+.w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.w.sel,.rub.sel{background:rgba(184,150,90,0.25);border-radius:4px}
+</style>
 </head>
 <body>
-${lineDivs}
+${bodyContent}
+<script>
+document.fonts.ready.then(function(){
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    var els=document.querySelectorAll('.l');
+    for(var i=0;i<els.length;i++){
+      if(els[i].parentElement&&els[i].parentElement.classList.contains('group'))continue;
+      var cw=els[i].clientWidth;
+      var sw=els[i].scrollWidth;
+      if(sw>0&&cw>0){
+        var s=cw/sw;
+        if(s>0.3&&s<1.5)els[i].style.transform='scaleX('+s+')';
+      }
+    }
+  })});
+});
+
+// --- Ayah selection ---
+var sel={active:false,startS:0,startA:0,endS:0,endA:0};
+var debounce=0;
+
+function getAyah(el){
+  while(el&&!el.dataset.s)el=el.parentElement;
+  if(!el||!el.dataset.s)return null;
+  return{s:+el.dataset.s,a:+el.dataset.a};
+}
+
+function clearSelection(){
+  document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
+  sel.active=false;
+  postMsg({type:'deselect'});
+}
+
+function highlightRange(s1,a1,s2,a2){
+  document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
+  var spans=document.querySelectorAll('[data-s]');
+  var inRange=false,pastEnd=false;
+  for(var i=0;i<spans.length;i++){
+    var sp=spans[i],ss=+sp.dataset.s,sa=+sp.dataset.a;
+    if(ss===s1&&sa===a1)inRange=true;
+    if(inRange&&pastEnd&&!(ss===s2&&sa===a2)){inRange=false;break;}
+    if(inRange)sp.classList.add('sel');
+    if(ss===s2&&sa===a2)pastEnd=true;
+  }
+}
+
+function postMsg(data){
+  if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify(data));
+}
+
+document.body.addEventListener('click',function(e){
+  var now=Date.now();
+  if(now-debounce<150)return;
+  debounce=now;
+
+  var ayah=getAyah(e.target);
+  if(!ayah){clearSelection();return;}
+
+  if(sel.active){
+    // Second tap: same ayah = deselect, different = extend range
+    if(ayah.s===sel.startS&&ayah.a===sel.startA&&ayah.s===sel.endS&&ayah.a===sel.endA){
+      clearSelection();return;
+    }
+    // Extend range: determine order by DOM position
+    var first=ayah,last={s:sel.startS,a:sel.startA};
+    var spans=document.querySelectorAll('[data-s]');
+    for(var i=0;i<spans.length;i++){
+      var ss=+spans[i].dataset.s,sa=+spans[i].dataset.a;
+      if(ss===sel.startS&&sa===sel.startA){first={s:sel.startS,a:sel.startA};last=ayah;break;}
+      if(ss===ayah.s&&sa===ayah.a){first=ayah;last={s:sel.startS,a:sel.startA};break;}
+    }
+    sel.startS=first.s;sel.startA=first.a;sel.endS=last.s;sel.endA=last.a;
+    highlightRange(first.s,first.a,last.s,last.a);
+    postMsg({type:'select',startSurah:first.s,startAyah:first.a,endSurah:last.s,endAyah:last.a,x:e.clientX,y:e.clientY});
+  } else {
+    // First tap: select single ayah
+    sel.active=true;
+    sel.startS=ayah.s;sel.startA=ayah.a;sel.endS=ayah.s;sel.endA=ayah.a;
+    highlightRange(ayah.s,ayah.a,ayah.s,ayah.a);
+    postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:e.clientX,y:e.clientY});
+  }
+});
+</script>
 </body>
 </html>`;
 }
