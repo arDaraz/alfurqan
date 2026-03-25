@@ -200,7 +200,11 @@ document.fonts.ready.then(function(){
 
 // --- Ayah selection ---
 var sel={active:false,startS:0,startA:0,endS:0,endA:0};
-var debounce=0;
+var LONG_PRESS_DELAY=300;
+var longPressTimer=null;
+var isDragging=false;
+var touchStartAyah=null;
+var rafPending=false;
 
 function getAyah(el){
   while(el&&!el.dataset.s)el=el.parentElement;
@@ -211,6 +215,8 @@ function getAyah(el){
 function clearSelection(){
   document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
   sel.active=false;
+  isDragging=false;
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
   postMsg({type:'deselect'});
 }
 
@@ -231,37 +237,84 @@ function postMsg(data){
   if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify(data));
 }
 
-document.body.addEventListener('click',function(e){
-  var now=Date.now();
-  if(now-debounce<150)return;
-  debounce=now;
+function orderByDom(a,b){
+  var spans=document.querySelectorAll('[data-s]');
+  for(var i=0;i<spans.length;i++){
+    var ss=+spans[i].dataset.s,sa=+spans[i].dataset.a;
+    if(ss===a.s&&sa===a.a)return[a,b];
+    if(ss===b.s&&sa===b.a)return[b,a];
+  }
+  return[a,b];
+}
 
-  var ayah=getAyah(e.target);
-  if(!ayah){clearSelection();return;}
-
-  if(sel.active){
-    // Second tap: same ayah = deselect, different = extend range
-    if(ayah.s===sel.startS&&ayah.a===sel.startA&&ayah.s===sel.endS&&ayah.a===sel.endA){
-      clearSelection();return;
-    }
-    // Extend range: determine order by DOM position
-    var first=ayah,last={s:sel.startS,a:sel.startA};
-    var spans=document.querySelectorAll('[data-s]');
-    for(var i=0;i<spans.length;i++){
-      var ss=+spans[i].dataset.s,sa=+spans[i].dataset.a;
-      if(ss===sel.startS&&sa===sel.startA){first={s:sel.startS,a:sel.startA};last=ayah;break;}
-      if(ss===ayah.s&&sa===ayah.a){first=ayah;last={s:sel.startS,a:sel.startA};break;}
-    }
-    sel.startS=first.s;sel.startA=first.a;sel.endS=last.s;sel.endA=last.a;
-    highlightRange(first.s,first.a,last.s,last.a);
-    postMsg({type:'select',startSurah:first.s,startAyah:first.a,endSurah:last.s,endAyah:last.a,x:e.clientX,y:e.clientY});
-  } else {
-    // First tap: select single ayah
+document.body.addEventListener('touchstart',function(e){
+  var t=e.touches[0];
+  if(!t)return;
+  var ayah=getAyah(document.elementFromPoint(t.clientX,t.clientY));
+  if(!ayah){return;}
+  touchStartAyah=ayah;
+  longPressTimer=setTimeout(function(){
+    isDragging=true;
     sel.active=true;
     sel.startS=ayah.s;sel.startA=ayah.a;sel.endS=ayah.s;sel.endA=ayah.a;
     highlightRange(ayah.s,ayah.a,ayah.s,ayah.a);
-    postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:e.clientX,y:e.clientY});
+  },LONG_PRESS_DELAY);
+},{passive:true});
+
+document.body.addEventListener('touchmove',function(e){
+  if(!isDragging){
+    if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+    return;
   }
+  e.preventDefault();
+  if(rafPending)return;
+  var t=e.touches[0];
+  if(!t)return;
+  var cx=t.clientX,cy=t.clientY;
+  rafPending=true;
+  requestAnimationFrame(function(){
+    rafPending=false;
+    var el=document.elementFromPoint(cx,cy);
+    var ayah=getAyah(el);
+    if(!ayah)return;
+    var ordered=orderByDom(touchStartAyah,ayah);
+    sel.startS=ordered[0].s;sel.startA=ordered[0].a;
+    sel.endS=ordered[1].s;sel.endA=ordered[1].a;
+    highlightRange(sel.startS,sel.startA,sel.endS,sel.endA);
+  });
+},{passive:false});
+
+document.body.addEventListener('touchend',function(e){
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+  if(isDragging){
+    isDragging=false;
+    var t=e.changedTouches[0];
+    var x=t?t.clientX:0,y=t?t.clientY:0;
+    postMsg({type:'select',startSurah:sel.startS,startAyah:sel.startA,endSurah:sel.endS,endAyah:sel.endA,x:x,y:y});
+    return;
+  }
+  if(!touchStartAyah)return;
+  var ayah=touchStartAyah;
+  touchStartAyah=null;
+  var t2=e.changedTouches[0];
+  var tx=t2?t2.clientX:0,ty=t2?t2.clientY:0;
+
+  if(sel.active){
+    var isSelected=false;
+    var spans=document.querySelectorAll('[data-s="'+ayah.s+'"][data-a="'+ayah.a+'"]');
+    for(var i=0;i<spans.length;i++){if(spans[i].classList.contains('sel')){isSelected=true;break;}}
+    if(isSelected){clearSelection();return;}
+  }
+  sel.active=true;
+  sel.startS=ayah.s;sel.startA=ayah.a;sel.endS=ayah.s;sel.endA=ayah.a;
+  highlightRange(ayah.s,ayah.a,ayah.s,ayah.a);
+  postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:tx,y:ty});
+});
+
+document.body.addEventListener('touchcancel',function(){
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+  isDragging=false;
+  touchStartAyah=null;
 });
 </script>
 </body>
