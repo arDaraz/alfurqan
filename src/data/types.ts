@@ -69,6 +69,12 @@ export interface AyahSelection {
 
 export type AyahActionType = 'play' | 'tafsir' | 'bookmark' | 'copy' | 'share' | 'wordByWord';
 
+export interface Bookmark {
+  surahNumber: number;
+  ayahNumber: number;
+  createdAt: number; // Date.now()
+}
+
 export interface MushafPageData {
   pageNumber: number;
   words: MushafWord[];
