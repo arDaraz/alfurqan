@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 01.1-01-PLAN.md (QCF Mushaf data layer)
-last_updated: "2026-03-23T21:21:50.635Z"
+stopped_at: Completed 260325-wmk (wire up ayah popup actions)
+last_updated: "2026-03-25T21:37:38.168Z"
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -71,6 +71,7 @@ Recent decisions affecting current work:
 - [Phase 01-05]: Removed scrollOffset entirely from store/types/hooks -- ayah-index-based restoration via scrollToIndex is deterministic across devices
 - [Phase 01-05]: Used useCallback for load functions in data hooks to enable both mount-time fetch and external retry with stable references
 - [Phase 01.1]: Widened mushaf_words count validation to 75K-90K (actual 83,665 vs estimated ~77K from quran.com API)
+- [Phase 260325-wmk]: Used RN Share.share() instead of expo-sharing for text -- expo-sharing requires file URI
 
 ### Pending Todos
 
@@ -85,8 +86,14 @@ None yet.
 - [Phase 2]: On-device ASR integration (whisper.rn + tarteel-ai model in GGML) has limited production precedent -- highest risk component
 - [Phase 1]: Arabic Uthmani text rendering must be validated on real physical devices early -- known cross-platform pitfall
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260325-wmk | Wire up 6 ayah popup actions (copy, share, bookmark, play audio, tafsir, word-by-word) | 2026-03-25 | de36942 | [260325-wmk-wire-up-the-6-ayah-popup-actions-copy-sh](./quick/260325-wmk-wire-up-the-6-ayah-popup-actions-copy-sh/) |
+
 ## Session Continuity
 
-Last session: 2026-03-23T21:21:50.632Z
-Stopped at: Completed 01.1-01-PLAN.md (QCF Mushaf data layer)
+Last session: 2026-03-25T21:37:34.304Z
+Last activity: 2026-03-25 - Completed quick task 260325-wmk: wire up 6 ayah popup actions
 Resume file: None
