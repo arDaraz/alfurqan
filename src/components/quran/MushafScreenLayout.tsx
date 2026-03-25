@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getSurahForPage } from '../../data/quranRepository';
+import { handleAyahAction } from '../../actions/ayahActions';
 import { MushafReader } from './MushafReader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
 import { theme } from '../../constants/theme';
+import type { AyahActionType, AyahSelection } from '../../data/types';
 
 interface Props {
   loadInitialPage: () => Promise<{ page: number; surahName: string }>;
@@ -37,6 +39,10 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleAction = useCallback((action: AyahActionType, selection: AyahSelection) => {
+    handleAyahAction(action, selection);
+  }, []);
 
   const handlePageChange = useCallback(async (pageNumber: number) => {
     try {
@@ -74,7 +80,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       ) : error ? (
         <ErrorState message={error} onRetry={loadData} />
       ) : initialPage !== null ? (
-        <MushafReader initialPage={initialPage} onPageChange={handlePageChange} />
+        <MushafReader initialPage={initialPage} onPageChange={handlePageChange} onAyahAction={handleAction} />
       ) : null}
     </View>
   );
