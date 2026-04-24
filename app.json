@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Tasmi'",
-    "slug": "tasmi",
+    "name": "Al Furqan",
+    "slug": "alfurqan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "tasmi",
+    "scheme": "alfurqan",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.tasmi.app",
+      "bundleIdentifier": "com.alfurqan.app",
       "icon": "./assets/expo.icon"
     },
     "android": {
-      "package": "com.tasmi.app",
+      "package": "com.alfurqan.app",
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F2",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
