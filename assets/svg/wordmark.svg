@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" fill="none">
+  
+  <defs>
+    <clipPath id="m"><rect x="0" y="0" width="80" height="80" rx="16"></rect></clipPath>
+  </defs>
+  
+  <g transform="translate(8 8)" clip-path="url(#m)">
+    <rect width="80" height="80" fill="#0B5D53"></rect>
+    <rect x="6" y="6" width="68" height="68" rx="12" fill="none" stroke="#B8923F" stroke-width="1" opacity=".55"></rect>
+    <g transform="translate(40 40)" stroke="#B8923F" stroke-width=".9" fill="none">
+      <rect x="-20" y="-20" width="40" height="40" rx="3"></rect>
+      <rect x="-20" y="-20" width="40" height="40" rx="3" transform="rotate(45)"></rect>
+      <circle r="14" opacity=".5"></circle>
+    </g>
+    <g transform="translate(40 40)" fill="#E2C480">
+      <path d="M -11 5 Q -11 -2 -4 -2 L 4 -2 Q 11 -2 11 5 L 11 9 Q 11 13 6 13 L -6 13 Q -11 13 -11 9 Z"></path>
+      <rect x="-1.3" y="-16" width="2.6" height="19" rx="1"></rect>
+      <circle cx="0" cy="-19" r="1.7"></circle>
+    </g>
+  </g>
+  
+  <text x="352" y="44" font-family="Reem Kufi, KFGQPC-Uthmani, sans-serif" font-size="42" font-weight="600" fill="#0E2724" text-anchor="end" direction="rtl">الفرقان</text>
+  
+  <text x="352" y="76" font-family="Manrope, sans-serif" font-size="13" font-weight="600" letter-spacing="4" fill="#4A635F" text-anchor="end">A L F U R Q A N</text>
+  
+  <line x1="102" y1="20" x2="102" y2="76" stroke="#B8923F" stroke-width="1" opacity=".4"></line>
+</svg>

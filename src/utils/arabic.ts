@@ -19,3 +19,16 @@ export function normalizeArabic(text: string): string {
 export function cleanUthmaniForDisplay(text: string): string {
   return text.replace(/[\u06D6-\u06DC\u06DF-\u06E4\u06EA-\u06ED]/g, '');
 }
+
+/**
+ * Normalize Uthmani text for clipboard/sharing — convert Uthmani-specific
+ * characters to standard Arabic so it renders correctly in any app/font.
+ */
+export function uthmaniToPlainArabic(text: string): string {
+  return text
+    .replace(/\u0671/g, '\u0627')           // ٱ (alif wasla) → ا (alif)
+    .replace(/[\u06D6-\u06DC\u06DF-\u06E4\u06EA-\u06ED]/g, '')  // strip waqf/combining marks
+    .replace(/\u0640/g, '')                  // strip tatweel (kashida)
+    .replace(/\s+/g, ' ')                    // collapse whitespace
+    .trim();
+}

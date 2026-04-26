@@ -1,22 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 
 interface EmptySearchResultProps {
   query?: string;
 }
 
-export function EmptySearchResult({ query }: EmptySearchResultProps) {
+export function EmptySearchResult({ query: _query }: EmptySearchResultProps) {
+  const theme = useTheme();
   const strings = useStrings();
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
       <Ionicons
         name="search-outline"
-        size={48}
-        color={theme.colors.textDisabled}
+        size={44}
+        color={theme.semantic.fgSubtle}
         style={styles.icon}
       />
       <Text style={styles.heading}>{strings.noResults}</Text>
@@ -25,28 +27,28 @@ export function EmptySearchResult({ query }: EmptySearchResultProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing['3xl'],
-  },
-  icon: {
-    marginBottom: theme.spacing.md,
-  },
-  heading: {
-    fontSize: theme.typography.body.size,
-    fontWeight: '400',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  body: {
-    fontSize: theme.typography.label.size,
-    fontWeight: '400',
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing['3xl'],
+      alignItems: 'center',
+    },
+    icon: {
+      marginBottom: theme.spacing.md,
+    },
+    heading: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 16,
+      color: theme.semantic.fg,
+      textAlign: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    body: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 13,
+      color: theme.semantic.fgMuted,
+      textAlign: 'center',
+    },
+  });
+}

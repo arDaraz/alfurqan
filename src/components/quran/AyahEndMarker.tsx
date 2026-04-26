@@ -1,40 +1,45 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { toArabicIndic } from '../../utils/arabic';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { AyahRosette, type AyahRosetteVariant } from '../brand/AyahRosette';
+
+const VARIANT_SIZE = { ayah: 32, inline: 24, compact: 18 } as const;
+const VARIANT_FONT = { ayah: 11, inline: 9, compact: 7 } as const;
 
 interface AyahEndMarkerProps {
   ayahNumber: number;
+  variant?: AyahRosetteVariant;
   isSelected?: boolean;
 }
 
-/**
- * Renders the ornamental end-of-ayah symbol inline.
- * Uses Unicode U+06DD (۝) followed by Arabic-Indic numeral.
- */
-export function AyahEndMarker({ ayahNumber, isSelected = false }: AyahEndMarkerProps) {
+export function AyahEndMarker({ ayahNumber, variant = 'inline', isSelected = false }: AyahEndMarkerProps) {
+  const theme = useTheme();
+  const color = isSelected ? theme.semantic.primary : theme.semantic.accent;
+  const size = VARIANT_SIZE[variant];
+  const fontSize = VARIANT_FONT[variant];
+
   return (
-    <Text
-      style={[
-        styles.marker,
-        { color: isSelected ? theme.colors.primary : theme.colors.accent },
-      ]}
-    >
-      {renderAyahEndMarker(ayahNumber, isSelected)}
-    </Text>
+    <View style={{ width: size, height: size }}>
+      <AyahRosette variant={variant} color={color} />
+      <Text style={[styles.number, { color, width: size, height: size, lineHeight: size, fontSize }]}>
+        {toArabicIndic(ayahNumber)}
+      </Text>
+    </View>
   );
 }
 
-/**
- * Returns the inline end-of-ayah marker string for use inside Text components.
- * Format: ۝ followed by Arabic-Indic numeral of the ayah number.
- */
-export function renderAyahEndMarker(ayahNumber: number, _isSelected: boolean = false): string {
-  return `\u06DD${toArabicIndic(ayahNumber)}`;
+export function renderAyahEndMarker(ayahNumber: number): string {
+  return `۝${toArabicIndic(ayahNumber)}`;
 }
 
 const styles = StyleSheet.create({
-  marker: {
-    fontSize: theme.typography.label.size,
+  number: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    textAlign: 'center',
+    fontFamily: 'Manrope',
+    fontWeight: '700',
   },
 });

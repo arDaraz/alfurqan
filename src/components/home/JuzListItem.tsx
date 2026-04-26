@@ -1,89 +1,141 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { Juz } from '../../data/types';
 import { toArabicIndic } from '../../utils/arabic';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { KhatamStar } from '../brand/KhatamStar';
 
 interface JuzListItemProps {
   juz: Juz;
   surahNames: Map<number, string>;
-  onPress: (juzNumber: number) => void;
+  onSelect: (juzNumber: number) => void;
+  onOpen: (juzNumber: number) => void;
+  isActive?: boolean;
 }
 
-export function JuzListItem({ juz, surahNames, onPress }: JuzListItemProps) {
+export function JuzListItem({ juz, surahNames, onSelect, onOpen, isActive = false }: JuzListItemProps) {
+  const theme = useTheme();
   const arabicNumber = toArabicIndic(juz.number);
   const surahName = surahNames.get(juz.startSurah) || '';
+  const styles = createStyles(theme);
+
+  const lastTapRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handlePress = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+      lastTapRef.current = 0;
+      onOpen(juz.number);
+    } else {
+      lastTapRef.current = now;
+      tapTimerRef.current = setTimeout(() => {
+        onSelect(juz.number);
+        lastTapRef.current = 0;
+      }, 300);
+    }
+  };
+
+  const strokeColor = isActive ? theme.semantic.primary : theme.semantic.accent;
+  const fillColor = theme.semantic.bg;
+  const numberColor = isActive ? theme.semantic.primary : theme.semantic.accent;
 
   return (
     <Pressable
-      onPress={() => onPress(juz.number)}
+      onPress={handlePress}
+      onLongPress={() => onOpen(juz.number)}
+      delayLongPress={400}
       accessibilityLabel={`الجزء ${juz.number}`}
       accessibilityRole="button"
-      style={({ pressed }) => [
-        styles.container,
-        pressed && styles.pressed,
-      ]}
+      style={[styles.container, isActive && styles.activeContainer]}
     >
-      {/* Circle with number */}
-      <View style={styles.circle}>
-        <Text style={styles.circleText}>{arabicNumber}</Text>
+      {isActive && <View style={styles.activeBar} />}
+
+      <View style={styles.badge}>
+        <KhatamStar size={44} color={strokeColor} fill={fillColor} strokeWidth={1} />
+        <Text style={[styles.badgeNumber, { color: numberColor }]}>{arabicNumber}</Text>
       </View>
 
-      {/* Juz info */}
       <View style={styles.textContent}>
-        <Text style={styles.heading}>الجزء {arabicNumber}</Text>
+        <Text style={[styles.heading, isActive && styles.headingActive]} numberOfLines={1}>
+          الجزء
+        </Text>
         <Text style={styles.subtitle} numberOfLines={1}>
-          يبدأ من سورة {surahName}، الآية {toArabicIndic(juz.startAyah)}
+          يبدأ من سورة {surahName} الآية <Text style={styles.ayahNum}>{toArabicIndic(juz.startAyah)}</Text>
         </Text>
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    height: 64,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: 'transparent',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.divider,
-  },
-  pressed: {
-    opacity: 0.7,
-    backgroundColor: `${theme.colors.divider}40`,
-  },
-  circle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#C9A84C',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: theme.spacing.md,
-  },
-  circleText: {
-    fontSize: 13,
-    color: theme.colors.text,
-    textAlign: 'center',
-  },
-  textContent: {
-    flex: 1,
-    alignItems: 'flex-end',
-    paddingRight: theme.spacing.sm,
-  },
-  heading: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    writingDirection: 'rtl',
-    marginBottom: 2,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: theme.colors.textSecondary,
-    writingDirection: 'rtl',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      marginHorizontal: 10,
+      marginVertical: 2,
+      borderRadius: theme.radii.md,
+      position: 'relative',
+    },
+    activeContainer: {
+      backgroundColor: theme.semantic.primaryTint,
+    },
+    activeBar: {
+      position: 'absolute',
+      top: 6,
+      bottom: 6,
+      left: 0,
+      width: 3,
+      borderRadius: 2,
+      backgroundColor: theme.semantic.primary,
+    },
+    badge: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 6,
+    },
+    badgeNumber: {
+      position: 'absolute',
+      fontFamily: theme.fonts.latin,
+      fontSize: 15,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+    textContent: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    heading: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 19,
+      color: theme.semantic.fg,
+      lineHeight: 24,
+      textAlign: 'left',
+      writingDirection: 'rtl',
+    },
+    headingActive: {
+      color: theme.semantic.primary,
+    },
+    subtitle: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 15,
+      color: theme.semantic.fgMuted,
+      marginTop: 8,
+      textAlign: 'left',
+      writingDirection: 'rtl',
+      lineHeight: 28,
+    },
+    ayahNum: {
+      fontSize: 22,
+      lineHeight: 28,
+      textAlignVertical: 'center',
+    },
+  });
+}

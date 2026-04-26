@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useTheme } from '../../hooks/useTheme';
 import type { AyahSelection, AyahActionType } from '../../data/types';
 
 interface AyahPopupProps {
@@ -11,119 +12,189 @@ interface AyahPopupProps {
   onDismiss: () => void;
 }
 
-const POPUP_HEIGHT = 72;
-const POPUP_WIDTH = 280;
-const ARROW_SIZE = 8;
+const POPUP_HEIGHT = 65;
+const POPUP_WIDTH = 380;
+const TAIL_SIZE = 12;
 
-const actions: Array<{ key: AyahActionType; icon: string; label: string }> = [
-  { key: 'play', icon: 'play', label: 'تشغيل' },
-  { key: 'tafsir', icon: 'book-open-variant', label: 'تفسير' },
-  { key: 'bookmark', icon: 'bookmark-outline', label: 'حفظ' },
-  { key: 'copy', icon: 'content-copy', label: 'نسخ' },
-  { key: 'share', icon: 'share-variant', label: 'مشاركة' },
-  { key: 'wordByWord', icon: 'abjad-arabic', label: 'كلمة' },
+type SvgEl =
+  | { type: 'path'; d: string }
+  | { type: 'circle'; cx: number; cy: number; r: number }
+  | { type: 'rect'; x: number; y: number; width: number; height: number; rx?: number };
+
+interface ActionDef {
+  key: AyahActionType;
+  label: string;
+  elements: SvgEl[];
+  primary?: boolean;
+}
+
+const ACTIONS: ActionDef[] = [
+  { key: 'play', label: 'تشغيل', primary: true, elements: [
+    { type: 'path', d: 'M8 5v14l11-7z' },
+  ]},
+  { key: 'tafsir', label: 'تفسير', elements: [
+    { type: 'path', d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' },
+    { type: 'path', d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' },
+  ]},
+  { key: 'bookmark', label: 'حفظ', elements: [
+    { type: 'path', d: 'm19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z' },
+  ]},
+  { key: 'copy', label: 'نسخ', elements: [
+    { type: 'rect', x: 9, y: 9, width: 13, height: 13, rx: 2 },
+    { type: 'path', d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' },
+  ]},
+  { key: 'share', label: 'مشاركة', elements: [
+    { type: 'circle', cx: 18, cy: 5, r: 3 },
+    { type: 'circle', cx: 6, cy: 12, r: 3 },
+    { type: 'circle', cx: 18, cy: 19, r: 3 },
+    { type: 'path', d: 'm8.59 13.51 6.83 3.98' },
+    { type: 'path', d: 'm15.41 6.51-6.82 3.98' },
+  ]},
+  { key: 'wordByWord', label: 'كلمة', elements: [
+    { type: 'path', d: 'M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2' },
+    { type: 'path', d: 'M9 20h6' },
+    { type: 'path', d: 'M12 4v16' },
+  ]},
 ];
 
 export function AyahPopup({ selection, x, y, onAction, onDismiss }: AyahPopupProps) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
+
   const screenWidth = Dimensions.get('window').width;
-  const showBelow = y < POPUP_HEIGHT + ARROW_SIZE + 20;
-  const top = showBelow ? y + ARROW_SIZE + 10 : y - POPUP_HEIGHT - ARROW_SIZE - 10;
+  const showBelow = y < POPUP_HEIGHT + TAIL_SIZE + 20;
+  const top = showBelow ? y + TAIL_SIZE + 8 : y - POPUP_HEIGHT - TAIL_SIZE - 8;
   const clampedLeft = Math.max(8, Math.min(x - POPUP_WIDTH / 2, screenWidth - POPUP_WIDTH - 8));
+  const tailLeft = Math.max(20, Math.min(x - clampedLeft - TAIL_SIZE / 2, POPUP_WIDTH - 32));
 
   return (
     <View style={[styles.container, { top, left: clampedLeft }]} pointerEvents="box-none">
-      {/* Arrow */}
-      <View style={[
-        styles.arrow,
-        showBelow ? styles.arrowUp : styles.arrowDown,
-        { left: Math.max(20, x - clampedLeft - ARROW_SIZE) },
-      ]} />
-      {/* Popup body */}
       <View style={styles.popup}>
-        {/* X close button */}
-        <Pressable onPress={onDismiss} style={styles.closeBtn} hitSlop={8}>
-          <MaterialCommunityIcons name="close" size={16} color="#9CA3AF" />
+        {/* Under forceRTL, flexDirection:'row' renders right-to-left.
+            First JSX child → rightmost. So: close → sep → actions.
+            Visual: [× (right)] [|] [play] ... [word (left)] */}
+        <Pressable onPress={onDismiss} accessibilityRole="button" accessibilityLabel="إغلاق" hitSlop={6}>
+          {({ pressed }) => (
+            <View style={[styles.close, pressed && styles.closePressed]}>
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+                stroke={theme.semantic.fgMuted} strokeWidth={2} strokeLinecap="round">
+                <Path d="M18 6L6 18" />
+                <Path d="M6 6l12 12" />
+              </Svg>
+            </View>
+          )}
         </Pressable>
-        {/* Actions row */}
-        <View style={styles.actionsRow}>
-          {actions.map((a) => (
-            <Pressable
-              key={a.key}
-              style={styles.actionBtn}
-              onPress={() => onAction(a.key, selection)}
-            >
-              <MaterialCommunityIcons name={a.icon as any} size={20} color="#5C4033" />
-              <Text style={styles.actionLabel}>{a.label}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <View style={styles.sep} />
+        {ACTIONS.map((a) => (
+          <Pressable
+            key={a.key}
+            onPress={() => onAction(a.key, selection)}
+            accessibilityRole="button"
+            accessibilityLabel={a.label}
+          >
+            {({ pressed }) => (
+              <View style={[styles.act, pressed && styles.actPressed]}>
+                <Svg width={20} height={20} viewBox="0 0 24 24"
+                  fill={a.primary ? theme.semantic.primary : 'none'}
+                  stroke={a.primary ? 'none' : theme.semantic.fg}
+                  strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                  {a.elements.map((el, i) => {
+                    if (el.type === 'path') return <Path key={i} d={el.d} />;
+                    if (el.type === 'circle') return <Circle key={i} cx={el.cx} cy={el.cy} r={el.r} />;
+                    return <Rect key={i} x={el.x} y={el.y} width={el.width} height={el.height} rx={el.rx} />;
+                  })}
+                </Svg>
+                <Text style={styles.actLabel}>{a.label}</Text>
+              </View>
+            )}
+          </Pressable>
+        ))}
       </View>
+      <View
+        style={[
+          styles.tailBase,
+          showBelow ? styles.tailUp : styles.tailDown,
+          { left: tailLeft },
+        ]}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    zIndex: 100,
-  },
-  popup: {
-    backgroundColor: '#FFF8F0',
-    borderWidth: 1,
-    borderColor: '#B8965A',
-    borderRadius: 10,
-    paddingTop: 2,
-    paddingBottom: 6,
-    paddingHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    marginTop: 16,
-  },
-  actionBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  actionLabel: {
-    fontSize: 9,
-    color: '#5C4033',
-    marginTop: 2,
-    fontWeight: '500' as const,
-  },
-  arrow: {
-    position: 'absolute',
-    width: 0,
-    height: 0,
-    borderLeftWidth: ARROW_SIZE,
-    borderRightWidth: ARROW_SIZE,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-  },
-  arrowUp: {
-    top: -ARROW_SIZE,
-    borderBottomWidth: ARROW_SIZE,
-    borderBottomColor: '#B8965A',
-  },
-  arrowDown: {
-    bottom: -ARROW_SIZE,
-    borderTopWidth: ARROW_SIZE,
-    borderTopColor: '#B8965A',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      zIndex: 100,
+      width: POPUP_WIDTH,
+    },
+    popup: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      backgroundColor: theme.semantic.bgRaised,
+      borderWidth: 1,
+      borderColor: theme.semantic.borderGold,
+      borderRadius: theme.radii.md,
+      padding: 6,
+      gap: 2,
+      ...theme.elevation.shadow3,
+    },
+    act: {
+      flex: 1,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 8,
+      paddingBottom: 6,
+      paddingHorizontal: 12,
+      borderRadius: theme.radii.sm,
+      gap: 4,
+      minWidth: 48,
+    },
+    actPressed: {
+      backgroundColor: theme.semantic.primaryTint,
+    },
+    actLabel: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 11,
+      fontWeight: '500',
+      color: theme.semantic.fgMuted,
+      lineHeight: 13,
+    },
+    sep: {
+      width: 1,
+      backgroundColor: theme.semantic.border,
+      marginHorizontal: 2,
+      marginVertical: 6,
+    },
+    close: {
+      flex: 1,
+      width: 42,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: theme.radii.sm,
+    },
+    closePressed: {
+      backgroundColor: theme.semantic.bgSunken,
+    },
+    // Downward tail — a rotated square with two borders, matching the design's CSS pseudo-element.
+    tailBase: {
+      position: 'absolute',
+      width: TAIL_SIZE,
+      height: TAIL_SIZE,
+      backgroundColor: theme.semantic.bgRaised,
+      borderColor: theme.semantic.borderGold,
+      transform: [{ rotate: '45deg' }],
+    },
+    tailDown: {
+      bottom: -TAIL_SIZE / 2 + 1,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+    tailUp: {
+      top: -TAIL_SIZE / 2 + 1,
+      borderLeftWidth: 1,
+      borderTopWidth: 1,
+    },
+  });
+}

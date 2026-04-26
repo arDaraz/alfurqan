@@ -3,16 +3,25 @@ import type { AppLanguage } from '../utils/locale';
 
 const ar = {
   // App
-  appTitle: 'تسميع',
+  appTitle: 'الفرقان',
+  appTitleFull: 'مصحف الفرقان',
+  appWordmarkRoman: 'ALFURQAN',
+  appTagline: 'Recite. We Listen.',
 
-  // Tabs
+  // Tabs (5-col bar — Home · Surahs · FAB · Review · Profile)
   tabHome: 'الرئيسية',
+  tabSurahs: 'السور',
+  tabReview: 'مراجعة',
+  tabProfile: 'الإعدادات',
   tabSettings: 'الإعدادات',
 
   // Home
+  greetingContinueLabel: 'تابع',
+  greetingResume: 'استأنف',
+  greetingStreak: (n: number) => `سلسلة ${n} يوم`,
   searchPlaceholder: 'ابحث عن سورة...',
-  tabSurah: 'سورة',
-  tabJuz: 'جزء',
+  tabSurah: 'السور',
+  tabJuz: 'الأجزاء',
   ayat: 'آية',
   makki: 'مكية',
   madani: 'مدنية',
@@ -52,25 +61,87 @@ const ar = {
   // Reader
   continueReading: 'متابعة القراءة',
   back: 'رجوع',
+  pageIndicator: (page: number, hizb: number) => `صفحة ${page} · حزب ${hizb}`,
+  juzShortLabel: (n: number) => `جزء ${n}`,
 
   // Mushaf
   mushafPageIndicator: (n: number) => `صفحة ${n} من ٦٠٤`,
   mushafPageLoadError: 'تعذّر تحميل هذه الصفحة. يرجى المحاولة مرة أخرى.',
   mushafFontLoadError: 'تعذّر تحميل خط المصحف. يرجى إعادة تشغيل التطبيق.',
+
+  // Reader toolbar
+  toolBookmark: 'إشارة',
+  toolListen: 'استماع',
+  toolTasmi: 'تسميع',
+  toolTranslation: 'ترجمة',
+  toolInfo: 'معلومات',
+
+  // Settings — sections
+  settingsTitle: 'الإعدادات',
+  settingsRomanLabel: 'SETTINGS',
+  settingsSectionReading: 'القراءة',
+  settingsSectionAudio: 'الصوت',
+  settingsSectionApp: 'التطبيق',
+  // Settings — rows
+  settingsQuranSize: 'حجم النص القرآني',
+  settingsMushafFont: 'خط المصحف',
+  settingsMushafFontValue: 'KFGQPC Uthmani · Hafs',
+  settingsNightReading: 'القراءة الليلية',
+  settingsNightReadingValue: 'وضع المصحف الليلي',
+  settingsShowTashkeel: 'عرض التشكيل',
+  settingsShowTashkeelValue: 'إظهار الحركات والتنوين',
+  settingsQari: 'القارئ',
+  settingsQariValue: 'مشاري راشد العفاسي',
+  settingsCorrection: 'حساسية التصحيح',
+  settingsCorrectionGentle: 'مرنة',
+  settingsCorrectionStandard: 'متوسطة',
+  settingsCorrectionStrict: 'قوي',
+  settingsLanguage: 'اللغة',
+  settingsLanguageValue: 'العربية',
+  settingsLanguageEnValue: 'English',
+  settingsDailyReminder: 'تذكير يومي',
+  settingsDailyReminderValue: 'بعد صلاة الفجر',
+  settingsAbout: 'حول الفرقان',
+  settingsChange: 'تغيير',
+  settingsThemeMode: 'مظهر التطبيق',
+  settingsThemeLight: 'فاتح',
+  settingsThemeDark: 'داكن',
+  settingsThemeSystem: 'النظام',
+
+  // Practice mode
+  practiceTitle: 'وضع التسميع',
+  practiceSubtitle: 'استمع. سجّل. صحّح.',
+  practiceListening: 'يستمع',
+  practiceListenSample: 'استمع',
+  practiceSkip: 'تخطَّ',
+  practiceMistakeHint: 'انقر الكلمة الحمراء لسماع النطق الصحيح.',
+
+  // Profile / streak
+  streakDays: 'يوم',
+  juzPosition: (juz: number, page: number) => `جزء ${juz} · صفحة ${page}`,
 } as const;
 
 const en = {
-  appTitle: "Tasmi'",
+  appTitle: 'Al Furqan',
+  appTitleFull: 'Mushaf Al Furqan',
+  appWordmarkRoman: 'ALFURQAN',
+  appTagline: 'Recite. We Listen.',
 
-  tabHome: 'Home',
+  tabHome: 'HOME',
+  tabSurahs: 'SURAHS',
+  tabReview: 'REVIEW',
+  tabProfile: 'PROFILE',
   tabSettings: 'Settings',
 
+  greetingContinueLabel: 'Continue',
+  greetingResume: 'Resume',
+  greetingStreak: (n: number) => `${n} day streak`,
   searchPlaceholder: 'Search surahs...',
   tabSurah: 'Surah',
-  tabJuz: 'Juz',
-  ayat: 'ayat',
-  makki: 'Makki',
-  madani: 'Madani',
+  tabJuz: 'Juzʾ',
+  ayat: 'AYAT',
+  makki: 'Meccan',
+  madani: 'Medinan',
 
   errorDefault: 'Unable to load Quran text. Please restart the app.',
   tryAgain: 'Try Again',
@@ -103,44 +174,71 @@ const en = {
 
   continueReading: 'Continue reading',
   back: 'Back',
+  pageIndicator: (page: number, hizb: number) => `PAGE ${page} · ḤIZB ${hizb}`,
+  juzShortLabel: (n: number) => `Juzʾ ${n}`,
 
-  // Mushaf
   mushafPageIndicator: (n: number) => `Page ${n} of 604`,
   mushafPageLoadError: 'Unable to load this page. Please try again.',
   mushafFontLoadError: 'Unable to load Mushaf font. Please restart the app.',
+
+  toolBookmark: 'Bookmark',
+  toolListen: 'Listen',
+  toolTasmi: 'Tasmīʿ',
+  toolTranslation: 'Translation',
+  toolInfo: 'Info',
+
+  settingsTitle: 'Settings',
+  settingsRomanLabel: 'SETTINGS',
+  settingsSectionReading: 'Reading',
+  settingsSectionAudio: 'Audio',
+  settingsSectionApp: 'App',
+  settingsQuranSize: 'Quran text size',
+  settingsMushafFont: 'Mushaf typeface',
+  settingsMushafFontValue: 'KFGQPC Uthmani · Hafs',
+  settingsNightReading: 'Night reading',
+  settingsNightReadingValue: 'Auto-switch at sunset',
+  settingsShowTashkeel: 'Show tashkīl',
+  settingsShowTashkeelValue: 'Display vowel diacritics',
+  settingsQari: 'Reciter',
+  settingsQariValue: 'Mishary Rashid Alafasy',
+  settingsCorrection: 'Correction sensitivity',
+  settingsCorrectionGentle: 'Gentle',
+  settingsCorrectionStandard: 'Standard',
+  settingsCorrectionStrict: 'Strict',
+  settingsLanguage: 'Language',
+  settingsLanguageValue: 'العربية',
+  settingsLanguageEnValue: 'English',
+  settingsDailyReminder: 'Daily reminder',
+  settingsDailyReminderValue: 'After Fajr',
+  settingsAbout: 'About Al Furqan',
+  settingsChange: 'Change',
+  settingsThemeMode: 'Appearance',
+  settingsThemeLight: 'Light',
+  settingsThemeDark: 'Dark',
+  settingsThemeSystem: 'System',
+
+  practiceTitle: 'Practice Mode',
+  practiceSubtitle: 'Listen. Recite. Correct.',
+  practiceListening: 'Listening',
+  practiceListenSample: 'Listen',
+  practiceSkip: 'Skip',
+  practiceMistakeHint: 'Tap the red word to hear correct pronunciation.',
+
+  streakDays: 'DAY',
+  juzPosition: (juz: number, page: number) => `JUZ ${juz} · PAGE ${page}`,
 } as const;
 
+type StringsBase = typeof ar;
+/** Loosen literal types so the en bundle is assignable. */
 export type Strings = {
-  appTitle: string;
-  tabHome: string;
-  tabSettings: string;
-  searchPlaceholder: string;
-  tabSurah: string;
-  tabJuz: string;
-  ayat: string;
-  makki: string;
-  madani: string;
-  errorDefault: string;
-  tryAgain: string;
-  noResults: string;
-  noResultsHint: string;
-  ayahSelected: (n: number) => string;
-  ayahsSelected: (start: number, end: number) => string;
-  clearSelection: string;
-  startPractice: string;
-  practiceComingSoon: string;
-  practiceComingSoonMsg: string;
-  onboarding: readonly { readonly heading: string; readonly body: string }[];
-  getStarted: string;
-  swipeToContinue: string;
-  continueReading: string;
-  back: string;
-  mushafPageIndicator: (n: number) => string;
-  mushafPageLoadError: string;
-  mushafFontLoadError: string;
+  [K in keyof StringsBase]: StringsBase[K] extends string
+    ? string
+    : StringsBase[K] extends readonly { readonly heading: string; readonly body: string }[]
+      ? readonly { readonly heading: string; readonly body: string }[]
+      : StringsBase[K];
 };
 
-const strings: Record<AppLanguage, Strings> = { ar, en };
+const strings: Record<AppLanguage, Strings> = { ar, en } as Record<AppLanguage, Strings>;
 
 export function getStrings(lang: AppLanguage): Strings {
   return strings[lang];
