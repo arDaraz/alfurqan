@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000055',
   },
   sheet: {
+    maxHeight: '80%',
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     backgroundColor: theme.colors.surface,

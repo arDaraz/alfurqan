@@ -809,7 +809,7 @@ git commit -m "feat(recitation): support background playback controls"
 - Page swipe during audio has no visible stale selection/highlight.
 - Text does not overlap on small iPhone simulator viewport.
 
-- [ ] **Step 1: Create UAT checklist**
+- [x] **Step 1: Create UAT checklist**
 
 Create `docs/superpowers/verification/2026-04-27-recitation-audio-uat.md` with sections:
 - Build details
@@ -820,7 +820,7 @@ Create `docs/superpowers/verification/2026-04-27-recitation-audio-uat.md` with s
 - Background audio checks
 - Known limitations from v1 non-goals
 
-- [ ] **Step 2: Polish mockup parity**
+- [x] **Step 2: Polish mockup parity**
 
 Adjust component styling for:
 - mini-player height and bottom progress line
@@ -831,11 +831,11 @@ Adjust component styling for:
 - repeat selected tile
 - RTL transport semantics
 
-- [ ] **Step 3: Verify strings**
+- [x] **Step 3: Verify strings**
 
 Ensure `src/constants/strings.ts` has Arabic and English recitation strings for every visible label, error, and action introduced by the feature.
 
-- [ ] **Step 4: Run automated checks**
+- [x] **Step 4: Run automated checks**
 
 Run:
 
@@ -856,7 +856,9 @@ npx expo run:ios
 
 Fill the UAT checklist with pass/fail notes and exact failures fixed in this task.
 
-- [ ] **Step 6: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/quran/MiniPlayerBar.tsx src/components/quran/MushafBottomToolbar.tsx src/components/quran/PlayerSheet.tsx src/components/quran/ReciterPickerSheet.tsx src/constants/strings.ts docs/superpowers/verification/2026-04-27-recitation-audio-uat.md

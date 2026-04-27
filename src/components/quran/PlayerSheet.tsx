@@ -244,13 +244,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000055',
   },
   sheet: {
-    minHeight: 430,
+    minHeight: 450,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.md,
     paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
   },
   header: {
     flexDirection: 'row',

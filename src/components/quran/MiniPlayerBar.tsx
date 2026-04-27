@@ -41,7 +41,12 @@ export function MiniPlayerBar() {
 
   return (
     <>
-      <View style={[styles.container, isError && styles.errorContainer]}>
+      <View style={[
+        styles.container,
+        isLoading && styles.loadingContainer,
+        isPaused && styles.pausedContainer,
+        isError && styles.errorContainer,
+      ]}>
         <Pressable
           onPress={handlePlayPause}
           style={[styles.roundButton, isLoading && styles.loadingButton]}
@@ -82,7 +87,7 @@ export function MiniPlayerBar() {
 
         <Pressable
           onPress={() => setSheetVisible(true)}
-          style={styles.avatar}
+          style={[styles.avatar, isLoading && styles.loadingAvatar]}
           accessibilityRole="button"
           accessibilityLabel={reciter.nameAr}
         >
@@ -114,6 +119,14 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     borderColor: theme.colors.destructive,
+    borderTopWidth: 3,
+  },
+  loadingContainer: {
+    borderColor: theme.colors.primary,
+  },
+  pausedContainer: {
+    borderTopWidth: 3,
+    borderTopColor: theme.colors.accent,
   },
   roundButton: {
     width: 36,
@@ -160,6 +173,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#D8BE7A',
+  },
+  loadingAvatar: {
+    borderWidth: 2,
+    borderColor: theme.colors.accent,
   },
   avatarText: {
     color: theme.colors.surface,

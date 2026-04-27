@@ -66,6 +66,17 @@ const ar = {
     play: 'تشغيل',
     pause: 'إيقاف مؤقت',
     nowPlayingAyah: (surah: number, ayah: number) => `السورة ${surah} · الآية ${ayah}`,
+    next: 'التالي',
+    previous: 'السابق',
+    repeat: 'التكرار',
+    speed: 'السرعة',
+    download: 'تحميل',
+    reciter: 'القارئ',
+    savedRecitations: 'التلاوات المحفوظة',
+    delete: 'حذف',
+    info: 'معلومات',
+    menu: 'القائمة',
+    bookmark: 'علامة',
     errorNetwork: 'لا يوجد اتصال بالإنترنت — جرّب لاحقًا أو نزّل السورة',
     errorAudioUnavailable: 'لا تتوفر هذه التلاوة لهذا القارئ',
     errorStorage: 'لا توجد مساحة كافية',
@@ -130,6 +141,17 @@ const en = {
     play: 'Play',
     pause: 'Pause',
     nowPlayingAyah: (surah: number, ayah: number) => `Surah ${surah} · Ayah ${ayah}`,
+    next: 'Next',
+    previous: 'Previous',
+    repeat: 'Repeat',
+    speed: 'Speed',
+    download: 'Download',
+    reciter: 'Reciter',
+    savedRecitations: 'Saved recitations',
+    delete: 'Delete',
+    info: 'Info',
+    menu: 'Menu',
+    bookmark: 'Bookmark',
     errorNetwork: 'No internet connection — try later or download the surah',
     errorAudioUnavailable: 'This recitation is not available for this reciter',
     errorStorage: 'Not enough storage space',
@@ -173,6 +195,17 @@ export type Strings = {
     play: string;
     pause: string;
     nowPlayingAyah: (surah: number, ayah: number) => string;
+    next: string;
+    previous: string;
+    repeat: string;
+    speed: string;
+    download: string;
+    reciter: string;
+    savedRecitations: string;
+    delete: string;
+    info: string;
+    menu: string;
+    bookmark: string;
     errorNetwork: string;
     errorAudioUnavailable: string;
     errorStorage: string;
