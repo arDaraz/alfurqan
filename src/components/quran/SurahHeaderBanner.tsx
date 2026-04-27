@@ -1,75 +1,77 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { SurahCartouche } from '../brand/SurahCartouche';
 import type { Surah } from '../../data/types';
 
 interface SurahHeaderBannerProps {
   surah: Surah;
 }
 
+const BANNER_WIDTH = 320;
+const BANNER_HEIGHT = 64;
+
 /**
- * Ornamental surah header banner with gold decorative frame.
- * Shows surah name in Arabic, ayah count, and revelation type (Makki/Madani).
+ * Sarlawh banner around the surah title — used at the start of a Mushaf
+ * opening page (Al-Fatiha, Al-Baqarah, etc.). Dark green panel with gold
+ * double border and side diamonds; the surah name renders cream/gold
+ * inside the panel.
  */
 export function SurahHeaderBanner({ surah }: SurahHeaderBannerProps) {
+  const theme = useTheme();
   const revelationLabel = surah.revelationType === 'Makki' ? 'مكية' : 'مدنية';
+  const styles = createStyles(theme);
 
   return (
-    <View style={styles.outerContainer}>
-      <View style={styles.frame}>
-        {/* Top ornamental accent line */}
-        <View style={styles.accentLine} />
-
-        <Text style={styles.surahName}>
-          {surah.nameArabic}
-        </Text>
-
-        <Text style={styles.metadata}>
-          {surah.ayahCount} آية • {revelationLabel}
-        </Text>
-
-        {/* Bottom ornamental accent line */}
-        <View style={styles.accentLine} />
+    <View style={styles.outer}>
+      <View style={styles.banner}>
+        <View style={styles.bannerBg}>
+          <SurahCartouche width={BANNER_WIDTH} height={BANNER_HEIGHT} />
+        </View>
+        <Text style={styles.surahName}>{surah.nameArabic}</Text>
       </View>
+      <Text style={styles.metadata}>
+        {surah.ayahCount} آية · {revelationLabel}
+      </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  outerContainer: {
-    marginTop: theme.spacing['2xl'], // 48px
-    marginBottom: theme.spacing['2xl'], // 48px
-    marginHorizontal: theme.spacing.md, // 16px margin from edges
-    alignItems: 'center',
-  },
-  frame: {
-    width: '100%',
-    borderWidth: 2,
-    borderColor: '#C9A84C', // Gold decorative border
-    borderRadius: 12,
-    paddingVertical: theme.spacing.lg, // 24px
-    paddingHorizontal: theme.spacing.md, // 16px
-    alignItems: 'center',
-  },
-  accentLine: {
-    width: '60%',
-    height: 1,
-    backgroundColor: '#C9A84C', // Gold accent
-    opacity: 0.5,
-    marginVertical: theme.spacing.sm, // 8px
-  },
-  surahName: {
-    fontFamily: 'KFGQPC-Uthmani',
-    fontSize: theme.typography.heading.size, // 24px
-    fontWeight: theme.typography.heading.weight, // '700'
-    color: theme.colors.text, // #1A1A2E
-    textAlign: 'center',
-    writingDirection: 'rtl',
-    marginBottom: theme.spacing.sm, // 8px
-  },
-  metadata: {
-    fontSize: theme.typography.body.size, // 18px
-    color: theme.colors.textSecondary, // #6B7280
-    textAlign: 'center',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    outer: {
+      marginTop: theme.spacing.xl,
+      marginBottom: theme.spacing.xl,
+      marginHorizontal: theme.spacing.md,
+      alignItems: 'center',
+    },
+    banner: {
+      width: BANNER_WIDTH,
+      height: BANNER_HEIGHT,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    bannerBg: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    surahName: {
+      fontFamily: theme.fonts.quran,
+      fontSize: theme.typeScale.title.size,
+      color: theme.semantic.fg,
+      textAlign: 'center',
+    },
+    metadata: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 14,
+      color: theme.semantic.fgMuted,
+      textAlign: 'center',
+      marginTop: theme.spacing.sm,
+    },
+  });
+}

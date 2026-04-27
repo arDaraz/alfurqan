@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, Text, StyleSheet, type ViewStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, View, type ViewStyle } from 'react-native';
 import { toArabicIndic } from '../../utils/arabic';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { AyahRosette } from '../brand/AyahRosette';
 import type { Ayah } from '../../data/types';
 
 export type AyahSelectionState = 'default' | 'selected-start' | 'selected-end' | 'in-range';
@@ -13,35 +14,30 @@ interface AyahTextProps {
 }
 
 /**
- * Renders a single ayah with Uthmani Arabic text, inline end marker,
- * RTL writing direction, and selection state visual feedback.
+ * Single-ayah block — Uthmani text + ornamental gold rosette + small Arabic
+ * numeral. Selection state inset-shadows the row instead of brightening it.
  */
 export function AyahText({ ayah, selectionState, onPress }: AyahTextProps) {
-  const handlePress = useCallback(() => {
-    onPress(ayah.ayahNumber);
-  }, [ayah.ayahNumber, onPress]);
+  const theme = useTheme();
+  const styles = createStyles(theme);
+  const handlePress = useCallback(() => onPress(ayah.ayahNumber), [ayah.ayahNumber, onPress]);
 
   const containerStyle = useMemo((): ViewStyle => {
-    switch (selectionState) {
-      case 'selected-start':
-      case 'selected-end':
-        return {
-          backgroundColor: '#0D737720',
-          borderLeftWidth: 2,
-          borderLeftColor: theme.colors.primary,
-        };
-      case 'in-range':
-        return {
-          backgroundColor: '#0D737720',
-        };
-      default:
-        return {};
-    }
-  }, [selectionState]);
+    const isSelected =
+      selectionState === 'selected-start' ||
+      selectionState === 'selected-end' ||
+      selectionState === 'in-range';
+    return isSelected
+      ? {
+          backgroundColor: theme.semantic.selectedRange,
+          borderWidth: 1,
+          borderColor: theme.semantic.primaryFocusRing,
+        }
+      : {};
+  }, [selectionState, theme]);
 
-  const markerColor = useMemo(() => {
-    return selectionState !== 'default' ? theme.colors.primary : theme.colors.accent;
-  }, [selectionState]);
+  const rosetteColor =
+    selectionState === 'default' ? theme.semantic.accent : theme.semantic.primary;
 
   return (
     <Pressable
@@ -52,31 +48,47 @@ export function AyahText({ ayah, selectionState, onPress }: AyahTextProps) {
     >
       <Text style={styles.ayahText}>
         {ayah.textUthmani}{' '}
-        <Text style={[styles.endMarker, { color: markerColor }]}>
-          {'\u06DD'}{toArabicIndic(ayah.ayahNumber)}
-        </Text>
+        <View style={styles.rosetteWrap}>
+          <AyahRosette size={20} color={rosetteColor} />
+          <Text style={styles.rosetteNumber}>{toArabicIndic(ayah.ayahNumber)}</Text>
+        </View>
       </Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: theme.spacing.xl, // 32px
-    paddingVertical: 6, // 12px gap between ayahs / 2
-    writingDirection: 'rtl',
-  },
-  ayahText: {
-    fontFamily: theme.fonts.arabic,
-    fontSize: theme.typography.display.size, // 28
-    fontWeight: theme.typography.display.weight, // '700'
-    lineHeight: theme.typography.display.size * theme.typography.display.arabicLineHeight, // 28 * 2.2 = 61.6
-    color: theme.colors.text,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  endMarker: {
-    fontSize: theme.typography.label.size, // 14px
-    color: theme.colors.accent, // #C9A84C gold
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      paddingHorizontal: theme.gutter.ayah,
+      paddingVertical: 6,
+      borderRadius: theme.radii.sm,
+      writingDirection: 'rtl',
+    },
+    ayahText: {
+      fontFamily: theme.fonts.quran,
+      fontSize: theme.typeScale.quranSm.size,
+      lineHeight: theme.typeScale.quranSm.size * theme.typeScale.quranSm.lineHeight,
+      color: theme.semantic.fg,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    rosetteWrap: {
+      width: 20,
+      height: 20,
+    },
+    rosetteNumber: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: 20,
+      height: 20,
+      textAlign: 'center',
+      fontFamily: theme.fonts.latin,
+      fontSize: 8,
+      color: theme.semantic.accent,
+      fontWeight: '700',
+      lineHeight: 20,
+    },
+  });
+}

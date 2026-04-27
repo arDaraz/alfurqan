@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, StyleSheet } from 'react-native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getSurahForPage } from '../../data/quranRepository';
 import { handleAyahAction } from '../../actions/ayahActions';
 import { MushafReader } from './MushafReader';
+import { ReaderHeader } from './ReaderHeader';
+import { ReaderToolbar } from './ReaderToolbar';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
-import { theme } from '../../constants/theme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import type { AyahActionType, AyahSelection } from '../../data/types';
 
 interface Props {
@@ -15,9 +18,17 @@ interface Props {
   errorMessage: string;
 }
 
+const PAGES_PER_JUZ = 604 / 30;
+
+function juzForPage(page: number): number {
+  return Math.max(1, Math.min(30, Math.ceil(page / PAGES_PER_JUZ)));
+}
+
 export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
-  const router = useRouter();
+  const { colors, nightReadingEnabled } = useReaderColors();
+  const styles = createStyles(colors);
   const [surahName, setSurahName] = useState('');
+  const [currentPage, setCurrentPage] = useState<number | null>(null);
   const [initialPage, setInitialPage] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +40,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       const result = await loadInitialPage();
       setSurahName(result.surahName);
       setInitialPage(result.page);
+      setCurrentPage(result.page);
     } catch (err) {
       setError(err instanceof Error ? err.message : errorMessage);
     } finally {
@@ -40,63 +52,57 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
     loadData();
   }, [loadData]);
 
-  const handleAction = useCallback((action: AyahActionType, selection: AyahSelection) => {
-    handleAyahAction(action, selection);
-  }, []);
+  const handleAction = useCallback(
+    (action: AyahActionType, selection: AyahSelection) => {
+      handleAyahAction(action, selection);
+    },
+    []
+  );
 
   const handlePageChange = useCallback(async (pageNumber: number) => {
+    setCurrentPage(pageNumber);
     try {
       const surah = await getSurahForPage(pageNumber);
-      if (surah) setSurahName((prev) => prev === surah.nameArabic ? prev : surah.nameArabic);
+      if (surah) {
+        setSurahName((prev) =>
+          prev === surah.nameArabic ? prev : surah.nameArabic
+        );
+      }
     } catch {
-      // Header stays on previous surah name — non-critical
+      /* non-critical */
     }
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerBackVisible: false,
-          headerTitle: () => (
-            <Text style={styles.headerTitle}>{surahName}</Text>
-          ),
-          headerLeft: () => (
-            <Pressable
-              onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
-              hitSlop={8}
-              style={styles.backButton}
-            >
-              <MaterialCommunityIcons name="chevron-left" size={28} color={theme.colors.text} />
-            </Pressable>
-          ),
-          headerStyle: { backgroundColor: theme.colors.surface },
-          headerTintColor: theme.colors.text,
-        }}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Stack.Screen options={{ headerShown: false }} />
+      {nightReadingEnabled && <StatusBar style="light" />}
+      <ReaderHeader
+        surahName={surahName}
+        juzNumber={juzForPage(currentPage ?? 1)}
+        pageNumber={currentPage ?? 1}
       />
       {loading ? (
         <LoadingSkeleton />
       ) : error ? (
         <ErrorState message={error} onRetry={loadData} />
       ) : initialPage !== null ? (
-        <MushafReader initialPage={initialPage} onPageChange={handlePageChange} onAyahAction={handleAction} />
+        <View style={styles.body}>
+          <MushafReader
+            initialPage={initialPage}
+            onPageChange={handlePageChange}
+            onAyahAction={handleAction}
+          />
+          <ReaderToolbar />
+        </View>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  headerTitle: {
-    fontFamily: theme.fonts.arabic,
-    fontSize: theme.typography.body.size,
-    color: theme.colors.text,
-  },
-  backButton: {
-    marginRight: 8,
-  },
-});
+function createStyles(colors: ReaderColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg, direction: 'rtl' },
+    body: { flex: 1 },
+  });
+}

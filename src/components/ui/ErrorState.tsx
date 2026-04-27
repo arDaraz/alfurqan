@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 
 interface ErrorStateProps {
@@ -9,11 +9,10 @@ interface ErrorStateProps {
   onRetry: () => void;
 }
 
-export function ErrorState({
-  message,
-  onRetry,
-}: ErrorStateProps) {
+export function ErrorState({ message, onRetry }: ErrorStateProps) {
+  const theme = useTheme();
   const strings = useStrings();
+  const styles = createStyles(theme);
   const resolvedMessage = message ?? strings.errorDefault;
 
   return (
@@ -21,17 +20,14 @@ export function ErrorState({
       <MaterialCommunityIcons
         name="alert-circle-outline"
         size={48}
-        color="#DC2626"
+        color={theme.semantic.danger}
         style={styles.icon}
       />
       <Text style={styles.heading}>{resolvedMessage}</Text>
       <Pressable
         onPress={onRetry}
-        style={({ pressed }) => [
-          styles.button,
-          pressed && styles.buttonPressed,
-        ]}
-        accessibilityLabel="Try Again"
+        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        accessibilityLabel={strings.tryAgain}
         accessibilityRole="button"
       >
         <Text style={styles.buttonText}>{strings.tryAgain}</Text>
@@ -40,39 +36,43 @@ export function ErrorState({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  icon: {
-    marginBottom: theme.spacing.md,
-  },
-  heading: {
-    fontSize: theme.typography.body.size,
-    fontWeight: '400',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.lg,
-    lineHeight: theme.typography.body.size * theme.typography.body.latinLineHeight,
-  },
-  button: {
-    backgroundColor: '#0D7377',
-    paddingHorizontal: theme.spacing.md,
-    height: 44,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: 120,
-  },
-  buttonPressed: {
-    backgroundColor: '#0B6163',
-  },
-  buttonText: {
-    fontSize: theme.typography.label.size,
-    fontWeight: '600',
-    color: theme.colors.surface,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      backgroundColor: theme.semantic.bg,
+    },
+    icon: {
+      marginBottom: theme.spacing.md,
+    },
+    heading: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 16,
+      lineHeight: 24,
+      color: theme.semantic.fg,
+      textAlign: 'center',
+      marginBottom: theme.spacing.lg,
+    },
+    button: {
+      backgroundColor: theme.semantic.primary,
+      paddingHorizontal: theme.spacing.lg,
+      height: 44,
+      borderRadius: theme.radii.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      minWidth: 140,
+    },
+    buttonPressed: {
+      backgroundColor: theme.semantic.primaryPressed,
+    },
+    buttonText: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.semantic.fgOnPrimary,
+    },
+  });
+}

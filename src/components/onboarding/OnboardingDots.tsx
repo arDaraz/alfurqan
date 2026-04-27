@@ -1,10 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
-import { theme } from '../../constants/theme';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { useTheme } from '../../hooks/useTheme';
 
 interface OnboardingDotsProps {
   total: number;
@@ -22,16 +19,17 @@ export function OnboardingDots({ total, active }: OnboardingDotsProps) {
 }
 
 function Dot({ isActive }: { isActive: boolean }) {
+  const theme = useTheme();
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      width: withSpring(isActive ? 10 : 8, { damping: 15, stiffness: 150 }),
-      height: withSpring(isActive ? 10 : 8, { damping: 15, stiffness: 150 }),
+      width: withSpring(isActive ? 24 : 8, { damping: 15, stiffness: 150 }),
+      height: withSpring(8, { damping: 15, stiffness: 150 }),
       backgroundColor: withSpring(
-        isActive ? theme.colors.primary : theme.colors.textDisabled,
+        isActive ? theme.semantic.primary : theme.semantic.borderStrong,
         { damping: 15, stiffness: 150 }
       ),
     };
-  }, [isActive]);
+  }, [isActive, theme]);
 
   return <Animated.View style={[styles.dot, animatedStyle]} />;
 }
@@ -41,9 +39,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   dot: {
-    borderRadius: 5,
+    borderRadius: 4,
   },
 });

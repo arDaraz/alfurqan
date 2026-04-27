@@ -1,13 +1,52 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { useTheme } from '../../hooks/useTheme';
+import { useStrings } from '../../constants/strings';
+import { useSettingsStore, type CorrectionSensitivity, type ThemeMode, type MushafFont } from '../../stores/settingsStore';
+import { isNightReadingEnabled, type ActiveNightReadingMode } from '../../constants/nightReading';
+import { useReadingStore } from '../../stores/readingStore';
 import { ReciterPickerSheet } from '../../components/quran/ReciterPickerSheet';
 import { getReciterById } from '../../data/reciters';
 import { useReciterStore } from '../../stores/reciterStore';
-import { theme } from '../../constants/theme';
+
+import { ProfileCard } from '../../components/settings/ProfileCard';
+import { SettingsGroup } from '../../components/settings/SettingsGroup';
+import { SettingsRow } from '../../components/settings/SettingsRow';
+import { Toggle } from '../../components/settings/Toggle';
+import { Pill } from '../../components/settings/Pill';
+import { FontSizeRow } from '../../components/settings/FontSizeRow';
+import { NightReadingPicker } from '../../components/settings/NightReadingPicker';
+
+const ICON_PROPS = { width: 17, height: 17, fill: 'none', strokeWidth: 1.75 } as const;
+
+const SETTINGS_PROFILE_NAME = 'أبو يوسف';
+const SETTINGS_STREAK = 27;
 
 export default function SettingsScreen() {
+  const theme = useTheme();
+  const strings = useStrings();
+  const styles = createStyles(theme);
+
   const [pickerVisible, setPickerVisible] = useState(false);
   const [savedVisible, setSavedVisible] = useState(false);
+
+  const language = useSettingsStore((s) => s.language);
+  const isArabic = language === 'ar';
+
+  const themeMode = useSettingsStore((s) => s.themeMode);
+  const setThemeMode = useSettingsStore((s) => s.setThemeMode);
+  const showTashkeel = useSettingsStore((s) => s.showTashkeel);
+  const setShowTashkeel = useSettingsStore((s) => s.setShowTashkeel);
+  const dailyReminder = useSettingsStore((s) => s.dailyReminder);
+  const setDailyReminder = useSettingsStore((s) => s.setDailyReminder);
+  const correctionSensitivity = useSettingsStore((s) => s.correctionSensitivity);
+  const setCorrectionSensitivity = useSettingsStore((s) => s.setCorrectionSensitivity);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
+  const quranFontScale = useSettingsStore((s) => s.quranFontScale);
+  const setQuranFontScale = useSettingsStore((s) => s.setQuranFontScale);
+
   const selectedReciterId = useReciterStore((s) => s.selectedReciterId);
   const downloads = useReciterStore((s) => s.downloads);
   const deleteSurahDownload = useReciterStore((s) => s.deleteSurahDownload);
@@ -15,69 +54,282 @@ export default function SettingsScreen() {
   const savedDownloads = Object.entries(downloads).filter(([, download]) => download.status === 'complete');
   const savedBytes = savedDownloads.reduce((total, [, download]) => total + (download.bytes ?? 0), 0);
 
+  const lastReadPage = useReadingStore((s) => s.lastReadPage) ?? 14;
+  const lastReadJuz = Math.max(1, Math.min(30, Math.ceil(lastReadPage / (604 / 30))));
+
+  const mushafFont = useSettingsStore((s) => s.mushafFont);
+  const setMushafFont = useSettingsStore((s) => s.setMushafFont);
+  const nightReadingMode = useSettingsStore((s) => s.nightReadingMode);
+  const setNightReadingMode = useSettingsStore((s) => s.setNightReadingMode);
+
+  const mushafFontLabels: Record<MushafFont, string> = {
+    uthmanic: 'Uthmanic Naskh',
+    'qcf-v1': 'QCF/QPC V1',
+    'qcf-v4': 'QCF/QPC V4 Tajweed',
+    'indopak-nastaleeq': 'IndoPak Nastaleeq',
+    'digital-khatt-indopak': 'Digital Khatt IndoPak',
+  };
+
+  const activeMushafFont: MushafFont = mushafFont in mushafFontLabels ? mushafFont : 'uthmanic';
+
+  const cycleMushafFont = () => {
+    const order: MushafFont[] = ['uthmanic', 'qcf-v1', 'qcf-v4', 'indopak-nastaleeq', 'digital-khatt-indopak'];
+    const idx = order.indexOf(activeMushafFont);
+    setMushafFont(order[(idx + 1) % order.length]);
+  };
+
+  const mushafFontLabel = mushafFontLabels[activeMushafFont];
+  const nightModeLabels: Record<ActiveNightReadingMode, { title: string; subtitle: string }> = {
+    classical: {
+      title: strings.settingsNightClassical,
+      subtitle: strings.settingsNightClassicalValue,
+    },
+    sepia: {
+      title: strings.settingsNightSepia,
+      subtitle: strings.settingsNightSepiaValue,
+    },
+    'pure-ink': {
+      title: strings.settingsNightPureInk,
+      subtitle: strings.settingsNightPureInkValue,
+    },
+    indigo: {
+      title: strings.settingsNightIndigo,
+      subtitle: strings.settingsNightIndigoValue,
+    },
+  };
+  const nightReadingEnabled = isNightReadingEnabled(nightReadingMode);
+  const activeNightMode: ActiveNightReadingMode = nightReadingEnabled
+    ? nightReadingMode
+    : 'classical';
+  const nightReadingLabel = nightReadingEnabled
+    ? nightModeLabels[activeNightMode].title
+    : strings.settingsNightReadingValue;
+
+  const cycleSensitivity = () => {
+    const order: CorrectionSensitivity[] = ['gentle', 'standard', 'strict'];
+    const idx = order.indexOf(correctionSensitivity);
+    setCorrectionSensitivity(order[(idx + 1) % order.length]);
+  };
+
+  const cycleTheme = () => {
+    const order: ThemeMode[] = ['light', 'dark', 'system'];
+    const idx = order.indexOf(themeMode);
+    setThemeMode(order[(idx + 1) % order.length]);
+  };
+
+  const sensitivityLabel =
+    correctionSensitivity === 'gentle'
+      ? strings.settingsCorrectionGentle
+      : correctionSensitivity === 'standard'
+        ? strings.settingsCorrectionStandard
+        : strings.settingsCorrectionStrict;
+
+  const themeLabel =
+    themeMode === 'light'
+      ? strings.settingsThemeLight
+      : themeMode === 'dark'
+        ? strings.settingsThemeDark
+        : strings.settingsThemeSystem;
+
+  const selectedReciterLabel = isArabic ? selectedReciter.nameAr : selectedReciter.nameEn;
+  const savedSummary = savedBytes > 0
+    ? isArabic ? `${formatBytes(savedBytes)} محفوظة` : `${formatBytes(savedBytes)} saved`
+    : strings.recitation.noneSaved;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>الإعدادات</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={[styles.title, !isArabic && styles.titleLtr]}>{strings.settingsTitle}</Text>
+        {!isArabic && <Text style={styles.romanLabel}>{strings.settingsRomanLabel}</Text>}
+      </View>
 
-      <Pressable
-        onPress={() => setPickerVisible(true)}
-        style={styles.row}
-        accessibilityRole="button"
-        accessibilityLabel="القارئ"
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.rowCopy}>
-          <Text style={styles.rowTitle}>القارئ</Text>
-          <Text style={styles.rowValue}>{selectedReciter.nameAr}</Text>
-        </View>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{selectedReciter.avatarInitialAr}</Text>
-        </View>
-      </Pressable>
+        <ProfileCard
+          name={SETTINGS_PROFILE_NAME}
+          juzNumber={lastReadJuz}
+          pageNumber={lastReadPage}
+          streakDays={SETTINGS_STREAK}
+        />
 
-      <Pressable
-        onPress={() => setSavedVisible((visible) => !visible)}
-        style={styles.row}
-        accessibilityRole="button"
-        accessibilityLabel="التلاوات المحفوظة"
-      >
-        <View style={styles.rowCopy}>
-          <Text style={styles.rowTitle}>التلاوات المحفوظة</Text>
-          <Text style={styles.rowValue}>
-            {savedBytes > 0 ? `${formatBytes(savedBytes)} محفوظة` : 'لا توجد تلاوات محفوظة بعد'}
-          </Text>
-        </View>
-      </Pressable>
-
-      {savedVisible && (
-        <View style={styles.savedList}>
-          {savedDownloads.length === 0 ? (
-            <Text style={styles.emptyText}>لا توجد تلاوات محفوظة بعد</Text>
-          ) : (
-            savedDownloads.map(([key, download]) => {
-              const [reciterId, surah] = key.split(':');
-              return (
-                <View key={key} style={styles.savedRow}>
-                  <View style={styles.rowCopy}>
-                    <Text style={styles.savedTitle}>{`${reciterId} · سورة ${surah}`}</Text>
-                    <Text style={styles.rowValue}>{formatBytes(download.bytes ?? 0)}</Text>
-                  </View>
-                  <Pressable
-                    onPress={() => void deleteSurahDownload(reciterId, Number(surah))}
-                    accessibilityRole="button"
-                    accessibilityLabel={`حذف سورة ${surah}`}
-                    style={styles.deleteButton}
-                  >
-                    <Text style={styles.deleteText}>حذف</Text>
-                  </Pressable>
-                </View>
-              );
-            })
+        <SettingsGroup label={strings.settingsSectionReading}>
+          <FontSizeRow
+            label={strings.settingsQuranSize}
+            value={quranFontScale}
+            onChange={setQuranFontScale}
+          />
+          <SettingsRow
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Path d="M4 7V5h16v2" stroke={theme.semantic.primary} strokeLinecap="round" />
+                <Path d="M9 19h6" stroke={theme.semantic.primary} strokeLinecap="round" />
+                <Path d="M12 5v14" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.settingsMushafFont}
+            value={mushafFontLabel}
+            trailing={<Pill label={strings.settingsChange} onPress={cycleMushafFont} />}
+          />
+          <SettingsRow
+            isLast={!nightReadingEnabled}
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Path
+                  d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
+                  stroke={theme.semantic.primary}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            }
+            label={strings.settingsNightReading}
+            value={nightReadingLabel}
+            trailing={
+              <Toggle
+                value={nightReadingEnabled}
+                onValueChange={(next) =>
+                  setNightReadingMode(next ? activeNightMode : 'off')
+                }
+                accessibilityLabel={strings.settingsNightReading}
+              />
+            }
+          />
+          {nightReadingEnabled && (
+            <NightReadingPicker
+              value={activeNightMode}
+              labels={nightModeLabels}
+              isArabic={isArabic}
+              onChange={setNightReadingMode}
+            />
           )}
-        </View>
-      )}
+        </SettingsGroup>
+
+        <SettingsGroup label={strings.settingsSectionAudio}>
+          <SettingsRow
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Path d="M11 5 6 9H2v6h4l5 4V5Z" stroke={theme.semantic.primary} strokeLinejoin="round" />
+                <Path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.settingsQari}
+            value={`${selectedReciterLabel} · ${selectedReciter.bitrate}kbps`}
+            onPress={() => setPickerVisible(true)}
+            trailing={<Pill label={strings.settingsChange} />}
+          />
+          <SettingsRow
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Path d="M12 3v11" stroke={theme.semantic.primary} strokeLinecap="round" />
+                <Path d="m7 9 5 5 5-5" stroke={theme.semantic.primary} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M5 19h14" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.recitation.savedRecitations}
+            value={savedSummary}
+            onPress={() => setSavedVisible((visible) => !visible)}
+          />
+          {savedVisible && (
+            <View style={styles.savedList}>
+              {savedDownloads.length === 0 ? (
+                <Text style={styles.emptyText}>{strings.recitation.noneSaved}</Text>
+              ) : (
+                savedDownloads.map(([key, download]) => {
+                  const [reciterId, surah] = key.split(':');
+                  return (
+                    <View key={key} style={styles.savedRow}>
+                      <View style={styles.savedCopy}>
+                        <Text style={styles.savedTitle}>
+                          {isArabic ? `${reciterId} · سورة ${surah}` : `${reciterId} · Surah ${surah}`}
+                        </Text>
+                        <Text style={styles.savedMeta}>{formatBytes(download.bytes ?? 0)}</Text>
+                      </View>
+                      <Pressable
+                        onPress={() => void deleteSurahDownload(reciterId, Number(surah))}
+                        accessibilityRole="button"
+                        accessibilityLabel={isArabic ? `حذف سورة ${surah}` : `Delete surah ${surah}`}
+                        style={styles.deleteButton}
+                      >
+                        <Text style={styles.deleteText}>{strings.recitation.delete}</Text>
+                      </Pressable>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          )}
+          <SettingsRow
+            isLast
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Rect x={9} y={3} width={6} height={12} rx={3} stroke={theme.semantic.primary} />
+                <Path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.settingsCorrection}
+            value={strings.settingsCorrection}
+            trailing={<Pill label={sensitivityLabel} onPress={cycleSensitivity} withChevron={false} />}
+          />
+        </SettingsGroup>
+
+        <SettingsGroup label={strings.settingsSectionApp}>
+          <SettingsRow
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Circle cx={12} cy={12} r={9} stroke={theme.semantic.primary} />
+                <Path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.settingsLanguage}
+            value={language === 'ar' ? strings.settingsLanguageValue : strings.settingsLanguageEnValue}
+            onPress={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+          />
+          <SettingsRow
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke={theme.semantic.primary} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            }
+            label={strings.settingsDailyReminder}
+            value={strings.settingsDailyReminderValue}
+            trailing={
+              <Toggle
+                value={dailyReminder}
+                onValueChange={setDailyReminder}
+                accessibilityLabel={strings.settingsDailyReminder}
+              />
+            }
+          />
+          <SettingsRow
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Circle cx={12} cy={12} r={9} stroke={theme.semantic.primary} />
+                <Path d="M12 8v4M12 16h.01" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.settingsThemeMode}
+            value={themeLabel}
+            onPress={cycleTheme}
+          />
+          <SettingsRow
+            isLast
+            icon={
+              <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                <Circle cx={12} cy={12} r={10} stroke={theme.semantic.primary} />
+                <Path d="M12 8v4M12 16h.01" stroke={theme.semantic.primary} strokeLinecap="round" />
+              </Svg>
+            }
+            label={strings.settingsAbout}
+            value={strings.settingsAbout}
+          />
+        </SettingsGroup>
+      </ScrollView>
 
       <ReciterPickerSheet visible={pickerVisible} onClose={() => setPickerVisible(false)} />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -87,98 +339,99 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.md,
-  },
-  title: {
-    color: theme.colors.text,
-    fontSize: theme.typography.heading.size,
-    fontWeight: theme.typography.heading.weight,
-    textAlign: 'right',
-    marginBottom: theme.spacing.md,
-  },
-  row: {
-    minHeight: 72,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors.divider,
-    backgroundColor: theme.colors.surface,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-  },
-  rowCopy: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  rowTitle: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  rowValue: {
-    color: theme.colors.textSecondary,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.primaryDark,
-    marginLeft: theme.spacing.sm,
-  },
-  avatarText: {
-    color: theme.colors.surface,
-    fontFamily: theme.fonts.arabic,
-    fontSize: 18,
-  },
-  savedList: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors.divider,
-    backgroundColor: theme.colors.surface,
-    marginBottom: theme.spacing.sm,
-    overflow: 'hidden',
-  },
-  savedRow: {
-    minHeight: 58,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    padding: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.divider,
-  },
-  savedTitle: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'right',
-  },
-  emptyText: {
-    color: theme.colors.textSecondary,
-    fontSize: 13,
-    textAlign: 'right',
-    padding: theme.spacing.md,
-  },
-  deleteButton: {
-    minWidth: 54,
-    minHeight: 34,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEE2E2',
-    marginRight: theme.spacing.sm,
-  },
-  deleteText: {
-    color: theme.colors.destructive,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.semantic.bg,
+      direction: 'rtl',
+    },
+    header: {
+      paddingHorizontal: theme.gutter.screen,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
+    },
+    title: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 30,
+      color: theme.semantic.fg,
+      letterSpacing: 0.3,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
+    titleLtr: {
+      fontFamily: theme.fonts.latin,
+      writingDirection: 'ltr',
+      fontWeight: '700',
+    },
+    romanLabel: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 11,
+      color: theme.semantic.fgMuted,
+      letterSpacing: 2.4,
+      marginTop: 4,
+      fontWeight: '600',
+      textAlign: 'center',
+      writingDirection: 'ltr',
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: theme.gutter.screen - 6,
+      paddingBottom: 28,
+    },
+    savedList: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.semantic.border,
+      backgroundColor: theme.semantic.bg,
+    },
+    savedRow: {
+      minHeight: 56,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.semantic.border,
+    },
+    savedCopy: {
+      flex: 1,
+    },
+    savedTitle: {
+      color: theme.semantic.fg,
+      fontFamily: theme.fonts.quran,
+      fontSize: 13,
+      writingDirection: 'rtl',
+    },
+    savedMeta: {
+      color: theme.semantic.fgMuted,
+      fontFamily: theme.fonts.latin,
+      fontSize: 11,
+      marginTop: 2,
+    },
+    emptyText: {
+      color: theme.semantic.fgMuted,
+      fontFamily: theme.fonts.quran,
+      fontSize: 13,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      writingDirection: 'rtl',
+    },
+    deleteButton: {
+      minWidth: 54,
+      minHeight: 32,
+      borderRadius: theme.radii.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.semantic.dangerSoft,
+      paddingHorizontal: 10,
+    },
+    deleteText: {
+      color: theme.semantic.danger,
+      fontFamily: theme.fonts.quran,
+      fontSize: 12,
+    },
+  });
+}

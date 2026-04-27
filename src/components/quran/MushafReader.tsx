@@ -10,7 +10,7 @@ import { getSurahLastAyah, getTopAyahForPage } from '../../data/quranRepository'
 import { recitationEngine } from '../../services/recitationEngine';
 import { useReadingStore } from '../../stores/readingStore';
 import { useRecitationStore } from '../../stores/recitationStore';
-import { theme } from '../../constants/theme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import type { AyahSelection, AyahActionType } from '../../data/types';
 
 const TOTAL_PAGES = 604;
@@ -43,6 +43,8 @@ export async function startToolbarRecitationFromPage(pageNumber: number): Promis
 export function MushafReader({ initialPage, onPageChange, onAyahAction }: MushafReaderProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const pagerRef = useRef<PagerView>(null);
+  const { colors } = useReaderColors();
+  const styles = createStyles(colors);
   const setLastReadPage = useReadingStore((s) => s.setLastReadPage);
 
   // Selection state
@@ -116,7 +118,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
                 />
               ) : (
                 <View style={styles.placeholder}>
-                  <ActivityIndicator size="small" color={theme.colors.accent} />
+                  <ActivityIndicator size="small" color={colors.accent} />
                 </View>
               )}
             </View>
@@ -142,21 +144,24 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pager: {
-    flex: 1,
-  },
-  pageContainer: {
-    flex: 1,
-  },
-  placeholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-});
+function createStyles(colors: ReaderColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    pager: {
+      flex: 1,
+    },
+    pageContainer: {
+      flex: 1,
+      overflow: 'hidden',
+    },
+    placeholder: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.bg,
+    },
+  });
+}

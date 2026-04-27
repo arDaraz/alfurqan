@@ -1,5 +1,7 @@
 import type { MushafWord, MushafLine, PageMarker } from '../../data/types';
 import { surahHasBismillah } from '../../constants/quran';
+import { getNightReadingPalette, type NightReadingMode } from '../../constants/nightReading';
+import { isSurahEndingLine } from './surahLine';
 
 export interface BismillahData {
   codes: string; // QCF v2 codes for Bismillah from page 1
@@ -10,13 +12,32 @@ export interface MushafHtmlOptions {
   pageNumber: number;
   words: MushafWord[];
   fontBase64: string;
+  fontSizeScale?: number;
   surahNumber?: number;
   bismillah?: BismillahData;
   markers?: PageMarker[];
+  nightReadingMode?: NightReadingMode;
+}
+
+function cssNumber(value: number): string {
+  return Number(value.toFixed(3)).toString();
 }
 
 export function generateMushafHtml(opts: MushafHtmlOptions): string {
-  const { pageNumber, words, fontBase64, surahNumber, bismillah, markers } = opts;
+  const {
+    words,
+    fontBase64,
+    fontSizeScale = 1,
+    surahNumber,
+    bismillah,
+    nightReadingMode = 'off',
+  } = opts;
+  const palette = getNightReadingPalette(nightReadingMode);
+  const bodyFontVw = cssNumber(7 * fontSizeScale);
+  const compactFontVw = cssNumber(7 * fontSizeScale);
+  const compactFontPx = cssNumber(28 * fontSizeScale);
+  const bismillahFontVw = cssNumber(5.5 * fontSizeScale);
+  const bismillahFontPx = cssNumber(24 * fontSizeScale);
   const lineMap = new Map<number, MushafWord[]>();
   for (const word of words) {
     const existing = lineMap.get(word.lineNumber);
@@ -31,7 +52,9 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
   const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => a - b);
   for (const lineNum of sortedKeys) {
     const lineWords = lineMap.get(lineNum)!;
+    const isSurahEnd = isSurahEndingLine(lineWords);
     const isCentered =
+      isSurahEnd ||
       lineWords.length <= 2 &&
       lineWords.every((w) => w.charType !== 'word');
     lines.push({ lineNumber: lineNum, words: lineWords, isCentered });
@@ -43,10 +66,12 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
     ? `surah${String(surahNumber).padStart(3, '0')}`
     : '';
 
-  const frameSvg = `<svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5e6c8"/><stop offset="50%" stop-color="#efe0c0"/><stop offset="100%" stop-color="#f5e6c8"/></linearGradient></defs><rect x="8" y="4" width="384" height="42" rx="3" fill="url(#bg)" stroke="#B8965A" stroke-width="1"/><rect x="4" y="1" width="392" height="48" rx="5" fill="none" stroke="#B8965A" stroke-width="0.8"/><circle cx="24" cy="25" r="8" fill="none" stroke="#C8A96E" stroke-width="0.6"/><circle cx="24" cy="25" r="4" fill="none" stroke="#C8A96E" stroke-width="0.4"/><circle cx="376" cy="25" r="8" fill="none" stroke="#C8A96E" stroke-width="0.6"/><circle cx="376" cy="25" r="4" fill="none" stroke="#C8A96E" stroke-width="0.4"/><path d="M36,25 C40,18 44,15 50,15 C44,15 40,12 36,5" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M36,25 C40,32 44,35 50,35 C44,35 40,38 36,45" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M364,25 C360,18 356,15 350,15 C356,15 360,12 364,5" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M364,25 C360,32 356,35 350,35 C356,35 360,38 364,45" fill="none" stroke="#C8A96E" stroke-width="0.5"/></svg>`;
+  const frameSvg = `<svg viewBox="0 0 440 80" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="${palette.accent}" stroke-linejoin="miter"><path d="M 22,6 L 418,6 L 440,40 L 418,74 L 22,74 L 0,40 Z" stroke-width="1.3"/><path d="M 28,12 L 412,12 L 432,40 L 412,68 L 28,68 L 8,40 Z" stroke-width=".6" opacity=".55"/></g><g transform="translate(12 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(428 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(220 6)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g><g transform="translate(220 74)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g></svg>`;
 
   const buildLine = (line: MushafLine) => {
-    const cls = line.isCentered ? 'lc' : 'l';
+    const isSurahEnd = isSurahEndingLine(line.words);
+    const cls = line.isCentered ? `lc${isSurahEnd ? ' surahEnd' : ''}` : 'l';
+    const attrs = isSurahEnd ? ' data-surah-end="true"' : '';
     const text = line.words.map((w) => {
       const ds = w.surahNumber;
       const da = w.ayahNumber;
@@ -57,7 +82,7 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
       }
       return `<span class="w" data-s="${ds}" data-a="${da}">${w.codeV2}</span>`;
     }).join(' ');
-    return `<div class="${cls}">${text}</div>`;
+    return `<div class="${cls}"${attrs}><span class="lineInner">${text}</span></div>`;
   };
 
   const buildBanner = (code: string, inSlot = false) =>
@@ -152,9 +177,6 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
     bodyContent = slots.join('\n');
   }
 
-  // Only show border on compact surah pages (Al-Fatiha style), not full 15-line pages
-  const border = (isSurahStart && !isFullPage) ? 'border:2px solid #C8A96E;border-radius:4px;' : '';
-
   return `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -164,25 +186,28 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
 @font-face{font-family:'QCF';src:url(data:font/woff2;base64,${fontBase64});font-display:block}
 @font-face{font-family:'SurahNames';src:url('https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf') format('truetype');font-display:swap}
 ${bismillahFontFace}
+@font-palette-values --QcfSepia{font-family:'QCF';base-palette:2}
+@font-palette-values --QcfBismillahSepia{font-family:'QCF1';base-palette:2}
 *{margin:0;padding:0;box-sizing:border-box}
-html{height:100%;overflow:hidden}
-body{height:100%;background:#FAF8F2;color:#1A1A2E;font-family:'QCF';font-size:7vw;direction:rtl;display:flex;flex-direction:column;padding:0 4vw;-webkit-user-select:none;user-select:none;position:relative;${border}}
-.l,.lc,.empty{height:calc(100%/15);display:flex;align-items:center;white-space:nowrap;transform-origin:right center}
-.l{justify-content:flex-start}
+html{min-height:100%;max-width:100vw;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:${palette.background};color:${palette.foreground};font-family:'QCF';font-palette:--QcfSepia;font-size:${bodyFontVw}vw;direction:rtl;display:flex;flex-direction:column;padding:0 4vw max(12vh,72px);-webkit-user-select:none;user-select:none;position:relative}
+.l,.lc,.empty{min-height:max(calc(100vh/15),2.2em);height:auto;width:100%;max-width:100%;overflow:hidden;display:flex;align-items:center;white-space:nowrap;transform-origin:right center;line-height:1.2}
+.l{justify-content:center;transform-origin:center center}
 .lc{justify-content:center;transform-origin:center center}
-.group{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh;margin-bottom:10vh}
-.group .l,.group .lc{height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:min(7vw,28px)}
-.sb{position:relative;text-align:center;direction:ltr;margin:0 2vw 0.5vh}
+.lineInner{display:inline-block;white-space:nowrap;max-width:none;transform-origin:center center;line-height:1.2}
+.group{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh;margin-bottom:10vh}
+.group .l,.group .lc{height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:min(${compactFontVw}vw,${compactFontPx}px)}
+.sb{position:relative;text-align:center;direction:ltr;margin:0 0 0.5vh}
 .sb svg{width:100%;height:auto;display:block}
-.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(7vw,30px);color:#5C4033;white-space:nowrap}
-.sb.slot{height:calc(100%/15);display:flex;align-items:center;justify-content:center;margin:0}
-.sb.slot svg{height:90%;width:auto}
-.bsm{display:flex;align-items:center;justify-content:center;color:#1A1A2E;font-family:'QCF1';font-size:min(5.5vw,24px);white-space:nowrap}
-.bsm.slot{height:calc(100%/15)}
-.rub{font-family:'Noto Naskh Arabic',serif;color:#B8965A;font-size:1.8em;line-height:0.5;vertical-align:middle}
+.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(6.5vw,28px);color:${palette.foreground};white-space:nowrap}
+.sb.slot{min-height:max(calc(100vh/15),2.2em);height:auto;display:flex;align-items:center;justify-content:center;margin:0}
+.sb.slot svg{width:100%;height:auto;max-height:100%}
+.bsm{display:flex;align-items:center;justify-content:center;color:${palette.foreground};font-family:'QCF1';font-palette:--QcfBismillahSepia;font-size:min(${bismillahFontVw}vw,${bismillahFontPx}px);white-space:nowrap}
+.bsm.slot{min-height:max(calc(100vh/15),2.2em);height:auto}
+.rub{font-family:'Noto Naskh Arabic',serif;color:${palette.accent};font-size:1.8em;line-height:0.5;vertical-align:middle}
 .w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.w.sel,.rub.sel{background:rgba(184,150,90,0.25);border-radius:4px}
-.w.playing,.rub.playing{background:rgba(218,165,32,0.30);border-radius:4px;transition:background 120ms ease}
+.w.sel,.rub.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
+.w.playing,.rub.playing{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.accent};transition:background 120ms ease,box-shadow 120ms ease}
 </style>
 </head>
 <body>
@@ -190,14 +215,18 @@ ${bodyContent}
 <script>
 document.fonts.ready.then(function(){
   requestAnimationFrame(function(){requestAnimationFrame(function(){
-    var els=document.querySelectorAll('.l');
+    var els=document.querySelectorAll('.l,.lc');
     for(var i=0;i<els.length;i++){
-      if(els[i].parentElement&&els[i].parentElement.classList.contains('group'))continue;
+      var inner=els[i].querySelector('.lineInner');
+      if(!inner)continue;
+      inner.style.transform='';
+      els[i].style.justifyContent='';
       var cw=els[i].clientWidth;
-      var sw=els[i].scrollWidth;
+      var sw=inner.scrollWidth||inner.getBoundingClientRect().width;
       if(sw>0&&cw>0){
         var s=cw/sw;
-        if(s>0.3&&s<1.5)els[i].style.transform='scaleX('+s+')';
+        if(s>0.3&&s<1)inner.style.transform='scaleX('+s+')';
+        else els[i].style.justifyContent='center';
       }
     }
   })});
