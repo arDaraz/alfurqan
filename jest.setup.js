@@ -22,4 +22,5 @@ const mockAudioPlayer = {
 jest.mock('expo-audio', () => ({
   createAudioPlayer: jest.fn(() => mockAudioPlayer),
   setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
+  setIsAudioActiveAsync: jest.fn().mockResolvedValue(undefined),
 }));

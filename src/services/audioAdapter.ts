@@ -1,6 +1,7 @@
 import {
   createAudioPlayer,
   setAudioModeAsync,
+  setIsAudioActiveAsync,
   type AudioPlayer,
   type AudioStatus,
 } from 'expo-audio';
@@ -48,6 +49,14 @@ let setupPromise: Promise<void> | null = null;
 let statusListener: ((status: AudioPlaybackStatus) => void) | null = null;
 let statusSubscription: { remove: () => void } | null = null;
 
+async function activateAudioSession(activePlayer?: AudioPlayer): Promise<void> {
+  await setIsAudioActiveAsync(true);
+  if (activePlayer) {
+    activePlayer.muted = false;
+    activePlayer.volume = 1;
+  }
+}
+
 export function registerAudioRemoteHandlers(_handlers: AudioRemoteHandlers): void {
   // expo-audio handles lock-screen play/pause/seek on the active player. This
   // hook preserves the engine contract for platforms/adapters with custom events.
@@ -61,10 +70,12 @@ async function setup(): Promise<AudioPlayer> {
       shouldRouteThroughEarpiece: false,
       shouldPlayInBackground: true,
       interruptionMode: 'doNotMix',
-    }).catch((error) => {
-      setupPromise = null;
-      throw error;
-    });
+    })
+      .then(() => activateAudioSession())
+      .catch((error) => {
+        setupPromise = null;
+        throw error;
+      });
   }
 
   await setupPromise;
@@ -104,9 +115,8 @@ async function waitForLoad(activePlayer: AudioPlayer): Promise<AudioLoadResult> 
 export const audioAdapter: AudioAdapter = {
   async load(options) {
     const activePlayer = await setup();
+    await activateAudioSession(activePlayer);
     activePlayer.pause();
-    activePlayer.muted = false;
-    activePlayer.volume = 1;
     activePlayer.replace({ uri: options.uri, name: options.title });
     activePlayer.setActiveForLockScreen(
       true,
@@ -126,6 +136,7 @@ export const audioAdapter: AudioAdapter = {
 
   async play() {
     const activePlayer = await setup();
+    await activateAudioSession(activePlayer);
     activePlayer.play();
   },
 
