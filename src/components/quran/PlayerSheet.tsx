@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000055',
   },
   sheet: {
+    direction: 'rtl',
     minHeight: 450,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -261,6 +262,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: theme.typography.label.size,
     fontWeight: '700',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   iconButton: {
     width: 36,
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   reciterRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     marginTop: theme.spacing.md,
   },
@@ -286,7 +289,8 @@ const styles = StyleSheet.create({
   avatarText: {
     color: theme.colors.surface,
     fontSize: 20,
-    fontFamily: theme.fonts.arabic,
+    fontFamily: theme.fonts.quran,
+    writingDirection: 'rtl',
   },
   reciterCopy: {
     flex: 1,
@@ -297,13 +301,18 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: 16,
     fontWeight: '700',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   reciterMeta: {
     color: theme.colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   ayahCard: {
+    direction: 'rtl',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.divider,
@@ -315,13 +324,15 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: 12,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   ayahText: {
     color: theme.colors.text,
-    fontFamily: theme.fonts.arabic,
-    fontSize: 20,
-    lineHeight: 36,
+    fontFamily: theme.fonts.quran,
+    fontSize: theme.typeScale.quranSm.size,
+    lineHeight: theme.typeScale.quranSm.size * theme.typeScale.quranSm.lineHeight,
     textAlign: 'right',
+    writingDirection: 'rtl',
     marginTop: theme.spacing.sm,
   },
   seekArea: {

@@ -68,6 +68,10 @@ export class AyahAudioCache {
     return promise;
   }
 
+  async prefetch(reciterId: string, surah: number, ayah: number): Promise<string> {
+    return this.getLocalPath(reciterId, surah, ayah);
+  }
+
   private async resolveLocalPath(
     reciterId: string,
     surah: number,

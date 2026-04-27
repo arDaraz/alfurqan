@@ -111,6 +111,23 @@ describe('ayahAudioCache.getLocalPath', () => {
     expect(fs.downloadAsync).toHaveBeenCalledTimes(1);
   });
 
+  it('prefetches through the same persistent ayah cache', async () => {
+    fs.getInfoAsync.mockResolvedValueOnce({
+      exists: true,
+      isDirectory: false,
+      uri: 'file:///documents/recitation/Husary_128kbps/001/002.mp3',
+      size: 42,
+      modificationTime: 1,
+      md5: 'hash',
+    });
+    const cache = createAyahAudioCacheForTest();
+
+    const path = await cache.prefetch('Husary_128kbps', 1, 2);
+
+    expect(path).toBe('file:///documents/recitation/Husary_128kbps/001/002.mp3');
+    expect(fs.downloadAsync).not.toHaveBeenCalled();
+  });
+
   it('deletes an empty cached file before refetching it', async () => {
     fs.getInfoAsync
       .mockResolvedValueOnce({

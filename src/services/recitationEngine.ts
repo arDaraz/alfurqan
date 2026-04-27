@@ -16,6 +16,7 @@ type AudioCacheLike = {
     ayah: number,
     signal?: AbortSignal
   ) => Promise<string>;
+  prefetch?: (reciterId: string, surah: number, ayah: number) => Promise<string>;
 };
 
 type RecitationEngineDeps = {
@@ -25,6 +26,7 @@ type RecitationEngineDeps = {
 
 type LoadIntent = 'play' | 'pause';
 const LOCK_SCREEN_ARTWORK: string | undefined = undefined;
+const PREFETCH_AHEAD_AYAHS = 3;
 
 function mapError(error: unknown): { category: 'network' | 'audio-unavailable' | 'storage'; message: string } {
   if (error instanceof CacheError) {
@@ -179,6 +181,7 @@ export class RecitationEngine {
     try {
       const localPath = await this.cache.getLocalPath(this.reciterId, snapshot.range.surah, ayah, signal);
       if (token !== this.loadToken) return;
+      this.prefetchUpcoming(snapshot.range, ayah);
 
       const reciter = getReciterById(this.reciterId);
       const result = await this.adapter.load({
@@ -221,12 +224,24 @@ export class RecitationEngine {
     );
   }
 
+  private prefetchUpcoming(range: PlaybackRange, ayah: number): void {
+    if (!this.cache.prefetch) return;
+
+    const stopAyah = Math.min(range.stopAyah, ayah + PREFETCH_AHEAD_AYAHS);
+    for (let nextAyah = ayah + 1; nextAyah <= stopAyah; nextAyah += 1) {
+      void this.cache.prefetch(this.reciterId, range.surah, nextAyah).catch(() => undefined);
+    }
+  }
+
   private handlePlaybackStatus(status: AudioPlaybackStatus): void {
     const snapshot = this.getSnapshot();
     if (!snapshot.range || snapshot.state === 'idle' || snapshot.state === 'error') return;
 
     const durationSeconds = status.duration || snapshot.durationSeconds;
-    useRecitationStore.getState()._setProgress(status.currentTime, durationSeconds);
+    const currentTime = durationSeconds > 0
+      ? Math.min(Math.max(0, status.currentTime), durationSeconds)
+      : Math.max(0, status.currentTime);
+    useRecitationStore.getState()._setProgress(currentTime, durationSeconds);
 
     if (!status.didJustFinish || snapshot.state !== 'playing' || this.handlingFinish) return;
 

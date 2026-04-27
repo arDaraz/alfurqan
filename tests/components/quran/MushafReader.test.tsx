@@ -1,6 +1,23 @@
 const mockMushafPageProps: Record<string, any>[] = [];
 const mockSetLastReadPage = jest.fn();
 
+jest.mock('react-native-mmkv', () => ({
+  createMMKV: jest.fn(() => ({
+    getString: jest.fn(),
+    set: jest.fn(),
+    remove: jest.fn(),
+    getAllKeys: jest.fn().mockReturnValue([]),
+  })),
+}));
+
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    MaterialCommunityIcons: ({ name }: { name: string }) => <Text>{name}</Text>,
+  };
+});
+
 jest.mock('react-native-pager-view', () => {
   const React = require('react');
   const { View } = require('react-native');

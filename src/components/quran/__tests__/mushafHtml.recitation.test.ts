@@ -22,7 +22,7 @@ describe('generateMushafHtml recitation highlight protocol', () => {
       fontBase64: 'font',
     });
 
-    expect(html).toContain('.w.playing,.rub.playing');
+    expect(html).toContain('.ayahRun.playing');
     expect(html).toContain('function setPlayingAyah(s,a)');
     expect(html).toContain("document.querySelectorAll('.playing')");
     expect(html).toContain('window.setPlayingAyah=setPlayingAyah');

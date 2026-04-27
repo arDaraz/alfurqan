@@ -104,6 +104,22 @@ describe('recitationEngine popup start', () => {
     expect(events).toEqual(['load', 'play']);
   });
 
+  it('prefetches upcoming ayahs after the current ayah is ready', async () => {
+    const adapter = createAdapter();
+    const cache = {
+      getLocalPath: jest.fn(async () => 'file:///recitation/Husary_128kbps/001/001.mp3'),
+      prefetch: jest.fn(async () => 'file:///recitation/Husary_128kbps/001/next.mp3'),
+    };
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+
+    expect(cache.prefetch).toHaveBeenCalledWith('Husary_128kbps', 1, 2);
+    expect(cache.prefetch).toHaveBeenCalledWith('Husary_128kbps', 1, 3);
+    expect(cache.prefetch).toHaveBeenCalledWith('Husary_128kbps', 1, 4);
+    expect(cache.prefetch).not.toHaveBeenCalledWith('Husary_128kbps', 1, 5);
+  });
+
   it('exposes loading while the selected ayah is being resolved', async () => {
     let resolvePath!: (path: string) => void;
     const adapter = createAdapter();
@@ -237,6 +253,20 @@ describe('recitationEngine popup start', () => {
     expect(engine.getSnapshot()).toMatchObject({
       positionSeconds: 3,
       durationSeconds: 9.25,
+    });
+  });
+
+  it('clamps native playback position to the current ayah duration', async () => {
+    const adapter = createStatusAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    adapter.emitStatus({ currentTime: 13, duration: 11 });
+
+    expect(engine.getSnapshot()).toMatchObject({
+      positionSeconds: 11,
+      durationSeconds: 11,
     });
   });
 

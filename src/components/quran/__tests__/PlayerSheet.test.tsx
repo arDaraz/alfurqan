@@ -42,11 +42,13 @@ jest.mock('../ReciterPickerSheet', () => {
 });
 
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { PlayerSheet } from '../PlayerSheet';
 import { recitationEngine } from '../../../services/recitationEngine';
 import { downloadKey, useReciterStore } from '../../../stores/reciterStore';
 import { useRecitationStore } from '../../../stores/recitationStore';
+import { theme } from '../../../constants/theme';
 
 describe('PlayerSheet', () => {
   const startSurahDownload = jest.fn();
@@ -87,6 +89,19 @@ describe('PlayerSheet', () => {
     expect(recitationEngine.next).toHaveBeenCalledTimes(1);
     expect(recitationEngine.prev).toHaveBeenCalledTimes(1);
     expect(recitationEngine.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the current ayah with the Mushaf Quran font and RTL direction', async () => {
+    const { getByText } = render(<PlayerSheet visible onClose={jest.fn()} />);
+
+    const ayah = await waitFor(() => getByText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'));
+    const style = StyleSheet.flatten(ayah.props.style);
+
+    expect(style).toMatchObject({
+      fontFamily: theme.fonts.quran,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    });
   });
 
   it('cycles speed and toggles repeat mode', async () => {
