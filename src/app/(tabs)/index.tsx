@@ -127,7 +127,6 @@ export default function HomeScreen() {
             data={filtered}
             renderItem={renderSurahItem}
             keyExtractor={surahKeyExtractor}
-            estimatedItemSize={64}
             ListEmptyComponent={
               query.length > 0 ? <EmptySearchResult query={query} /> : null
             }
@@ -137,7 +136,6 @@ export default function HomeScreen() {
             data={juzList}
             renderItem={renderJuzItem}
             keyExtractor={juzKeyExtractor}
-            estimatedItemSize={64}
           />
         )}
       </View>
