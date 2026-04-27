@@ -16,14 +16,8 @@ export function MushafBottomToolbar({ onPlayPress }: MushafBottomToolbarProps) {
 
   return (
     <View style={styles.container}>
-      <ToolbarIcon
-        label="معلومات"
-        icon="information-outline"
-      />
-      <ToolbarIcon
-        label="القائمة"
-        icon="format-list-bulleted"
-      />
+      <ToolbarIcon label="معلومات" icon="information-outline" />
+      <ToolbarIcon label="القائمة" icon="format-list-bulleted" />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={strings.startPractice}
@@ -37,10 +31,7 @@ export function MushafBottomToolbar({ onPlayPress }: MushafBottomToolbarProps) {
         onPress={onPlayPress}
         disabled={playbackDisabled}
       />
-      <ToolbarIcon
-        label="علامة"
-        icon="bookmark-outline"
-      />
+      <ToolbarIcon label="علامة" icon="bookmark-outline" />
     </View>
   );
 }

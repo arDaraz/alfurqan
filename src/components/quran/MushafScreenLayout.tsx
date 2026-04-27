@@ -7,7 +7,6 @@ import { getSurahForPage } from '../../data/quranRepository';
 import { handleAyahAction } from '../../actions/ayahActions';
 import { MushafReader } from './MushafReader';
 import { ReaderHeader } from './ReaderHeader';
-import { ReaderToolbar } from './ReaderToolbar';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
 import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
@@ -93,7 +92,6 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
             onPageChange={handlePageChange}
             onAyahAction={handleAction}
           />
-          <ReaderToolbar />
         </View>
       ) : null}
     </SafeAreaView>

@@ -39,6 +39,41 @@ describe('recitationEngine popup start', () => {
     };
   }
 
+  function createStatusAdapter(events: string[] = []) {
+    let listener: ((status: {
+      currentTime: number;
+      duration: number;
+      didJustFinish: boolean;
+      isLoaded: boolean;
+      playing: boolean;
+    }) => void) | null = null;
+    const adapter = {
+      ...createAdapter(events),
+      subscribeStatus: jest.fn((nextListener) => {
+        listener = nextListener;
+        return () => {
+          listener = null;
+        };
+      }),
+      emitStatus(status: {
+        currentTime?: number;
+        duration?: number;
+        didJustFinish?: boolean;
+        isLoaded?: boolean;
+        playing?: boolean;
+      }) {
+        listener?.({
+          currentTime: status.currentTime ?? 0,
+          duration: status.duration ?? 0,
+          didJustFinish: status.didJustFinish ?? false,
+          isLoaded: status.isLoaded ?? true,
+          playing: status.playing ?? true,
+        });
+      },
+    };
+    return adapter;
+  }
+
   function createCache(localPath = 'file:///recitation/Husary_128kbps/001/001.mp3') {
     return {
       getLocalPath: jest.fn(async () => localPath),
@@ -178,6 +213,41 @@ describe('recitationEngine popup start', () => {
 
     await engine.start({ surah: 1, startAyah: 1, stopAyah: 3, trigger: 'popup' });
     await engine.next();
+
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      currentAyah: 2,
+    });
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Husary_128kbps',
+      1,
+      2,
+      expect.any(AbortSignal)
+    );
+  });
+
+  it('updates progress from native playback status', async () => {
+    const adapter = createStatusAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    adapter.emitStatus({ currentTime: 3, duration: 9.25 });
+
+    expect(engine.getSnapshot()).toMatchObject({
+      positionSeconds: 3,
+      durationSeconds: 9.25,
+    });
+  });
+
+  it('advances to the next ayah when native playback finishes', async () => {
+    const adapter = createStatusAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 3, trigger: 'popup' });
+    adapter.emitStatus({ currentTime: 7, duration: 7, didJustFinish: true, playing: false });
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(engine.getSnapshot()).toMatchObject({
       state: 'playing',

@@ -2,6 +2,7 @@ import {
   createAudioPlayer,
   setAudioModeAsync,
   type AudioPlayer,
+  type AudioStatus,
 } from 'expo-audio';
 
 export type AudioLoadOptions = {
@@ -15,6 +16,14 @@ export type AudioLoadResult = {
   durationSeconds?: number;
 };
 
+export type AudioPlaybackStatus = {
+  currentTime: number;
+  duration: number;
+  didJustFinish: boolean;
+  isLoaded: boolean;
+  playing: boolean;
+};
+
 export type AudioAdapter = {
   load(options: AudioLoadOptions): Promise<AudioLoadResult>;
   play(): Promise<void>;
@@ -22,6 +31,7 @@ export type AudioAdapter = {
   stop(): Promise<void>;
   seek(seconds: number): Promise<void>;
   setSpeed(speed: number): Promise<void>;
+  subscribeStatus?: (listener: (status: AudioPlaybackStatus) => void) => () => void;
 };
 
 type AudioRemoteHandlers = {
@@ -35,6 +45,8 @@ type AudioRemoteHandlers = {
 
 let player: AudioPlayer | null = null;
 let setupPromise: Promise<void> | null = null;
+let statusListener: ((status: AudioPlaybackStatus) => void) | null = null;
+let statusSubscription: { remove: () => void } | null = null;
 
 export function registerAudioRemoteHandlers(_handlers: AudioRemoteHandlers): void {
   // expo-audio handles lock-screen play/pause/seek on the active player. This
@@ -44,7 +56,9 @@ export function registerAudioRemoteHandlers(_handlers: AudioRemoteHandlers): voi
 async function setup(): Promise<AudioPlayer> {
   if (!setupPromise) {
     setupPromise = setAudioModeAsync({
+      allowsRecording: false,
       playsInSilentMode: true,
+      shouldRouteThroughEarpiece: false,
       shouldPlayInBackground: true,
       interruptionMode: 'doNotMix',
     }).catch((error) => {
@@ -59,6 +73,17 @@ async function setup(): Promise<AudioPlayer> {
     player = createAudioPlayer(null, {
       updateInterval: 1000,
       keepAudioSessionActive: true,
+    });
+    player.muted = false;
+    player.volume = 1;
+    statusSubscription = player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+      statusListener?.({
+        currentTime: status.currentTime,
+        duration: status.duration,
+        didJustFinish: status.didJustFinish,
+        isLoaded: status.isLoaded,
+        playing: status.playing,
+      });
     });
   }
 
@@ -80,6 +105,8 @@ export const audioAdapter: AudioAdapter = {
   async load(options) {
     const activePlayer = await setup();
     activePlayer.pause();
+    activePlayer.muted = false;
+    activePlayer.volume = 1;
     activePlayer.replace({ uri: options.uri, name: options.title });
     activePlayer.setActiveForLockScreen(
       true,
@@ -118,5 +145,15 @@ export const audioAdapter: AudioAdapter = {
 
   async setSpeed(speed) {
     player?.setPlaybackRate(speed, 'medium');
+  },
+
+  subscribeStatus(listener) {
+    statusListener = listener;
+    void setup();
+    return () => {
+      if (statusListener === listener) {
+        statusListener = null;
+      }
+    };
   },
 };

@@ -3,7 +3,7 @@ import { getReciterById } from '../data/reciters';
 import { useReciterStore } from '../stores/reciterStore';
 import { useRecitationStore, type PlaybackRange, type PlaybackMode, type PlaybackSpeed } from '../stores/recitationStore';
 import { ayahAudioCache, CacheError } from './ayahAudioCache';
-import { audioAdapter, registerAudioRemoteHandlers, type AudioAdapter } from './audioAdapter';
+import { audioAdapter, registerAudioRemoteHandlers, type AudioAdapter, type AudioPlaybackStatus } from './audioAdapter';
 
 type WebViewLike = {
   injectJavaScript: (script: string) => void;
@@ -24,7 +24,7 @@ type RecitationEngineDeps = {
 };
 
 type LoadIntent = 'play' | 'pause';
-const LOCK_SCREEN_ARTWORK = 'asset:/assets/images/icon.png';
+const LOCK_SCREEN_ARTWORK: string | undefined = undefined;
 
 function mapError(error: unknown): { category: 'network' | 'audio-unavailable' | 'storage'; message: string } {
   if (error instanceof CacheError) {
@@ -46,12 +46,14 @@ export class RecitationEngine {
   private abortController: AbortController | null = null;
   private pendingSeek: number | null = null;
   private pendingPause = false;
+  private handlingFinish = false;
   private activePageWebViewRef: RefObject<WebViewLike | null> | null = null;
 
   constructor(deps: RecitationEngineDeps) {
     this.adapter = deps.adapter;
     this.cache = deps.cache;
     useRecitationStore.getState()._reset();
+    this.adapter.subscribeStatus?.((status) => this.handlePlaybackStatus(status));
   }
 
   getSnapshot() {
@@ -61,6 +63,7 @@ export class RecitationEngine {
   async start(range: PlaybackRange): Promise<void> {
     this.pendingSeek = null;
     this.pendingPause = false;
+    this.handlingFinish = false;
     useRecitationStore.getState()._setSession(range, range.startAyah);
     await this.loadAyah(range.startAyah, 'play');
   }
@@ -93,6 +96,7 @@ export class RecitationEngine {
     this.loadToken += 1;
     this.pendingSeek = null;
     this.pendingPause = false;
+    this.handlingFinish = false;
     await this.adapter.stop();
     useRecitationStore.getState()._reset();
     this.highlightInWebView(null, null);
@@ -168,6 +172,7 @@ export class RecitationEngine {
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
     const token = ++this.loadToken;
+    this.handlingFinish = false;
     useRecitationStore.getState()._setCurrentAyah(ayah);
     useRecitationStore.getState()._setState('loading');
 
@@ -214,6 +219,21 @@ export class RecitationEngine {
     this.activePageWebViewRef?.current?.injectJavaScript(
       `window.setPlayingAyah(${surah ?? 'null'}, ${ayah ?? 'null'}); true;`
     );
+  }
+
+  private handlePlaybackStatus(status: AudioPlaybackStatus): void {
+    const snapshot = this.getSnapshot();
+    if (!snapshot.range || snapshot.state === 'idle' || snapshot.state === 'error') return;
+
+    const durationSeconds = status.duration || snapshot.durationSeconds;
+    useRecitationStore.getState()._setProgress(status.currentTime, durationSeconds);
+
+    if (!status.didJustFinish || snapshot.state !== 'playing' || this.handlingFinish) return;
+
+    this.handlingFinish = true;
+    void this.next().finally(() => {
+      this.handlingFinish = false;
+    });
   }
 }
 

@@ -1,16 +1,20 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 import { LogoGlyph } from '../brand/LogoGlyph';
 import { OrnamentDivider } from '../brand/OrnamentDivider';
+import { OnboardingDots } from './OnboardingDots';
 
 interface OnboardingScreenProps {
   heading: string;
   body: string;
   illustrationIcon: string;
   isLastScreen: boolean;
+  screenIndex: number;
+  totalScreens: number;
   onGetStarted?: () => void;
   /** Whether this is the first page (gets the brand glyph instead of an icon). */
   isFirstScreen?: boolean;
@@ -26,13 +30,16 @@ export function OnboardingScreen({
   body,
   illustrationIcon,
   isLastScreen,
+  screenIndex,
+  totalScreens,
   isFirstScreen,
   onGetStarted,
 }: OnboardingScreenProps) {
   const { width } = useWindowDimensions();
   const theme = useTheme();
   const strings = useStrings();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(theme, insets.bottom);
 
   return (
     <View style={[styles.container, { width }]}>
@@ -63,14 +70,17 @@ export function OnboardingScreen({
       </View>
 
       <View style={styles.bottomArea}>
+        <OnboardingDots total={totalScreens} active={screenIndex} />
         {isLastScreen ? (
           <Pressable
             onPress={onGetStarted}
             accessibilityLabel={strings.getStarted}
             accessibilityRole="button"
-            style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+            style={({ pressed }) => [styles.ctaHitArea, pressed && styles.ctaPressed]}
           >
-            <Text style={styles.ctaText}>{strings.getStarted}</Text>
+            <View style={styles.ctaSurface}>
+              <Text style={styles.ctaText}>{strings.getStarted}</Text>
+            </View>
           </Pressable>
         ) : (
           <Text style={styles.swipeHint}>{strings.swipeToContinue}</Text>
@@ -80,7 +90,7 @@ export function OnboardingScreen({
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, bottomInset: number) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -121,37 +131,41 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       maxWidth: 320,
     },
     bottomArea: {
-      paddingBottom: theme.spacing['3xl'],
+      paddingBottom: Math.max(bottomInset, theme.spacing.md) + theme.spacing.xl,
       paddingHorizontal: theme.spacing.xl,
       alignItems: 'center',
-      gap: theme.spacing.md,
+      gap: theme.spacing.lg,
     },
-    cta: {
-      backgroundColor: theme.semantic.primary,
-      height: 48,
+    ctaHitArea: {
+      minWidth: 220,
+      minHeight: 52,
+    },
+    ctaSurface: {
+      height: 52,
       minWidth: 220,
       paddingHorizontal: theme.spacing.lg,
       borderRadius: theme.radii.md,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: theme.semantic.primary,
       ...theme.elevation.shadow2,
     },
     ctaPressed: {
-      backgroundColor: theme.semantic.primaryPressed,
+      opacity: 0.86,
     },
     ctaText: {
       fontFamily: theme.fonts.latin,
       fontSize: 16,
       fontWeight: '600',
       color: theme.semantic.fgOnPrimary,
-      letterSpacing: 0.16,
+      letterSpacing: 0,
     },
     swipeHint: {
       fontFamily: theme.fonts.latin,
       fontSize: 13,
       color: theme.semantic.fgSubtle,
       textAlign: 'center',
-      letterSpacing: 0.4,
+      letterSpacing: 0,
     },
   });
 }
