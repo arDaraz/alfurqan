@@ -32,6 +32,15 @@ jest.mock('../../../services/recitationEngine', () => ({
   },
 }));
 
+jest.mock('../ReciterPickerSheet', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    ReciterPickerSheet: ({ visible }: { visible: boolean }) =>
+      visible ? <Text>reciter-picker</Text> : null,
+  };
+});
+
 import React from 'react';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { PlayerSheet } from '../PlayerSheet';
@@ -81,5 +90,18 @@ describe('PlayerSheet', () => {
 
     expect(recitationEngine.setSpeed).toHaveBeenCalledWith(1);
     expect(recitationEngine.setMode).toHaveBeenCalledWith('loop-surah');
+  });
+
+  it('opens the reciter picker from the reciter control', async () => {
+    const { getByLabelText, getByText, queryByText } = render(
+      <PlayerSheet visible onClose={jest.fn()} />
+    );
+
+    await waitFor(() => expect(getByText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ')).toBeTruthy());
+    expect(queryByText('reciter-picker')).toBeNull();
+
+    fireEvent.press(getByLabelText('القارئ'));
+
+    expect(getByText('reciter-picker')).toBeTruthy();
   });
 });

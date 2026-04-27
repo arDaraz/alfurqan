@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PlayerSheet } from './PlayerSheet';
-import { getReciterById, DEFAULT_RECITER_ID } from '../../data/reciters';
+import { getReciterById } from '../../data/reciters';
 import { recitationEngine } from '../../services/recitationEngine';
+import { useReciterStore } from '../../stores/reciterStore';
 import { useRecitationStore } from '../../stores/recitationStore';
 import { useStrings } from '../../constants/strings';
 import { theme } from '../../constants/theme';
@@ -17,10 +18,11 @@ export function MiniPlayerBar() {
   const positionSeconds = useRecitationStore((s) => s.positionSeconds);
   const durationSeconds = useRecitationStore((s) => s.durationSeconds);
   const errorMessage = useRecitationStore((s) => s.errorMessage);
+  const selectedReciterId = useReciterStore((s) => s.selectedReciterId);
 
   if (state === 'idle' || !range || currentAyah === null) return null;
 
-  const reciter = getReciterById(DEFAULT_RECITER_ID);
+  const reciter = getReciterById(selectedReciterId);
   const progress =
     durationSeconds > 0 ? Math.max(0, Math.min(1, positionSeconds / durationSeconds)) : 0;
   const isPaused = state === 'paused';

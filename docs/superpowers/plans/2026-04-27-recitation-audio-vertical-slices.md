@@ -549,37 +549,37 @@ git commit -m "feat(recitation): add expanded player controls"
 - Switching while idle only changes persistence.
 - Switching while playing reloads the current ayah and resumes prior play/pause intent.
 
-- [ ] **Step 1: Write reciter store tests**
+- [x] **Step 1: Write reciter store tests**
 
 Create `src/stores/__tests__/reciterStore.test.ts` for:
 - default selected reciter is `Husary_128kbps`
 - `selectReciter('Minshawy_Murattal_128kbps')` persists selection
 - persisted `downloading` states hydrate as `idle`
 
-- [ ] **Step 2: Implement reciter store**
+- [x] **Step 2: Implement reciter store**
 
 Create `src/stores/reciterStore.ts` with selected reciter, catalog selectors, download metadata shape, MMKV persistence, and hydration cleanup.
 
-- [ ] **Step 3: Add engine reciter swap tests**
+- [x] **Step 3: Add engine reciter swap tests**
 
 Extend `recitationEngine.test.ts`:
 - `setReciter` while idle persists only
 - `setReciter` while playing reloads same ayah from new reciter
 - `setReciter` while paused reloads and remains paused
 
-- [ ] **Step 4: Implement `setReciter`**
+- [x] **Step 4: Implement `setReciter`**
 
 Modify `recitationEngine.ts` to abort in-flight load, increment `loadToken`, preserve `currentAyah`, and reload with the new reciter.
 
-- [ ] **Step 5: Create reciter picker**
+- [x] **Step 5: Create reciter picker**
 
 Create `ReciterPickerSheet.tsx` with cards for the five catalog entries, locale-aware names, qira'a text, avatar initials, and downloaded-status badge.
 
-- [ ] **Step 6: Wire sheet and settings**
+- [x] **Step 6: Wire sheet and settings**
 
 Modify `PlayerSheet.tsx` reciter button to open `ReciterPickerSheet`. Replace the current minimal `settings.tsx` screen with settings rows for `القارئ` and `التلاوات المحفوظة`; only the reciter row needs to be functional in this slice.
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run:
 
@@ -601,7 +601,9 @@ Expected:
 - Change reciter from settings, close/reopen app screen, and confirm choice remains.
 - Start playback, switch reciter from sheet, and confirm the current ayah continues under the new reciter.
 
-- [ ] **Step 9: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/app/\(tabs\)/settings.tsx src/components/quran/PlayerSheet.tsx src/components/quran/ReciterPickerSheet.tsx src/services/recitationEngine.ts src/stores/reciterStore.ts src/stores/__tests__/reciterStore.test.ts src/services/__tests__/recitationEngine.test.ts

@@ -1,7 +1,24 @@
+jest.mock('react-native-mmkv', () => ({
+  createMMKV: jest.fn(() => ({
+    getString: jest.fn(),
+    set: jest.fn(),
+    remove: jest.fn(),
+    getAllKeys: jest.fn().mockReturnValue([]),
+  })),
+}));
+
 import { CacheError } from '../ayahAudioCache';
 import { createRecitationEngineForTest } from '../recitationEngine';
+import { useReciterStore } from '../../stores/reciterStore';
 
 describe('recitationEngine popup start', () => {
+  beforeEach(() => {
+    useReciterStore.setState({
+      selectedReciterId: 'Husary_128kbps',
+      downloads: {},
+    });
+  });
+
   function createAdapter(events: string[] = []) {
     return {
       load: jest.fn(async () => {
@@ -257,6 +274,60 @@ describe('recitationEngine popup start', () => {
     resolvePath('file:///recitation/Husary_128kbps/001/001.mp3');
     await startPromise;
 
+    expect(adapter.play).not.toHaveBeenCalled();
+    expect(engine.getSnapshot().state).toBe('paused');
+  });
+
+  it('setReciter while idle persists without loading audio', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.setReciter('Minshawy_Murattal_128kbps');
+
+    expect(useReciterStore.getState().selectedReciterId).toBe('Minshawy_Murattal_128kbps');
+    expect(cache.getLocalPath).not.toHaveBeenCalled();
+    expect(adapter.load).not.toHaveBeenCalled();
+  });
+
+  it('setReciter while playing reloads the same ayah from the new reciter', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 2, stopAyah: 7, trigger: 'popup' });
+    await engine.setReciter('Minshawy_Murattal_128kbps');
+
+    expect(useReciterStore.getState().selectedReciterId).toBe('Minshawy_Murattal_128kbps');
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Minshawy_Murattal_128kbps',
+      1,
+      2,
+      expect.any(AbortSignal)
+    );
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      currentAyah: 2,
+    });
+  });
+
+  it('setReciter while paused reloads and remains paused', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 2, stopAyah: 7, trigger: 'popup' });
+    await engine.pause();
+    adapter.play.mockClear();
+
+    await engine.setReciter('Minshawy_Murattal_128kbps');
+
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Minshawy_Murattal_128kbps',
+      1,
+      2,
+      expect.any(AbortSignal)
+    );
     expect(adapter.play).not.toHaveBeenCalled();
     expect(engine.getSnapshot().state).toBe('paused');
   });

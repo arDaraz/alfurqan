@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { getReciterById, DEFAULT_RECITER_ID } from '../../data/reciters';
+import { ReciterPickerSheet } from './ReciterPickerSheet';
+import { getReciterById } from '../../data/reciters';
 import { getAyahTextRange } from '../../data/quranRepository';
 import { recitationEngine } from '../../services/recitationEngine';
+import { useReciterStore } from '../../stores/reciterStore';
 import { useRecitationStore, type PlaybackSpeed } from '../../stores/recitationStore';
 import { theme } from '../../constants/theme';
 import { useStrings } from '../../constants/strings';
@@ -24,8 +26,10 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
   const speed = useRecitationStore((s) => s.speed);
   const positionSeconds = useRecitationStore((s) => s.positionSeconds);
   const durationSeconds = useRecitationStore((s) => s.durationSeconds);
+  const selectedReciterId = useReciterStore((s) => s.selectedReciterId);
   const [ayahText, setAyahText] = useState('');
-  const reciter = getReciterById(DEFAULT_RECITER_ID);
+  const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
+  const reciter = getReciterById(selectedReciterId);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,7 +149,11 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
               />
             </Pressable>
             <SheetButton label="التالي" icon="skip-next" onPress={() => recitationEngine.next()} />
-            <SheetButton label="القارئ" icon="account-voice" />
+            <SheetButton
+              label="القارئ"
+              icon="account-voice"
+              onPress={() => setReciterPickerVisible(true)}
+            />
           </View>
 
           <View style={styles.modeStrip}>
@@ -162,6 +170,10 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
           </View>
 
           <Text style={styles.speedLabel}>{speed}x</Text>
+          <ReciterPickerSheet
+            visible={reciterPickerVisible}
+            onClose={() => setReciterPickerVisible(false)}
+          />
         </View>
       </View>
     </Modal>

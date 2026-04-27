@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
-import { DEFAULT_RECITER_ID, getReciterById } from '../data/reciters';
+import { getReciterById } from '../data/reciters';
+import { useReciterStore } from '../stores/reciterStore';
 import { useRecitationStore, type PlaybackRange, type PlaybackMode, type PlaybackSpeed } from '../stores/recitationStore';
 import { ayahAudioCache, CacheError } from './ayahAudioCache';
 import { audioAdapter, type AudioAdapter } from './audioAdapter';
@@ -39,7 +40,7 @@ function mapError(error: unknown): { category: 'network' | 'audio-unavailable' |
 export class RecitationEngine {
   private adapter: AudioAdapter;
   private cache: AudioCacheLike;
-  private reciterId = DEFAULT_RECITER_ID;
+  private reciterId = useReciterStore.getState().selectedReciterId;
   private loadToken = 0;
   private abortController: AbortController | null = null;
   private pendingSeek: number | null = null;
@@ -143,6 +144,7 @@ export class RecitationEngine {
 
   async setReciter(reciterId: string): Promise<void> {
     getReciterById(reciterId);
+    useReciterStore.getState().selectReciter(reciterId);
     this.reciterId = reciterId;
     const snapshot = this.getSnapshot();
     if (!snapshot.range || !snapshot.currentAyah || snapshot.state === 'idle') return;
