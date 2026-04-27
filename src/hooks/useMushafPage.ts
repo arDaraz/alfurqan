@@ -15,6 +15,7 @@ import { generateMushafHtml } from '../components/quran/mushafHtml';
 import { generateUnicodeMushafHtml, type UnicodeMushafHtmlOptions } from '../components/quran/mushafHtmlUnicode';
 import type { BismillahData } from '../components/quran/mushafHtml';
 import { SURAH_AL_FATIHA, surahHasBismillah } from '../constants/quran';
+import type { NightReadingMode } from '../constants/nightReading';
 import { useSettingsStore } from '../stores/settingsStore';
 import type { MushafFont } from '../stores/settingsStore';
 
@@ -53,9 +54,10 @@ export function quranFontScaleToHtmlScale(quranFontScale: number): number {
 export function buildMushafHtmlCacheKey(
   mushafFont: MushafFont,
   pageNumber: number,
-  quranFontScale: number
+  quranFontScale: number,
+  nightReadingMode: NightReadingMode = 'off'
 ): string {
-  return `${mushafFont}:${pageNumber}:${quranFontScaleToHtmlScale(quranFontScale).toFixed(4)}`;
+  return `${mushafFont}:${pageNumber}:${quranFontScaleToHtmlScale(quranFontScale).toFixed(4)}:${nightReadingMode}`;
 }
 
 function getWordsLoader(mushafFont: MushafFont) {
@@ -154,10 +156,16 @@ export function useMushafPage(pageNumber: number) {
   const mountedRef = useRef(true);
   const mushafFont = useSettingsStore((s) => s.mushafFont);
   const quranFontScale = useSettingsStore((s) => s.quranFontScale);
+  const nightReadingMode = useSettingsStore((s) => s.nightReadingMode);
 
   const loadPage = useCallback(async () => {
     const readerFontSizeScale = quranFontScaleToHtmlScale(quranFontScale);
-    const cacheKey = buildMushafHtmlCacheKey(mushafFont, pageNumber, quranFontScale);
+    const cacheKey = buildMushafHtmlCacheKey(
+      mushafFont,
+      pageNumber,
+      quranFontScale,
+      nightReadingMode
+    );
     const cached = htmlCache.get(cacheKey);
     if (cached) {
       setHtml(cached);
@@ -207,6 +215,7 @@ export function useMushafPage(pageNumber: number) {
             bismillahText: bismillahData?.codes,
             ...unicodeFontOptions,
             fontSizeScale: unicodeFontSizeScale,
+            nightReadingMode,
           })
         : generateMushafHtml({
             pageNumber,
@@ -216,6 +225,7 @@ export function useMushafPage(pageNumber: number) {
             surahNumber,
             bismillah: bismillahData,
             markers,
+            nightReadingMode,
           });
       cacheHtml(cacheKey, generatedHtml);
       setHtml(generatedHtml);
@@ -226,7 +236,7 @@ export function useMushafPage(pageNumber: number) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [pageNumber, mushafFont, quranFontScale]);
+  }, [pageNumber, mushafFont, quranFontScale, nightReadingMode]);
 
   useEffect(() => {
     mountedRef.current = true;

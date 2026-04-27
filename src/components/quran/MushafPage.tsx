@@ -5,7 +5,7 @@ import { useMushafPage } from '../../hooks/useMushafPage';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
 import { useStrings } from '../../constants/strings';
-import { theme } from '../../constants/theme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 
 interface MushafPageProps {
   pageNumber: number;
@@ -16,6 +16,8 @@ interface MushafPageProps {
 export function MushafPage({ pageNumber, onSelectionEvent, clearSelectionRef }: MushafPageProps) {
   const { html, loading, error, retry } = useMushafPage(pageNumber);
   const strings = useStrings();
+  const { colors } = useReaderColors();
+  const styles = createStyles(colors);
   const webViewRef = useRef<WebView>(null);
 
   // Attach clearSelection to the ref so parent can call it
@@ -51,7 +53,10 @@ export function MushafPage({ pageNumber, onSelectionEvent, clearSelectionRef }: 
         ref={webViewRef}
         source={{ html }}
         style={styles.webview}
-        scrollEnabled={false}
+        scrollEnabled={true}
+        directionalLockEnabled={true}
+        bounces={false}
+        overScrollMode="never"
         javaScriptEnabled={true}
         originWhitelist={['*']}
         showsHorizontalScrollIndicator={false}
@@ -63,13 +68,15 @@ export function MushafPage({ pageNumber, onSelectionEvent, clearSelectionRef }: 
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-});
+function createStyles(colors: ReaderColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    webview: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+  });
+}

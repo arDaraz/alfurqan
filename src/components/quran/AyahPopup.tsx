@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { useTheme } from '../../hooks/useTheme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
+import type { Theme } from '../../constants/theme';
 import type { AyahSelection, AyahActionType } from '../../data/types';
 
 interface AyahPopupProps {
@@ -58,8 +59,8 @@ const ACTIONS: ActionDef[] = [
 ];
 
 export function AyahPopup({ selection, x, y, onAction, onDismiss }: AyahPopupProps) {
-  const theme = useTheme();
-  const styles = createStyles(theme);
+  const { theme, colors } = useReaderColors();
+  const styles = createStyles(theme, colors);
 
   const screenWidth = Dimensions.get('window').width;
   const showBelow = y < POPUP_HEIGHT + TAIL_SIZE + 20;
@@ -77,7 +78,7 @@ export function AyahPopup({ selection, x, y, onAction, onDismiss }: AyahPopupPro
           {({ pressed }) => (
             <View style={[styles.close, pressed && styles.closePressed]}>
               <Svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-                stroke={theme.semantic.fgMuted} strokeWidth={2} strokeLinecap="round">
+                stroke={colors.fgMuted} strokeWidth={2} strokeLinecap="round">
                 <Path d="M18 6L6 18" />
                 <Path d="M6 6l12 12" />
               </Svg>
@@ -95,8 +96,8 @@ export function AyahPopup({ selection, x, y, onAction, onDismiss }: AyahPopupPro
             {({ pressed }) => (
               <View style={[styles.act, pressed && styles.actPressed]}>
                 <Svg width={20} height={20} viewBox="0 0 24 24"
-                  fill={a.primary ? theme.semantic.primary : 'none'}
-                  stroke={a.primary ? 'none' : theme.semantic.fg}
+                  fill={a.primary ? colors.primary : 'none'}
+                  stroke={a.primary ? 'none' : colors.fg}
                   strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
                   {a.elements.map((el, i) => {
                     if (el.type === 'path') return <Path key={i} d={el.d} />;
@@ -121,7 +122,7 @@ export function AyahPopup({ selection, x, y, onAction, onDismiss }: AyahPopupPro
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: Theme, colors: ReaderColors) {
   return StyleSheet.create({
     container: {
       position: 'absolute',
@@ -131,9 +132,9 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     popup: {
       flexDirection: 'row',
       alignItems: 'stretch',
-      backgroundColor: theme.semantic.bgRaised,
+      backgroundColor: colors.bgRaised,
       borderWidth: 1,
-      borderColor: theme.semantic.borderGold,
+      borderColor: colors.borderGold,
       borderRadius: theme.radii.md,
       padding: 6,
       gap: 2,
@@ -152,18 +153,18 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       minWidth: 48,
     },
     actPressed: {
-      backgroundColor: theme.semantic.primaryTint,
+      backgroundColor: colors.primaryTint,
     },
     actLabel: {
       fontFamily: theme.fonts.quran,
       fontSize: 11,
       fontWeight: '500',
-      color: theme.semantic.fgMuted,
+      color: colors.fgMuted,
       lineHeight: 13,
     },
     sep: {
       width: 1,
-      backgroundColor: theme.semantic.border,
+      backgroundColor: colors.border,
       marginHorizontal: 2,
       marginVertical: 6,
     },
@@ -175,15 +176,15 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       borderRadius: theme.radii.sm,
     },
     closePressed: {
-      backgroundColor: theme.semantic.bgSunken,
+      backgroundColor: colors.bgSunken,
     },
     // Downward tail — a rotated square with two borders, matching the design's CSS pseudo-element.
     tailBase: {
       position: 'absolute',
       width: TAIL_SIZE,
       height: TAIL_SIZE,
-      backgroundColor: theme.semantic.bgRaised,
-      borderColor: theme.semantic.borderGold,
+      backgroundColor: colors.bgRaised,
+      borderColor: colors.borderGold,
       transform: [{ rotate: '45deg' }],
     },
     tailDown: {

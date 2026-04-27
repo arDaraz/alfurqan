@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getSurahForPage } from '../../data/quranRepository';
 import { handleAyahAction } from '../../actions/ayahActions';
@@ -9,7 +10,7 @@ import { ReaderHeader } from './ReaderHeader';
 import { ReaderToolbar } from './ReaderToolbar';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
-import { useTheme } from '../../hooks/useTheme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import type { AyahActionType, AyahSelection } from '../../data/types';
 
 interface Props {
@@ -24,8 +25,8 @@ function juzForPage(page: number): number {
 }
 
 export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
-  const theme = useTheme();
-  const styles = createStyles(theme);
+  const { colors, nightReadingEnabled } = useReaderColors();
+  const styles = createStyles(colors);
   const [surahName, setSurahName] = useState('');
   const [currentPage, setCurrentPage] = useState<number | null>(null);
   const [initialPage, setInitialPage] = useState<number | null>(null);
@@ -75,6 +76,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
+      {nightReadingEnabled && <StatusBar style="light" />}
       <ReaderHeader
         surahName={surahName}
         juzNumber={juzForPage(currentPage ?? 1)}
@@ -98,9 +100,9 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(colors: ReaderColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.semantic.bg },
+    container: { flex: 1, backgroundColor: colors.bg, direction: 'rtl' },
     body: { flex: 1 },
   });
 }

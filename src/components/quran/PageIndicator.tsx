@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useStrings } from '../../constants/strings';
-import { useTheme } from '../../hooks/useTheme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import { OrnamentDivider } from '../brand/OrnamentDivider';
+import type { Theme } from '../../constants/theme';
 
 interface PageIndicatorProps {
   currentPage: number;
@@ -14,18 +15,22 @@ interface PageIndicatorProps {
  */
 export function PageIndicator({ currentPage }: PageIndicatorProps) {
   const strings = useStrings();
-  const theme = useTheme();
-  const styles = createStyles(theme);
+  const { theme, colors, nightReadingEnabled } = useReaderColors();
+  const styles = createStyles(theme, colors);
 
   return (
     <View style={styles.container}>
-      <OrnamentDivider tier="compact" color={theme.semantic.accent} darkMode={theme.mode === 'dark'} />
+      <OrnamentDivider
+        tier="compact"
+        color={colors.accent}
+        darkMode={nightReadingEnabled || theme.mode === 'dark'}
+      />
       <Text style={styles.text}>{strings.mushafPageIndicator(currentPage)}</Text>
     </View>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: Theme, colors: ReaderColors) {
   return StyleSheet.create({
     container: {
       paddingVertical: theme.spacing.sm,
@@ -38,7 +43,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 11,
       letterSpacing: 0.66,
       fontWeight: '600',
-      color: theme.semantic.accent,
+      color: colors.accent,
     },
   });
 }

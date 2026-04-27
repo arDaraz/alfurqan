@@ -215,7 +215,26 @@ describe('generateUnicodeMushafHtml', () => {
       fontMimeType: 'font/otf',
     });
 
-    expect(html).toContain('#content{width:100%;min-width:0;height:100%;');
+    expect(html).toContain('#content{width:100%;max-width:100%;overflow-x:hidden;min-width:0;min-height:100vh;height:auto;');
+  });
+
+  it('lets oversized Unicode pages scroll vertically instead of overlapping lines', () => {
+    const html = generateUnicodeMushafHtml({
+      pageNumber: 4,
+      words: fullPageWords,
+      fontBase64: 'font-data',
+      fontFamily: 'DigitalKhattIndopak',
+      fontFormat: 'opentype',
+      fontMimeType: 'font/otf',
+      fontSizeScale: 1.4,
+    });
+
+    expect(html).toContain('html,body{min-height:100%;max-width:100vw;overflow-x:hidden;overflow-y:auto');
+    expect(html).toContain('#content{width:100%;max-width:100%;overflow-x:hidden;min-width:0;min-height:100vh;height:auto;');
+    expect(html).toContain('max-width:100vw;overflow-x:hidden;');
+    expect(html).toContain('.line{width:100%;max-width:100%;min-height:max(calc(100vh/15),2em);height:auto;');
+    expect(html).toContain('overflow:hidden;');
+    expect(html).toContain('.sb.slot{min-height:max(calc(100vh/15),2em);height:auto;');
   });
 
   it('justifies shorter lines on full Unicode mushaf pages only', () => {
@@ -295,5 +314,21 @@ describe('generateUnicodeMushafHtml', () => {
 
     expect(html).toContain('<body class="compact">');
     expect(html).toContain("var shouldJustifyFullLines=document.body.classList.contains('full')&&!document.body.classList.contains('multiSurah');");
+  });
+
+  it('applies the selected night reading palette to Unicode mushaf pages', () => {
+    const html = generateUnicodeMushafHtml({
+      pageNumber: 2,
+      words,
+      fontBase64: 'font-data',
+      fontFamily: 'DigitalKhattIndopak',
+      fontFormat: 'opentype',
+      fontMimeType: 'font/otf',
+      nightReadingMode: 'sepia',
+    });
+
+    expect(html).toContain('body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:#1F1814;color:#F0DAB0;');
+    expect(html).toContain('.num{font-family:\'Noto Naskh Arabic\',\'Arial\',serif;color:#E0B265;');
+    expect(html).toContain('.ayah.sel{background:rgba(200,150,74,0.18);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(200,150,74,0.38)}');
   });
 });

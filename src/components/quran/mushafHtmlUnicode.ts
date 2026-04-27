@@ -1,5 +1,6 @@
 import type { MushafWord } from '../../data/types';
 import { surahHasBismillah } from '../../constants/quran';
+import { getNightReadingPalette, type NightReadingMode } from '../../constants/nightReading';
 import { isSurahEndingLine } from './surahLine';
 
 export interface UnicodeMushafHtmlOptions {
@@ -18,6 +19,7 @@ export interface UnicodeMushafHtmlOptions {
   lineFitWidthRatio?: number;
   surahNumber?: number;
   bismillahText?: string;
+  nightReadingMode?: NightReadingMode;
 }
 
 function escapeHtml(value: string): string {
@@ -45,7 +47,9 @@ export function generateUnicodeMushafHtml(opts: UnicodeMushafHtmlOptions): strin
     lineFitWidthRatio = 0.96,
     surahNumber,
     bismillahText,
+    nightReadingMode = 'off',
   } = opts;
+  const palette = getNightReadingPalette(nightReadingMode);
   const lineMap = new Map<number, MushafWord[]>();
 
   for (const word of words) {
@@ -59,7 +63,7 @@ export function generateUnicodeMushafHtml(opts: UnicodeMushafHtmlOptions): strin
   const isCompact = !hasMultipleSurahs && lines.length <= 8;
   const bodyClass = isCompact ? 'compact' : `full${hasMultipleSurahs ? ' multiSurah' : ''}`;
 
-  const frameSvg = `<svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5e6c8"/><stop offset="50%" stop-color="#efe0c0"/><stop offset="100%" stop-color="#f5e6c8"/></linearGradient></defs><rect x="8" y="4" width="384" height="42" rx="3" fill="url(#bg)" stroke="#B8965A" stroke-width="1"/><rect x="4" y="1" width="392" height="48" rx="5" fill="none" stroke="#B8965A" stroke-width="0.8"/><circle cx="24" cy="25" r="8" fill="none" stroke="#C8A96E" stroke-width="0.6"/><circle cx="24" cy="25" r="4" fill="none" stroke="#C8A96E" stroke-width="0.4"/><circle cx="376" cy="25" r="8" fill="none" stroke="#C8A96E" stroke-width="0.6"/><circle cx="376" cy="25" r="4" fill="none" stroke="#C8A96E" stroke-width="0.4"/><path d="M36,25 C40,18 44,15 50,15 C44,15 40,12 36,5" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M36,25 C40,32 44,35 50,35 C44,35 40,38 36,45" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M364,25 C360,18 356,15 350,15 C356,15 360,12 364,5" fill="none" stroke="#C8A96E" stroke-width="0.5"/><path d="M364,25 C360,32 356,35 350,35 C356,35 360,38 364,45" fill="none" stroke="#C8A96E" stroke-width="0.5"/></svg>`;
+  const frameSvg = `<svg viewBox="0 0 440 80" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="${palette.accent}" stroke-linejoin="miter"><path d="M 22,6 L 418,6 L 440,40 L 418,74 L 22,74 L 0,40 Z" stroke-width="1.3"/><path d="M 28,12 L 412,12 L 432,40 L 412,68 L 28,68 L 8,40 Z" stroke-width=".6" opacity=".55"/></g><g transform="translate(12 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.surface}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(428 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.surface}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(220 6)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.surface}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g><g transform="translate(220 74)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.surface}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g></svg>`;
   const buildBanner = (sn: number, inSlot = false) =>
     `<div class="sb${inSlot ? ' slot' : ''}">${frameSvg}<span class="sn">surah${String(sn).padStart(3, '0')}</span></div>`;
 
@@ -144,25 +148,25 @@ export function generateUnicodeMushafHtml(opts: UnicodeMushafHtmlOptions): strin
 @font-face{font-family:'${fontFamily}';src:url(data:${fontMimeType};base64,${fontBase64}) format('${fontFormat}');font-display:block}
 @font-face{font-family:'SurahNames';src:url('https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf') format('truetype');font-display:swap}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
-body{width:100%;height:100%;background:#F5EEDB;color:#0E2724;font-family:'${fontFamily}',serif;font-feature-settings:${fontFeatureSettings};font-variant-ligatures:normal;text-rendering:optimizeLegibility;direction:rtl;display:flex;flex-direction:column;justify-content:center;padding:0 4vw;-webkit-user-select:none;user-select:none}
-#content{width:100%;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:center}
+html,body{min-height:100%;max-width:100vw;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:${palette.background};color:${palette.foreground};font-family:'${fontFamily}',serif;font-feature-settings:${fontFeatureSettings};font-variant-ligatures:normal;text-rendering:optimizeLegibility;direction:rtl;display:flex;flex-direction:column;justify-content:flex-start;padding:0 4vw max(12vh,72px);-webkit-user-select:none;user-select:none}
+#content{width:100%;max-width:100%;overflow-x:hidden;min-width:0;min-height:100vh;height:auto;display:flex;flex-direction:column;justify-content:center}
 body.compact #content{justify-content:flex-start;padding-top:${compactTopPaddingVh}vh}
-.sb{position:relative;text-align:center;direction:ltr;margin:0 2vw 2.4vh}
+.sb{position:relative;text-align:center;direction:ltr;margin:0 0 2.4vh}
 .sb svg{width:100%;height:auto;display:block}
-.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(7vw,30px);color:#0E2724;white-space:nowrap}
-.sb.slot{height:calc(100%/15);display:flex;align-items:center;justify-content:center;margin:0 2vw}
+.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(6.5vw,28px);color:${palette.foreground};white-space:nowrap}
+.sb.slot{min-height:max(calc(100vh/15),2em);height:auto;display:flex;align-items:center;justify-content:center;margin:0}
 .sb.slot svg{width:100%;height:auto;display:block}
-.bsm{text-align:center;margin:0.2vh 0 2.2vh;color:#0E2724;font-size:0.86em;white-space:nowrap}
-.bsm.slot{height:calc(100%/15);display:flex;align-items:center;justify-content:center;margin:0}
-.line{width:100%;height:calc(100%/15);display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:visible;min-width:0}
-.empty{height:calc(100%/15)}
+.bsm{text-align:center;margin:0.2vh 0 2.2vh;color:${palette.foreground};font-size:0.86em;white-space:nowrap}
+.bsm.slot{min-height:max(calc(100vh/15),2em);height:auto;display:flex;align-items:center;justify-content:center;margin:0}
+.line{width:100%;max-width:100%;min-height:max(calc(100vh/15),2em);height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;min-width:0}
+.empty{min-height:max(calc(100vh/15),2em);height:auto}
 .lineInner{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:0.26em;white-space:nowrap;max-width:none;font-feature-settings:inherit;font-variant-ligatures:inherit;line-height:1.7}
 body.compact .line{height:auto;min-height:${compactLineMinHeightVh}vh;margin:0.2vh 0}
 .ayah{cursor:pointer;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;flex:0 0 auto;min-width:0}
-.num{font-family:'Noto Naskh Arabic','Arial',serif;color:#B8923F;white-space:nowrap;width:1.32em;height:1.32em;border:1px solid #B8923F;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.54em;line-height:1;flex:0 0 auto;margin:0 0.08em}
+.num{font-family:'Noto Naskh Arabic','Arial',serif;color:${palette.accent};white-space:nowrap;width:1.32em;height:1.32em;border:1px solid ${palette.accent};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.54em;line-height:1;flex:0 0 auto;margin:0 0.08em}
 .numText{transform:translateY(-0.02em)}
-.ayah.sel{background:rgba(11,93,83,0.10);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(11,93,83,0.35)}
+.ayah.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
 </style>
 </head>
 <body class="${bodyClass}">

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore, type CorrectionSensitivity, type ThemeMode, type MushafFont } from '../../stores/settingsStore';
+import { isNightReadingEnabled, type ActiveNightReadingMode } from '../../constants/nightReading';
 import { useReadingStore } from '../../stores/readingStore';
 
 import { ProfileCard } from '../../components/settings/ProfileCard';
@@ -13,6 +14,7 @@ import { SettingsRow } from '../../components/settings/SettingsRow';
 import { Toggle } from '../../components/settings/Toggle';
 import { Pill } from '../../components/settings/Pill';
 import { FontSizeRow } from '../../components/settings/FontSizeRow';
+import { NightReadingPicker } from '../../components/settings/NightReadingPicker';
 
 const ICON_PROPS = { width: 17, height: 17, fill: 'none', strokeWidth: 1.75 } as const;
 
@@ -44,8 +46,8 @@ export default function SettingsScreen() {
 
   const mushafFont = useSettingsStore((s) => s.mushafFont);
   const setMushafFont = useSettingsStore((s) => s.setMushafFont);
-
-  const [nightReadingPlaceholder, setNightReadingPlaceholder] = useState(false);
+  const nightReadingMode = useSettingsStore((s) => s.nightReadingMode);
+  const setNightReadingMode = useSettingsStore((s) => s.setNightReadingMode);
 
   const mushafFontLabels: Record<MushafFont, string> = {
     uthmanic: 'Uthmanic Naskh',
@@ -64,6 +66,31 @@ export default function SettingsScreen() {
   };
 
   const mushafFontLabel = mushafFontLabels[activeMushafFont];
+  const nightModeLabels: Record<ActiveNightReadingMode, { title: string; subtitle: string }> = {
+    classical: {
+      title: strings.settingsNightClassical,
+      subtitle: strings.settingsNightClassicalValue,
+    },
+    sepia: {
+      title: strings.settingsNightSepia,
+      subtitle: strings.settingsNightSepiaValue,
+    },
+    'pure-ink': {
+      title: strings.settingsNightPureInk,
+      subtitle: strings.settingsNightPureInkValue,
+    },
+    indigo: {
+      title: strings.settingsNightIndigo,
+      subtitle: strings.settingsNightIndigoValue,
+    },
+  };
+  const nightReadingEnabled = isNightReadingEnabled(nightReadingMode);
+  const activeNightMode: ActiveNightReadingMode = nightReadingEnabled
+    ? nightReadingMode
+    : 'classical';
+  const nightReadingLabel = nightReadingEnabled
+    ? nightModeLabels[activeNightMode].title
+    : strings.settingsNightReadingValue;
 
   const cycleSensitivity = () => {
     const order: CorrectionSensitivity[] = ['gentle', 'standard', 'strict'];
@@ -129,7 +156,7 @@ export default function SettingsScreen() {
             trailing={<Pill label={strings.settingsChange} onPress={cycleMushafFont} />}
           />
           <SettingsRow
-            isLast
+            isLast={!nightReadingEnabled}
             icon={
               <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
                 <Path
@@ -141,15 +168,25 @@ export default function SettingsScreen() {
               </Svg>
             }
             label={strings.settingsNightReading}
-            value={strings.settingsNightReadingValue}
+            value={nightReadingLabel}
             trailing={
               <Toggle
-                value={nightReadingPlaceholder}
-                onValueChange={setNightReadingPlaceholder}
+                value={nightReadingEnabled}
+                onValueChange={(next) =>
+                  setNightReadingMode(next ? activeNightMode : 'off')
+                }
                 accessibilityLabel={strings.settingsNightReading}
               />
             }
           />
+          {nightReadingEnabled && (
+            <NightReadingPicker
+              value={activeNightMode}
+              labels={nightModeLabels}
+              isArabic={isArabic}
+              onChange={setNightReadingMode}
+            />
+          )}
         </SettingsGroup>
 
         <SettingsGroup label={strings.settingsSectionAudio}>
@@ -239,6 +276,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     container: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
+      direction: 'rtl',
     },
     header: {
       paddingHorizontal: theme.gutter.screen,

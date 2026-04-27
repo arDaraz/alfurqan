@@ -1,43 +1,59 @@
 import React from 'react';
-import Svg, { G, Path, Circle, Line } from 'react-native-svg';
+import Svg, { G, Path, Rect, Circle } from 'react-native-svg';
 
 interface Props {
   width?: number;
   height?: number;
+  /** Gold stroke color used for the frame and ornaments. */
   color?: string;
+  /** Cream/paper fill used inside the diamonds and ornaments to cover the underlying page bg. */
+  fillColor?: string;
 }
 
+const VIEW_W = 440;
+const VIEW_H = 80;
+
+// Outer hexagon: top edge → right chevron tip → bottom edge → left chevron tip.
+const OUTER_PATH = `M 22,6 L 418,6 L 440,40 L 418,74 L 22,74 L 0,40 Z`;
+// Inner hexagon: parallel offset of ~6 on horizontal edges, ~8 inset at the chevron tips so the converging lines stay parallel-looking.
+const INNER_PATH = `M 28,12 L 412,12 L 432,40 L 412,68 L 28,68 L 8,40 Z`;
+
 /**
- * Sarlawh cartouche — the ornamental frame used exclusively around surah
- * titles on the Mushaf opening page. Never repurpose for generic headings.
+ * Sarlawh — the surah title cartouche. A stretched hexagonal frame with
+ * gold double-line border, small diamonds tucked inside the left/right
+ * chevron tips, and small diamond ornaments centered on the top/bottom
+ * edges. The surah name renders centered inside the panel (handled by
+ * the consumer).
  */
 export function SurahCartouche({
-  width = 200,
-  height = 160,
+  width = 320,
+  height = (320 * VIEW_H) / VIEW_W,
   color = '#B8923F',
+  fillColor = '#F5EEDB',
 }: Props) {
   return (
-    <Svg width={width} height={height} viewBox="0 0 200 160">
+    <Svg width={width} height={height} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}>
       <G fill="none" stroke={color}>
-        <Path
-          d="M 20 80 Q 20 20 60 20 L 140 20 Q 180 20 180 80 L 180 140 L 20 140 Z"
-          strokeWidth={1.25}
-          opacity={0.85}
-        />
-        <Path
-          d="M 28 84 Q 28 28 64 28 L 136 28 Q 172 28 172 84 L 172 132 L 28 132 Z"
-          strokeWidth={0.75}
-          opacity={0.55}
-        />
-        <G opacity={0.7} strokeWidth={0.9}>
-          <Path d="M 60 20 Q 70 12 80 20" />
-          <Path d="M 80 20 Q 90 12 100 20" />
-          <Path d="M 100 20 Q 110 12 120 20" />
-          <Path d="M 120 20 Q 130 12 140 20" />
-        </G>
-        <Circle cx={12} cy={80} r={4} opacity={0.8} />
-        <Circle cx={188} cy={80} r={4} opacity={0.8} />
-        <Line x1={60} y1={140} x2={140} y2={140} strokeWidth={0.75} opacity={0.6} />
+        <Path d={OUTER_PATH} strokeWidth={1.3} strokeLinejoin="miter" />
+        <Path d={INNER_PATH} strokeWidth={0.6} opacity={0.55} strokeLinejoin="miter" />
+      </G>
+
+      <G transform="translate(12 40)">
+        <Rect x={-8} y={-8} width={16} height={16} fill={fillColor} stroke={color} strokeWidth={1.1} transform="rotate(45)" />
+        <Circle r={1.8} fill={color} />
+      </G>
+
+      <G transform="translate(428 40)">
+        <Rect x={-8} y={-8} width={16} height={16} fill={fillColor} stroke={color} strokeWidth={1.1} transform="rotate(45)" />
+        <Circle r={1.8} fill={color} />
+      </G>
+
+      <G transform={`translate(${VIEW_W / 2} 6)`}>
+        <Rect x={-4} y={-4} width={8} height={8} fill={fillColor} stroke={color} strokeWidth={0.9} transform="rotate(45)" />
+      </G>
+
+      <G transform={`translate(${VIEW_W / 2} ${VIEW_H - 6})`}>
+        <Rect x={-4} y={-4} width={8} height={8} fill={fillColor} stroke={color} strokeWidth={0.9} transform="rotate(45)" />
       </G>
     </Svg>
   );

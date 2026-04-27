@@ -8,7 +8,7 @@
     "scheme": "alfurqan",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.alfurqan.app",
+      "bundleIdentifier": "com.ahmeddaraz.alfurqan",
       "icon": "./assets/expo.icon"
     },
     "android": {
@@ -37,7 +37,9 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

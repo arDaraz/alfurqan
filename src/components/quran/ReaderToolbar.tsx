@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { useTheme } from '../../hooks/useTheme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Theme } from '../../constants/theme';
 
 interface Props {
   onBookmark?: () => void;
@@ -17,40 +18,40 @@ interface Props {
  * Slot order (LTR): bookmark · listen · TASMI · translation · info.
  */
 export function ReaderToolbar({ onBookmark, onListen, onTranslation, onInfo }: Props) {
-  const theme = useTheme();
+  const { theme, colors } = useReaderColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, colors);
 
   return (
     <View style={[styles.wrap, { bottom: 14 + Math.max(insets.bottom - 8, 0) }]} pointerEvents="box-none">
       <View style={styles.bar}>
         <ToolButton onPress={onBookmark}>
           <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke={theme.semantic.fg} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke={colors.fg} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
         </ToolButton>
         <ToolButton onPress={onListen}>
           <Svg width={20} height={20} viewBox="0 0 24 24">
-            <Path d="M8 5v14l11-7z" fill={theme.semantic.fg} />
+            <Path d="M8 5v14l11-7z" fill={colors.fg} />
           </Svg>
         </ToolButton>
         <ToolButton primary onPress={() => router.push('/practice' as never)}>
           <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Rect x={9} y={3} width={6} height={12} rx={3} stroke={theme.semantic.fgOnPrimary} strokeWidth={1.75} />
-            <Path d="M5 11a7 7 0 0 0 14 0" stroke={theme.semantic.fgOnPrimary} strokeWidth={1.75} strokeLinecap="round" />
-            <Path d="M12 18v3" stroke={theme.semantic.fgOnPrimary} strokeWidth={1.75} strokeLinecap="round" />
+            <Rect x={9} y={3} width={6} height={12} rx={3} stroke={colors.fgOnPrimary} strokeWidth={1.75} />
+            <Path d="M5 11a7 7 0 0 0 14 0" stroke={colors.fgOnPrimary} strokeWidth={1.75} strokeLinecap="round" />
+            <Path d="M12 18v3" stroke={colors.fgOnPrimary} strokeWidth={1.75} strokeLinecap="round" />
           </Svg>
         </ToolButton>
         <ToolButton onPress={onTranslation}>
           <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path d="M4 6h16M4 12h16M4 18h10" stroke={theme.semantic.fg} strokeWidth={1.75} strokeLinecap="round" />
+            <Path d="M4 6h16M4 12h16M4 18h10" stroke={colors.fg} strokeWidth={1.75} strokeLinecap="round" />
           </Svg>
         </ToolButton>
         <ToolButton onPress={onInfo}>
           <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Circle cx={12} cy={12} r={9} stroke={theme.semantic.fg} strokeWidth={1.75} />
-            <Path d="M12 8v4M12 16h.01" stroke={theme.semantic.fg} strokeWidth={1.75} strokeLinecap="round" />
+            <Circle cx={12} cy={12} r={9} stroke={colors.fg} strokeWidth={1.75} />
+            <Path d="M12 8v4M12 16h.01" stroke={colors.fg} strokeWidth={1.75} strokeLinecap="round" />
           </Svg>
         </ToolButton>
       </View>
@@ -67,8 +68,8 @@ function ToolButton({
   primary?: boolean;
   onPress?: () => void;
 }) {
-  const theme = useTheme();
-  const styles = createStyles(theme);
+  const { theme, colors } = useReaderColors();
+  const styles = createStyles(theme, colors);
   return (
     <Pressable
       onPress={onPress}
@@ -84,7 +85,7 @@ function ToolButton({
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: Theme, colors: ReaderColors) {
   return StyleSheet.create({
     wrap: {
       position: 'absolute',
@@ -94,8 +95,8 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     bar: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.semantic.bgRaised,
-      borderColor: theme.semantic.border,
+      backgroundColor: colors.bgRaised,
+      borderColor: colors.border,
       borderWidth: 1,
       borderRadius: theme.radii.md + 4,
       padding: 10,
@@ -110,7 +111,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       justifyContent: 'center',
     },
     btnPrimary: {
-      backgroundColor: theme.semantic.primary,
+      backgroundColor: colors.primary,
       ...theme.elevation.shadow1,
     },
     btnPressed: {
@@ -123,7 +124,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       left: -3,
       right: -3,
       borderRadius: theme.radii.sm + 7,
-      borderColor: theme.semantic.accentSoft,
+      borderColor: colors.accentSoft,
       borderWidth: 1,
       opacity: 0.55,
     },

@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { useTheme } from '../../hooks/useTheme';
+import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
+import type { Theme } from '../../constants/theme';
 
 interface Props {
   surahName: string;
@@ -16,10 +17,10 @@ interface Props {
 
 export function ReaderHeader({ surahName, juzNumber, pageNumber, onMore }: Props) {
   const router = useRouter();
-  const theme = useTheme();
+  const { theme, colors } = useReaderColors();
   const strings = useStrings();
   const language = useSettingsStore((s) => s.language);
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, colors);
 
   const isRTL = language === 'ar';
   const juzText = isRTL ? toArabicIndic(juzNumber) : String(juzNumber);
@@ -40,7 +41,7 @@ export function ReaderHeader({ surahName, juzNumber, pageNumber, onMore }: Props
         style={styles.iconBtn}
       >
         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-          <Path d="m9 6 6 6-6 6" stroke={theme.semantic.fg} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+          <Path d="m9 6 6 6-6 6" stroke={colors.fg} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
         </Svg>
       </Pressable>
 
@@ -68,16 +69,16 @@ export function ReaderHeader({ surahName, juzNumber, pageNumber, onMore }: Props
         style={styles.iconBtn}
       >
         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-          <Circle cx={12} cy={6} r={1} fill={theme.semantic.fg} />
-          <Circle cx={12} cy={12} r={1} fill={theme.semantic.fg} />
-          <Circle cx={12} cy={18} r={1} fill={theme.semantic.fg} />
+          <Circle cx={12} cy={6} r={1} fill={colors.fg} />
+          <Circle cx={12} cy={12} r={1} fill={colors.fg} />
+          <Circle cx={12} cy={18} r={1} fill={colors.fg} />
         </Svg>
       </Pressable>
     </View>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: Theme, colors: ReaderColors) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -87,16 +88,16 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       paddingTop: 14,
       paddingBottom: 14,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.semantic.border,
-      backgroundColor: theme.semantic.bg,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.bg,
     },
     iconBtn: {
       width: 36,
       height: 36,
       borderRadius: theme.radii.md - 2,
-      backgroundColor: theme.semantic.bgRaised,
+      backgroundColor: colors.bgRaised,
       borderWidth: 1,
-      borderColor: theme.semantic.border,
+      borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -109,37 +110,37 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     surah: {
       fontFamily: theme.fonts.quran,
       fontSize: theme.typeScale.body.size,
-      color: theme.semantic.fg,
+      color: colors.fg,
     },
     surahEn: {
       fontFamily: theme.fonts.latin,
       fontSize: theme.typeScale.body.size,
       fontWeight: '600',
-      color: theme.semantic.fg,
+      color: colors.fg,
     },
     metaLabel: {
       fontFamily: theme.fonts.quran,
       fontSize: theme.typeScale.label.size,
-      color: theme.semantic.fgMuted,
+      color: colors.fgMuted,
       marginEnd: 4,
     },
     metaLabelEn: {
       fontFamily: theme.fonts.latin,
       fontSize: theme.typeScale.label.size,
-      color: theme.semantic.fgMuted,
+      color: colors.fgMuted,
       letterSpacing: 0.2,
       marginEnd: 4,
     },
     metaDigit: {
       fontFamily: theme.fonts.arabic,
       fontSize: theme.typeScale.label.size,
-      color: theme.semantic.fgMuted,
+      color: colors.fgMuted,
     },
     bullet: {
       width: 3,
       height: 3,
       borderRadius: 1.5,
-      backgroundColor: theme.semantic.fgMuted,
+      backgroundColor: colors.fgMuted,
       marginHorizontal: 8,
       opacity: 0.55,
     },

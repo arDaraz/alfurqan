@@ -1,5 +1,6 @@
 import type { MushafWord, MushafLine, PageMarker } from '../../data/types';
 import { surahHasBismillah } from '../../constants/quran';
+import { getNightReadingPalette, type NightReadingMode } from '../../constants/nightReading';
 import { isSurahEndingLine } from './surahLine';
 
 export interface BismillahData {
@@ -15,6 +16,7 @@ export interface MushafHtmlOptions {
   surahNumber?: number;
   bismillah?: BismillahData;
   markers?: PageMarker[];
+  nightReadingMode?: NightReadingMode;
 }
 
 function cssNumber(value: number): string {
@@ -22,7 +24,15 @@ function cssNumber(value: number): string {
 }
 
 export function generateMushafHtml(opts: MushafHtmlOptions): string {
-  const { words, fontBase64, fontSizeScale = 1, surahNumber, bismillah } = opts;
+  const {
+    words,
+    fontBase64,
+    fontSizeScale = 1,
+    surahNumber,
+    bismillah,
+    nightReadingMode = 'off',
+  } = opts;
+  const palette = getNightReadingPalette(nightReadingMode);
   const bodyFontVw = cssNumber(7 * fontSizeScale);
   const compactFontVw = cssNumber(7 * fontSizeScale);
   const compactFontPx = cssNumber(28 * fontSizeScale);
@@ -56,7 +66,7 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
     ? `surah${String(surahNumber).padStart(3, '0')}`
     : '';
 
-  const frameSvg = `<svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#B8923F"><path d="M 40 25 Q 40 5 80 5 L 320 5 Q 360 5 360 25 L 360 45 L 40 45 Z" stroke-width="1.25" opacity=".85"/><path d="M 46 27 Q 46 9 82 9 L 318 9 Q 354 9 354 27 L 354 41 L 46 41 Z" stroke-width=".75" opacity=".55"/><g opacity=".7" stroke-width=".9"><path d="M 120 5 Q 140 -2 160 5"/><path d="M 160 5 Q 180 -2 200 5"/><path d="M 200 5 Q 220 -2 240 5"/><path d="M 240 5 Q 260 -2 280 5"/></g><circle cx="28" cy="25" r="5" opacity=".8"/><circle cx="372" cy="25" r="5" opacity=".8"/><line x1="120" y1="45" x2="280" y2="45" stroke-width=".75" opacity=".6"/></g></svg>`;
+  const frameSvg = `<svg viewBox="0 0 440 80" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="${palette.accent}" stroke-linejoin="miter"><path d="M 22,6 L 418,6 L 440,40 L 418,74 L 22,74 L 0,40 Z" stroke-width="1.3"/><path d="M 28,12 L 412,12 L 432,40 L 412,68 L 28,68 L 8,40 Z" stroke-width=".6" opacity=".55"/></g><g transform="translate(12 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(428 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(220 6)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g><g transform="translate(220 74)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g></svg>`;
 
   const buildLine = (line: MushafLine) => {
     const isSurahEnd = isSurahEndingLine(line.words);
@@ -72,7 +82,7 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
       }
       return `<span class="w" data-s="${ds}" data-a="${da}">${w.codeV2}</span>`;
     }).join(' ');
-    return `<div class="${cls}"${attrs}>${text}</div>`;
+    return `<div class="${cls}"${attrs}><span class="lineInner">${text}</span></div>`;
   };
 
   const buildBanner = (code: string, inSlot = false) =>
@@ -167,9 +177,6 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
     bodyContent = slots.join('\n');
   }
 
-  // Only show border on compact surah pages (Al-Fatiha style), not full 15-line pages
-  const border = (isSurahStart && !isFullPage) ? 'border:1px solid #B8923F;border-radius:6px;' : '';
-
   return `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -182,25 +189,24 @@ ${bismillahFontFace}
 @font-palette-values --QcfSepia{font-family:'QCF';base-palette:2}
 @font-palette-values --QcfBismillahSepia{font-family:'QCF1';base-palette:2}
 *{margin:0;padding:0;box-sizing:border-box}
-html{height:100%;overflow:hidden}
-/* v2 Mushaf palette — paper-100 bg / ink-900 text / gold-500 accents */
-body{height:100%;background:#F5EEDB;color:#0E2724;font-family:'QCF';font-palette:--QcfSepia;font-size:${bodyFontVw}vw;direction:rtl;display:flex;flex-direction:column;padding:0 4vw;-webkit-user-select:none;user-select:none;position:relative;${border}}
-.l,.lc,.empty{height:calc(100%/15);display:flex;align-items:center;white-space:nowrap;transform-origin:right center}
+html{min-height:100%;max-width:100vw;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:${palette.background};color:${palette.foreground};font-family:'QCF';font-palette:--QcfSepia;font-size:${bodyFontVw}vw;direction:rtl;display:flex;flex-direction:column;padding:0 4vw max(12vh,72px);-webkit-user-select:none;user-select:none;position:relative}
+.l,.lc,.empty{min-height:max(calc(100vh/15),2.2em);height:auto;width:100%;max-width:100%;overflow:hidden;display:flex;align-items:center;white-space:nowrap;transform-origin:right center;line-height:1.2}
 .l{justify-content:center;transform-origin:center center}
 .lc{justify-content:center;transform-origin:center center}
-.group{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh;margin-bottom:10vh}
+.lineInner{display:inline-block;white-space:nowrap;max-width:none;transform-origin:center center;line-height:1.2}
+.group{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh;margin-bottom:10vh}
 .group .l,.group .lc{height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:min(${compactFontVw}vw,${compactFontPx}px)}
-.sb{position:relative;text-align:center;direction:ltr;margin:0 2vw 0.5vh}
+.sb{position:relative;text-align:center;direction:ltr;margin:0 0 0.5vh}
 .sb svg{width:100%;height:auto;display:block}
-.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(7vw,30px);color:#0E2724;white-space:nowrap}
-.sb.slot{height:calc(100%/15);display:flex;align-items:center;justify-content:center;margin:0}
-.sb.slot svg{height:90%;width:auto}
-.bsm{display:flex;align-items:center;justify-content:center;color:#0E2724;font-family:'QCF1';font-palette:--QcfBismillahSepia;font-size:min(${bismillahFontVw}vw,${bismillahFontPx}px);white-space:nowrap}
-.bsm.slot{height:calc(100%/15)}
-.rub{font-family:'Noto Naskh Arabic',serif;color:#B8923F;font-size:1.8em;line-height:0.5;vertical-align:middle}
+.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(6.5vw,28px);color:${palette.foreground};white-space:nowrap}
+.sb.slot{min-height:max(calc(100vh/15),2.2em);height:auto;display:flex;align-items:center;justify-content:center;margin:0}
+.sb.slot svg{width:100%;height:auto;max-height:100%}
+.bsm{display:flex;align-items:center;justify-content:center;color:${palette.foreground};font-family:'QCF1';font-palette:--QcfBismillahSepia;font-size:min(${bismillahFontVw}vw,${bismillahFontPx}px);white-space:nowrap}
+.bsm.slot{min-height:max(calc(100vh/15),2.2em);height:auto}
+.rub{font-family:'Noto Naskh Arabic',serif;color:${palette.accent};font-size:1.8em;line-height:0.5;vertical-align:middle}
 .w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
-/* Selected ayahs use the v2 inset shadow ("impressed into paper") */
-.w.sel,.rub.sel{background:rgba(11,93,83,0.10);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(11,93,83,0.35)}
+.w.sel,.rub.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
 </style>
 </head>
 <body>
@@ -208,16 +214,17 @@ ${bodyContent}
 <script>
 document.fonts.ready.then(function(){
   requestAnimationFrame(function(){requestAnimationFrame(function(){
-    var els=document.querySelectorAll('.l');
+    var els=document.querySelectorAll('.l,.lc');
     for(var i=0;i<els.length;i++){
-      if(els[i].parentElement&&els[i].parentElement.classList.contains('group'))continue;
-      els[i].style.transform='';
+      var inner=els[i].querySelector('.lineInner');
+      if(!inner)continue;
+      inner.style.transform='';
       els[i].style.justifyContent='';
       var cw=els[i].clientWidth;
-      var sw=els[i].scrollWidth;
+      var sw=inner.scrollWidth||inner.getBoundingClientRect().width;
       if(sw>0&&cw>0){
         var s=cw/sw;
-        if(s>0.3&&s<1)els[i].style.transform='scaleX('+s+')';
+        if(s>0.3&&s<1)inner.style.transform='scaleX('+s+')';
         else els[i].style.justifyContent='center';
       }
     }

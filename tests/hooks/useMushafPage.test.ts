@@ -26,4 +26,10 @@ describe('mushaf page font scaling', () => {
       buildMushafHtmlCacheKey('uthmanic', 604, 0.8)
     );
   });
+
+  it('keys generated mushaf HTML by night reading mode so palette changes refresh cached pages', () => {
+    expect(buildMushafHtmlCacheKey('uthmanic', 604, 0.58, 'off')).not.toBe(
+      buildMushafHtmlCacheKey('uthmanic', 604, 0.58, 'indigo')
+    );
+  });
 });

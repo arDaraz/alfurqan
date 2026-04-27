@@ -165,16 +165,19 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     container: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
+      direction: 'rtl',
     },
     loadingContainer: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
+      direction: 'rtl',
       alignItems: 'center',
       justifyContent: 'center',
     },
     errorContainer: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
+      direction: 'rtl',
     },
     controls: {
       paddingHorizontal: theme.gutter.screen - 6,

@@ -8,11 +8,14 @@ interface SurahHeaderBannerProps {
   surah: Surah;
 }
 
+const BANNER_WIDTH = 320;
+const BANNER_HEIGHT = 64;
+
 /**
- * Sarlawh cartouche around the surah title — used only at the start of
- * a Mushaf opening page (Al-Fatiha, Al-Baqarah, etc.). The cartouche is
- * the brand's reserved ornament for surah titles; do not reuse for
- * generic headings.
+ * Sarlawh banner around the surah title — used at the start of a Mushaf
+ * opening page (Al-Fatiha, Al-Baqarah, etc.). Dark green panel with gold
+ * double border and side diamonds; the surah name renders cream/gold
+ * inside the panel.
  */
 export function SurahHeaderBanner({ surah }: SurahHeaderBannerProps) {
   const theme = useTheme();
@@ -21,15 +24,15 @@ export function SurahHeaderBanner({ surah }: SurahHeaderBannerProps) {
 
   return (
     <View style={styles.outer}>
-      <View style={styles.frame}>
-        <View style={styles.cartouche}>
-          <SurahCartouche width={220} height={Math.round(220 * 160 / 200)} color={theme.semantic.accent} />
+      <View style={styles.banner}>
+        <View style={styles.bannerBg}>
+          <SurahCartouche width={BANNER_WIDTH} height={BANNER_HEIGHT} />
         </View>
         <Text style={styles.surahName}>{surah.nameArabic}</Text>
-        <Text style={styles.metadata}>
-          {surah.ayahCount} آية · {revelationLabel}
-        </Text>
       </View>
+      <Text style={styles.metadata}>
+        {surah.ayahCount} آية · {revelationLabel}
+      </Text>
     </View>
   );
 }
@@ -42,32 +45,33 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       marginHorizontal: theme.spacing.md,
       alignItems: 'center',
     },
-    frame: {
+    banner: {
+      width: BANNER_WIDTH,
+      height: BANNER_HEIGHT,
       alignItems: 'center',
-      paddingVertical: theme.spacing.lg,
-      paddingHorizontal: theme.spacing.md,
+      justifyContent: 'center',
     },
-    cartouche: {
+    bannerBg: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
+      bottom: 0,
       alignItems: 'center',
-      opacity: 0.85,
+      justifyContent: 'center',
     },
     surahName: {
       fontFamily: theme.fonts.quran,
-      fontSize: theme.typeScale.heading.size,
+      fontSize: theme.typeScale.title.size,
       color: theme.semantic.fg,
       textAlign: 'center',
-      marginTop: theme.spacing.xl + 4,
-      marginBottom: theme.spacing.sm,
     },
     metadata: {
-      fontFamily: theme.fonts.arabic,
+      fontFamily: theme.fonts.quran,
       fontSize: 14,
       color: theme.semantic.fgMuted,
       textAlign: 'center',
+      marginTop: theme.spacing.sm,
     },
   });
 }

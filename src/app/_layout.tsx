@@ -76,7 +76,7 @@ export default function RootLayout() {
   }
 
   const stackScreenOptions = {
-    contentStyle: { backgroundColor: theme.semantic.bg },
+    contentStyle: { backgroundColor: theme.semantic.bg, direction: 'rtl' },
     headerShown: false,
   } as const;
 
