@@ -5,6 +5,8 @@ jest.mock('expo-file-system/legacy', () => ({
   downloadAsync: jest.fn(),
   moveAsync: jest.fn(),
   deleteAsync: jest.fn(),
+  readDirectoryAsync: jest.fn(),
+  getFreeDiskStorageAsync: jest.fn(),
 }));
 
 import * as FileSystem from 'expo-file-system/legacy';
@@ -107,5 +109,52 @@ describe('ayahAudioCache.getLocalPath', () => {
 
     expect(first).toBe(second);
     expect(fs.downloadAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('deletes an empty cached file before refetching it', async () => {
+    fs.getInfoAsync
+      .mockResolvedValueOnce({
+        exists: true,
+        isDirectory: false,
+        uri: 'file:///documents/recitation/Husary_128kbps/001/001.mp3',
+        size: 0,
+        modificationTime: 1,
+        md5: 'hash',
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        isDirectory: false,
+        uri: 'file:///documents/recitation/Husary_128kbps/001/001.mp3.tmp',
+        size: 42,
+        modificationTime: 1,
+        md5: 'hash',
+      });
+    fs.downloadAsync.mockResolvedValueOnce({
+      uri: 'file:///documents/recitation/Husary_128kbps/001/001.mp3.tmp',
+      status: 200,
+      headers: {},
+      md5: 'hash',
+      mimeType: 'audio/mpeg',
+    });
+    const cache = createAyahAudioCacheForTest({ tokenFactory: () => 'token' });
+
+    await cache.getLocalPath('Husary_128kbps', 1, 1, new AbortController().signal);
+
+    expect(fs.deleteAsync).toHaveBeenCalledWith(
+      'file:///documents/recitation/Husary_128kbps/001/001.mp3',
+      { idempotent: true }
+    );
+    expect(fs.downloadAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('deletes a surah download directory', async () => {
+    const cache = createAyahAudioCacheForTest();
+
+    await cache.deleteSurah('Husary_128kbps', 1);
+
+    expect(fs.deleteAsync).toHaveBeenCalledWith(
+      'file:///documents/recitation/Husary_128kbps/001/',
+      { idempotent: true }
+    );
   });
 });

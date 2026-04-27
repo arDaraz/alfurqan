@@ -5,7 +5,7 @@ import { ReciterPickerSheet } from './ReciterPickerSheet';
 import { getReciterById } from '../../data/reciters';
 import { getAyahTextRange } from '../../data/quranRepository';
 import { recitationEngine } from '../../services/recitationEngine';
-import { useReciterStore } from '../../stores/reciterStore';
+import { downloadKey, useReciterStore } from '../../stores/reciterStore';
 import { useRecitationStore, type PlaybackSpeed } from '../../stores/recitationStore';
 import { theme } from '../../constants/theme';
 import { useStrings } from '../../constants/strings';
@@ -27,6 +27,9 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
   const positionSeconds = useRecitationStore((s) => s.positionSeconds);
   const durationSeconds = useRecitationStore((s) => s.durationSeconds);
   const selectedReciterId = useReciterStore((s) => s.selectedReciterId);
+  const downloads = useReciterStore((s) => s.downloads);
+  const startSurahDownload = useReciterStore((s) => s.startSurahDownload);
+  const cancelSurahDownload = useReciterStore((s) => s.cancelSurahDownload);
   const [ayahText, setAyahText] = useState('');
   const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
   const reciter = getReciterById(selectedReciterId);
@@ -59,6 +62,9 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
     () => Math.max(0, Math.round((durationSeconds || 0) / 2)),
     [durationSeconds]
   );
+  const currentDownload = range
+    ? downloads[downloadKey(selectedReciterId, range.surah)]
+    : undefined;
 
   const handleSpeed = () => {
     const index = SPEEDS.indexOf(speed);
@@ -76,6 +82,16 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
     } else if (state === 'playing' || state === 'loading') {
       void recitationEngine.pause();
     }
+  };
+
+  const handleDownload = () => {
+    if (!range) return;
+    if (currentDownload?.status === 'downloading') {
+      cancelSurahDownload(selectedReciterId, range.surah);
+      return;
+    }
+    if (currentDownload?.status === 'complete') return;
+    void startSurahDownload(selectedReciterId, range.surah);
   };
 
   return (
@@ -159,7 +175,13 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
           <View style={styles.modeStrip}>
             <SheetButton label="معلومات" icon="information-outline" compact />
             <SheetButton label="السرعة" icon="speedometer" compact onPress={handleSpeed} />
-            <SheetButton label="تحميل" icon="download-outline" compact />
+            <SheetButton
+              label="تحميل"
+              icon={currentDownload?.status === 'complete' ? 'check-circle-outline' : 'download-outline'}
+              compact
+              selected={currentDownload?.status === 'downloading' || currentDownload?.status === 'complete'}
+              onPress={handleDownload}
+            />
             <SheetButton
               label="التكرار"
               icon="repeat"

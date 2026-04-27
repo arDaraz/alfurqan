@@ -42,12 +42,16 @@ jest.mock('../ReciterPickerSheet', () => {
 });
 
 import React from 'react';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { PlayerSheet } from '../PlayerSheet';
 import { recitationEngine } from '../../../services/recitationEngine';
+import { downloadKey, useReciterStore } from '../../../stores/reciterStore';
 import { useRecitationStore } from '../../../stores/recitationStore';
 
 describe('PlayerSheet', () => {
+  const startSurahDownload = jest.fn();
+  const cancelSurahDownload = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
     useRecitationStore.getState()._reset();
@@ -59,6 +63,12 @@ describe('PlayerSheet', () => {
     }, 1);
     useRecitationStore.getState()._setState('playing');
     useRecitationStore.getState()._setProgress(2, 8);
+    useReciterStore.setState({
+      selectedReciterId: 'Husary_128kbps',
+      downloads: {},
+      startSurahDownload,
+      cancelSurahDownload,
+    });
   });
 
   it('wires seek and transport controls to the recitation engine', async () => {
@@ -103,5 +113,33 @@ describe('PlayerSheet', () => {
     fireEvent.press(getByLabelText('القارئ'));
 
     expect(getByText('reciter-picker')).toBeTruthy();
+  });
+
+  it('starts and cancels current surah downloads', async () => {
+    const { getByLabelText, getByText, rerender } = render(
+      <PlayerSheet visible onClose={jest.fn()} />
+    );
+
+    await waitFor(() => expect(getByText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ')).toBeTruthy());
+    fireEvent.press(getByLabelText('تحميل'));
+    expect(startSurahDownload).toHaveBeenCalledWith('Husary_128kbps', 1);
+
+    act(() => {
+      useReciterStore.setState({
+        downloads: {
+          [downloadKey('Husary_128kbps', 1)]: {
+            ayahsTotal: 7,
+            ayahsCached: 1,
+            status: 'downloading',
+          },
+        },
+        startSurahDownload,
+        cancelSurahDownload,
+      });
+    });
+    rerender(<PlayerSheet visible onClose={jest.fn()} />);
+
+    fireEvent.press(getByLabelText('تحميل'));
+    expect(cancelSurahDownload).toHaveBeenCalledWith('Husary_128kbps', 1);
   });
 });

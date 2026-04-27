@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import { getSurahLastAyah } from '../data/quranRepository';
 import { urlForAyah } from './everyAyahProvider';
 
 type TokenFactory = () => string;
@@ -78,9 +79,37 @@ export class AyahAudioCache {
     const target = this.pathFor(reciterId, surah, ayah);
     const existing = await FileSystem.getInfoAsync(target);
     if (isNonEmptyFile(existing)) return target;
+    if (existing.exists && !existing.isDirectory) {
+      await FileSystem.deleteAsync(target, { idempotent: true });
+    }
 
     await this.download(reciterId, surah, ayah, target, signal);
     return target;
+  }
+
+  async downloadSurah(
+    reciterId: string,
+    surah: number,
+    signal?: AbortSignal,
+    onProgress?: (ayahsCached: number, ayahsTotal: number) => void
+  ): Promise<void> {
+    const ayahsTotal = await getSurahLastAyah(surah);
+    for (let ayah = 1; ayah <= ayahsTotal; ayah += 1) {
+      if (signal?.aborted) throw new CacheError('aborted', 'Audio download was cancelled');
+      await this.getLocalPath(reciterId, surah, ayah, signal);
+      onProgress?.(ayah, ayahsTotal);
+    }
+  }
+
+  async bytesUsed(reciterId?: string, surah?: number): Promise<number> {
+    let root = `${ensureDocumentDirectory()}recitation/`;
+    if (reciterId) root += `${reciterId}/`;
+    if (reciterId && surah) root += `${String(surah).padStart(3, '0')}/`;
+    return this.sumBytes(root);
+  }
+
+  async deleteSurah(reciterId: string, surah: number): Promise<void> {
+    await FileSystem.deleteAsync(this.dirFor(reciterId, surah), { idempotent: true });
   }
 
   private async download(
@@ -125,6 +154,18 @@ export class AyahAudioCache {
 
   private pathFor(reciterId: string, surah: number, ayah: number): string {
     return `${this.dirFor(reciterId, surah)}${String(ayah).padStart(3, '0')}.mp3`;
+  }
+
+  private async sumBytes(uri: string): Promise<number> {
+    const info = await FileSystem.getInfoAsync(uri);
+    if (!info.exists) return 0;
+    if (!info.isDirectory) return typeof info.size === 'number' ? info.size : 0;
+
+    const entries = await FileSystem.readDirectoryAsync(uri);
+    const childSizes = await Promise.all(
+      entries.map((entry) => this.sumBytes(`${uri}${entry}${entry.includes('.') ? '' : '/'}`))
+    );
+    return childSizes.reduce((total, size) => total + size, 0);
   }
 }
 

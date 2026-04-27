@@ -631,7 +631,7 @@ git commit -m "feat(recitation): switch and persist reciters"
 - Settings shows total saved size and allows deleting a reciter/surah download.
 - Offline playback uses existing local files without network.
 
-- [ ] **Step 1: Extend cache tests**
+- [x] **Step 1: Extend cache tests**
 
 Add tests for:
 - local hit returns without download
@@ -640,7 +640,7 @@ Add tests for:
 - parallel same ayah requests share one promise
 - `deleteSurahDownload` removes the nested surah directory
 
-- [ ] **Step 2: Complete cache implementation**
+- [x] **Step 2: Complete cache implementation**
 
 Update `ayahAudioCache.ts` with:
 - `downloadSurah(reciterId, surah, signal, onProgress)`
@@ -648,7 +648,7 @@ Update `ayahAudioCache.ts` with:
 - `deleteSurah(reciterId, surah)`
 - free disk floor check before surah download
 
-- [ ] **Step 3: Extend reciter store tests**
+- [x] **Step 3: Extend reciter store tests**
 
 Add tests for:
 - successful download progress
@@ -656,7 +656,7 @@ Add tests for:
 - error sets `status: 'error'` with message
 - delete clears state and file data
 
-- [ ] **Step 4: Implement download actions**
+- [x] **Step 4: Implement download actions**
 
 Update `reciterStore.ts`:
 - module-local `Map<string, AbortController>`
@@ -665,7 +665,7 @@ Update `reciterStore.ts`:
 - `deleteSurahDownload`
 - `bytesUsed` selector or async helper for settings
 
-- [ ] **Step 5: Wire player sheet download button**
+- [x] **Step 5: Wire player sheet download button**
 
 Modify `PlayerSheet.tsx` mode strip download button:
 - idle: start download for current `range.surah`
@@ -673,11 +673,11 @@ Modify `PlayerSheet.tsx` mode strip download button:
 - complete: show downloaded badge
 - error: retry download
 
-- [ ] **Step 6: Wire saved recitations settings**
+- [x] **Step 6: Wire saved recitations settings**
 
 Modify `settings.tsx` saved recitations row to show total size. Tapping it opens a list grouped by reciter with surah rows and delete affordances.
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run:
 
@@ -702,7 +702,9 @@ Expected:
 - Delete saved Al-Fatiha in settings.
 - With network still disabled, playback of that ayah shows network error.
 
-- [ ] **Step 9: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/services/ayahAudioCache.ts src/stores/reciterStore.ts src/components/quran/PlayerSheet.tsx src/app/\(tabs\)/settings.tsx src/services/__tests__/ayahAudioCache.test.ts src/stores/__tests__/reciterStore.test.ts
