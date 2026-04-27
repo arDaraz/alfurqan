@@ -1,14 +1,15 @@
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
-import { getAyahTextRange } from '../data/quranRepository';
+import { getAyahTextRange, getSurahLastAyah } from '../data/quranRepository';
 import { useReadingStore } from '../stores/readingStore';
+import { recitationEngine } from '../services/recitationEngine';
 import type { AyahActionType, AyahSelection } from '../data/types';
 
 export async function handleAyahAction(
   action: AyahActionType,
   selection: AyahSelection
 ): Promise<void> {
-  const { startSurah, startAyah, endAyah } = selection;
+  const { startSurah, startAyah, endSurah, endAyah } = selection;
 
   switch (action) {
     case 'copy': {
@@ -26,7 +27,15 @@ export async function handleAyahAction(
       break;
     }
     case 'play': {
-      console.log(`[AyahAction] play: surah ${startSurah}, ayahs ${startAyah}-${endAyah}`);
+      const stopAyah = await getSurahLastAyah(startSurah);
+      await recitationEngine.start({
+        surah: startSurah,
+        startAyah,
+        stopAyah,
+        trigger: 'popup',
+        selectedEndSurah: endSurah,
+        selectedEndAyah: endAyah,
+      });
       break;
     }
     case 'tafsir': {

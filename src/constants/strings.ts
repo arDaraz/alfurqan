@@ -57,6 +57,19 @@ const ar = {
   mushafPageIndicator: (n: number) => `صفحة ${n} من ٦٠٤`,
   mushafPageLoadError: 'تعذّر تحميل هذه الصفحة. يرجى المحاولة مرة أخرى.',
   mushafFontLoadError: 'تعذّر تحميل خط المصحف. يرجى إعادة تشغيل التطبيق.',
+  recitation: {
+    loading: 'جاري التحميل...',
+    playing: 'قيد التشغيل',
+    paused: 'متوقف مؤقتًا',
+    error: 'تعذّر تشغيل التلاوة',
+    stop: 'إيقاف',
+    play: 'تشغيل',
+    pause: 'إيقاف مؤقت',
+    nowPlayingAyah: (surah: number, ayah: number) => `السورة ${surah} · الآية ${ayah}`,
+    errorNetwork: 'لا يوجد اتصال بالإنترنت — جرّب لاحقًا أو نزّل السورة',
+    errorAudioUnavailable: 'لا تتوفر هذه التلاوة لهذا القارئ',
+    errorStorage: 'لا توجد مساحة كافية',
+  },
 } as const;
 
 const en = {
@@ -108,6 +121,19 @@ const en = {
   mushafPageIndicator: (n: number) => `Page ${n} of 604`,
   mushafPageLoadError: 'Unable to load this page. Please try again.',
   mushafFontLoadError: 'Unable to load Mushaf font. Please restart the app.',
+  recitation: {
+    loading: 'Loading...',
+    playing: 'Playing',
+    paused: 'Paused',
+    error: 'Unable to play recitation',
+    stop: 'Stop',
+    play: 'Play',
+    pause: 'Pause',
+    nowPlayingAyah: (surah: number, ayah: number) => `Surah ${surah} · Ayah ${ayah}`,
+    errorNetwork: 'No internet connection — try later or download the surah',
+    errorAudioUnavailable: 'This recitation is not available for this reciter',
+    errorStorage: 'Not enough storage space',
+  },
 } as const;
 
 export type Strings = {
@@ -138,6 +164,19 @@ export type Strings = {
   mushafPageIndicator: (n: number) => string;
   mushafPageLoadError: string;
   mushafFontLoadError: string;
+  recitation: {
+    loading: string;
+    playing: string;
+    paused: string;
+    error: string;
+    stop: string;
+    play: string;
+    pause: string;
+    nowPlayingAyah: (surah: number, ayah: number) => string;
+    errorNetwork: string;
+    errorAudioUnavailable: string;
+    errorStorage: string;
+  };
 };
 
 const strings: Record<AppLanguage, Strings> = { ar, en };

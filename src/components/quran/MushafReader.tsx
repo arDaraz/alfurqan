@@ -4,6 +4,7 @@ import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager
 import { MushafPage } from './MushafPage';
 import { PageIndicator } from './PageIndicator';
 import { AyahPopup } from './AyahPopup';
+import { MiniPlayerBar } from './MiniPlayerBar';
 import { useReadingStore } from '../../stores/readingStore';
 import { theme } from '../../constants/theme';
 import type { AyahSelection, AyahActionType } from '../../data/types';
@@ -107,6 +108,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
         />
       )}
 
+      <MiniPlayerBar />
       <PageIndicator currentPage={currentPage} />
     </View>
   );

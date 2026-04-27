@@ -82,7 +82,7 @@
 - Mini-player appears above the reader controls when state is not `idle`.
 - Engine can enter `loading`, `playing`, `paused`, `error`, and `idle`.
 
-- [ ] **Step 1: Install native dependencies**
+- [x] **Step 1: Install native dependencies**
 
 Run:
 
@@ -95,7 +95,7 @@ Expected:
 - `expo-file-system` is a direct dependency in `package.json`.
 - `react-native-track-player` is a dependency in `package.json`.
 
-- [ ] **Step 2: Write provider tests**
+- [x] **Step 2: Write provider tests**
 
 Create `src/services/__tests__/everyAyahProvider.test.ts`:
 
@@ -115,7 +115,7 @@ describe('urlForAyah', () => {
 });
 ```
 
-- [ ] **Step 3: Implement reciter catalog and provider**
+- [x] **Step 3: Implement reciter catalog and provider**
 
 Create `src/data/reciters.ts` with the verified five-reciter catalog from the design. Create `src/services/everyAyahProvider.ts` with:
 
@@ -130,7 +130,7 @@ export function urlForAyah(reciterId: string, surah: number, ayah: number): stri
 }
 ```
 
-- [ ] **Step 4: Add repository helpers**
+- [x] **Step 4: Add repository helpers**
 
 Modify `src/data/quranRepository.ts`:
 
@@ -142,7 +142,7 @@ export async function getSurahLastAyah(surahNumber: number): Promise<number> {
 }
 ```
 
-- [ ] **Step 5: Write engine happy-path test**
+- [x] **Step 5: Write engine happy-path test**
 
 Create `src/services/__tests__/recitationEngine.test.ts` with a mocked adapter/cache and the first visible behavior:
 
@@ -176,7 +176,7 @@ describe('recitationEngine popup start', () => {
 });
 ```
 
-- [ ] **Step 6: Implement recitation store and engine minimum**
+- [x] **Step 6: Implement recitation store and engine minimum**
 
 Create `src/stores/recitationStore.ts` with `PlaybackState`, `PlaybackRange`, `PlaybackMode`, and a Zustand store matching the design. Create `src/services/recitationEngine.ts` with:
 - singleton export `recitationEngine`
@@ -185,7 +185,7 @@ Create `src/stores/recitationStore.ts` with `PlaybackState`, `PlaybackRange`, `P
 - `loadToken` stale callback protection
 - current default reciter `Husary_128kbps`
 
-- [ ] **Step 7: Implement audio adapter and cache minimum**
+- [x] **Step 7: Implement audio adapter and cache minimum**
 
 Create `src/services/ayahAudioCache.ts` with `getLocalPath(reciterId, surah, ayah, signal)`. Use `FileSystem.documentDirectory`, nested local layout, in-flight promise dedup, non-zero-size validation, and EveryAyah URL construction.
 
@@ -198,7 +198,7 @@ Create `src/services/audioAdapter.ts` with a thin Track Player wrapper:
 - `seek(seconds)`
 - `setSpeed(speed)`
 
-- [ ] **Step 8: Wire popup play**
+- [x] **Step 8: Wire popup play**
 
 Modify `src/actions/ayahActions.ts` so `play` awaits `getSurahLastAyah(startSurah)` and calls:
 
@@ -213,7 +213,7 @@ recitationEngine.start({
 });
 ```
 
-- [ ] **Step 9: Add mini-player**
+- [x] **Step 9: Add mini-player**
 
 Create `src/components/quran/MiniPlayerBar.tsx`:
 - render nothing when `state === 'idle'`
@@ -224,7 +224,7 @@ Create `src/components/quran/MiniPlayerBar.tsx`:
 
 Mount it in `src/components/quran/MushafReader.tsx` above the future toolbar area so the popup slice has visible feedback.
 
-- [ ] **Step 10: Run tests**
+- [x] **Step 10: Run tests**
 
 Run:
 
@@ -247,7 +247,9 @@ Expected:
 - Tap `تشغيل`.
 - Mini-player appears and audio starts or enters a clear recoverable error state if simulator networking/audio setup fails.
 
-- [ ] **Step 12: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 12: Commit**
 
 ```bash
 git add package.json package-lock.json src/actions/ayahActions.ts src/components/quran/MushafReader.tsx src/components/quran/MiniPlayerBar.tsx src/constants/strings.ts src/data/quranRepository.ts src/data/reciters.ts src/services src/stores/recitationStore.ts

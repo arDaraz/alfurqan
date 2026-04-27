@@ -10,7 +10,14 @@ jest.mock('../../src/data/database', () => ({
   getDatabase: jest.fn().mockResolvedValue(mockDb),
 }));
 
-import { getSurahs, getAyahsBySurah, getJuzList, getSurahByNumber, searchSurahs } from '../../src/data/quranRepository';
+import {
+  getSurahs,
+  getAyahsBySurah,
+  getJuzList,
+  getSurahByNumber,
+  getSurahLastAyah,
+  searchSurahs,
+} from '../../src/data/quranRepository';
 
 describe('quranRepository', () => {
   beforeEach(() => {
@@ -104,6 +111,22 @@ describe('quranRepository', () => {
       mockDb.getFirstAsync.mockResolvedValueOnce(null);
       const surah = await getSurahByNumber(999);
       expect(surah).toBeNull();
+    });
+  });
+
+  describe('getSurahLastAyah', () => {
+    it('returns the ayah count for a known surah', async () => {
+      mockDb.getFirstAsync.mockResolvedValueOnce({
+        number: 1, name_arabic: 'الفاتحة', name_english: 'Al-Fatiha', ayah_count: 7, revelation_type: 'Makki', revelation_order: 5, juz_start: 1,
+      });
+
+      await expect(getSurahLastAyah(1)).resolves.toBe(7);
+    });
+
+    it('throws when the surah does not exist', async () => {
+      mockDb.getFirstAsync.mockResolvedValueOnce(null);
+
+      await expect(getSurahLastAyah(999)).rejects.toThrow('Surah 999 not found');
     });
   });
 

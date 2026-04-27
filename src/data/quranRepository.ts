@@ -81,6 +81,12 @@ export async function getSurahByNumber(surahNumber: number): Promise<Surah | nul
   return mapSurahRow(row);
 }
 
+export async function getSurahLastAyah(surahNumber: number): Promise<number> {
+  const surah = await getSurahByNumber(surahNumber);
+  if (!surah) throw new Error(`Surah ${surahNumber} not found`);
+  return surah.ayahCount;
+}
+
 // TODO: Currently fetches within a single surah. Add cross-surah support when
 // the selection UI allows spanning across surah boundaries.
 export async function getAyahTextRange(

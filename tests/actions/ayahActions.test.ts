@@ -16,12 +16,20 @@ jest.mock('expo-clipboard', () => ({
 // Mock quranRepository
 jest.mock('../../src/data/quranRepository', () => ({
   getAyahTextRange: jest.fn().mockResolvedValue('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
+  getSurahLastAyah: jest.fn().mockResolvedValue(7),
+}));
+
+jest.mock('../../src/services/recitationEngine', () => ({
+  recitationEngine: {
+    start: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
 import { handleAyahAction } from '../../src/actions/ayahActions';
-import { getAyahTextRange } from '../../src/data/quranRepository';
+import { getAyahTextRange, getSurahLastAyah } from '../../src/data/quranRepository';
+import { recitationEngine } from '../../src/services/recitationEngine';
 import { useReadingStore } from '../../src/stores/readingStore';
 import type { AyahSelection } from '../../src/data/types';
 
@@ -75,13 +83,17 @@ describe('handleAyahAction', () => {
   });
 
   describe('placeholder actions', () => {
-    it('play action logs to console', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('play action starts recitation from selected ayah to end of surah', async () => {
       await handleAyahAction('play', mockSelection);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[AyahAction] play')
-      );
-      consoleSpy.mockRestore();
+      expect(getSurahLastAyah).toHaveBeenCalledWith(1);
+      expect(recitationEngine.start).toHaveBeenCalledWith({
+        surah: 1,
+        startAyah: 1,
+        stopAyah: 7,
+        trigger: 'popup',
+        selectedEndSurah: 1,
+        selectedEndAyah: 3,
+      });
     });
 
     it('tafsir action logs to console', async () => {
