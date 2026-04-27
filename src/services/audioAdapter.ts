@@ -1,4 +1,4 @@
-import TrackPlayer, { Capability } from 'react-native-track-player';
+import TrackPlayer, { Capability, Event } from 'react-native-track-player';
 
 export type AudioLoadOptions = {
   uri: string;
@@ -21,6 +21,45 @@ export type AudioAdapter = {
 };
 
 let setupPromise: Promise<void> | null = null;
+let remoteListenersRegistered = false;
+
+type AudioRemoteHandlers = {
+  next?: () => Promise<void> | void;
+  pause?: () => Promise<void> | void;
+  previous?: () => Promise<void> | void;
+  resume?: () => Promise<void> | void;
+  seek?: (seconds: number) => Promise<void> | void;
+  stop?: () => Promise<void> | void;
+};
+
+let remoteHandlers: AudioRemoteHandlers = {};
+
+export function registerAudioRemoteHandlers(handlers: AudioRemoteHandlers): void {
+  remoteHandlers = handlers;
+}
+
+function registerRemoteListeners(): void {
+  if (remoteListenersRegistered) return;
+  remoteListenersRegistered = true;
+  TrackPlayer.addEventListener(Event.RemotePlay, () => {
+    void remoteHandlers.resume?.();
+  });
+  TrackPlayer.addEventListener(Event.RemotePause, () => {
+    void remoteHandlers.pause?.();
+  });
+  TrackPlayer.addEventListener(Event.RemoteStop, () => {
+    void remoteHandlers.stop?.();
+  });
+  TrackPlayer.addEventListener(Event.RemoteNext, () => {
+    void remoteHandlers.next?.();
+  });
+  TrackPlayer.addEventListener(Event.RemotePrevious, () => {
+    void remoteHandlers.previous?.();
+  });
+  TrackPlayer.addEventListener(Event.RemoteSeek, (event) => {
+    void remoteHandlers.seek?.(event.position);
+  });
+}
 
 async function setup(): Promise<void> {
   if (!setupPromise) {
@@ -39,6 +78,7 @@ async function setup(): Promise<void> {
           progressUpdateEventInterval: 1,
         })
       )
+      .then(registerRemoteListeners)
       .catch((error) => {
         setupPromise = null;
         throw error;

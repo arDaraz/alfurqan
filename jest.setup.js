@@ -19,6 +19,7 @@ jest.mock('react-native-track-player', () => ({
     stop: jest.fn().mockResolvedValue(undefined),
     seekTo: jest.fn().mockResolvedValue(undefined),
     setRate: jest.fn().mockResolvedValue(undefined),
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
   },
   Capability: {
     Play: 0,
@@ -27,5 +28,13 @@ jest.mock('react-native-track-player', () => ({
     SeekTo: 3,
     SkipToNext: 4,
     SkipToPrevious: 5,
+  },
+  Event: {
+    RemotePlay: 'remote-play',
+    RemotePause: 'remote-pause',
+    RemoteStop: 'remote-stop',
+    RemoteNext: 'remote-next',
+    RemotePrevious: 'remote-previous',
+    RemoteSeek: 'remote-seek',
   },
 }));

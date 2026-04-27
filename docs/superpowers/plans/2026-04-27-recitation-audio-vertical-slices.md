@@ -730,13 +730,13 @@ git commit -m "feat(recitation): manage offline surah downloads"
 - Remote play, pause, stop, seek, next, previous call engine methods.
 - Audio survives app backgrounding.
 
-- [ ] **Step 1: Configure app.json**
+- [x] **Step 1: Configure app.json**
 
 Modify `app.json`:
 - add iOS background audio mode
 - add Android foreground service notification metadata required by `react-native-track-player`
 
-- [ ] **Step 2: Register remote events**
+- [x] **Step 2: Register remote events**
 
 Modify `audioAdapter.ts` bootstrap to map Track Player remote events:
 - remote play -> `recitationEngine.resume()`
@@ -746,14 +746,14 @@ Modify `audioAdapter.ts` bootstrap to map Track Player remote events:
 - remote next -> `recitationEngine.next()`
 - remote previous -> `recitationEngine.prev()`
 
-- [ ] **Step 3: Add metadata update path**
+- [x] **Step 3: Add metadata update path**
 
 Ensure every adapter load sets title, artist, and artwork:
 - title: `الفاتحة - الآية ١`
 - artist: selected reciter name
 - artwork: bundled lock-screen artwork asset
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run:
 
@@ -778,7 +778,9 @@ Expected:
 - Pause/resume from Control Center updates in-app state when app returns foreground.
 - Next/previous from Control Center changes ayah.
 
-- [ ] **Step 6: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add app.json src/services/audioAdapter.ts src/services/recitationEngine.ts src/services/__tests__/recitationEngine.test.ts

@@ -3,7 +3,7 @@ import { getReciterById } from '../data/reciters';
 import { useReciterStore } from '../stores/reciterStore';
 import { useRecitationStore, type PlaybackRange, type PlaybackMode, type PlaybackSpeed } from '../stores/recitationStore';
 import { ayahAudioCache, CacheError } from './ayahAudioCache';
-import { audioAdapter, type AudioAdapter } from './audioAdapter';
+import { audioAdapter, registerAudioRemoteHandlers, type AudioAdapter } from './audioAdapter';
 
 type WebViewLike = {
   injectJavaScript: (script: string) => void;
@@ -24,6 +24,7 @@ type RecitationEngineDeps = {
 };
 
 type LoadIntent = 'play' | 'pause';
+const LOCK_SCREEN_ARTWORK = 'asset:/assets/images/icon.png';
 
 function mapError(error: unknown): { category: 'network' | 'audio-unavailable' | 'storage'; message: string } {
   if (error instanceof CacheError) {
@@ -179,6 +180,7 @@ export class RecitationEngine {
         uri: localPath,
         title: `سورة ${snapshot.range.surah} - الآية ${ayah}`,
         artist: reciter.nameAr,
+        artwork: LOCK_SCREEN_ARTWORK,
       });
       if (token !== this.loadToken) return;
 
@@ -218,6 +220,15 @@ export class RecitationEngine {
 export const recitationEngine = new RecitationEngine({
   adapter: audioAdapter,
   cache: ayahAudioCache,
+});
+
+registerAudioRemoteHandlers({
+  next: () => recitationEngine.next(),
+  pause: () => recitationEngine.pause(),
+  previous: () => recitationEngine.prev(),
+  resume: () => recitationEngine.resume(),
+  seek: (seconds) => recitationEngine.seek(seconds),
+  stop: () => recitationEngine.stop(),
 });
 
 export function createRecitationEngineForTest(deps: RecitationEngineDeps): RecitationEngine {
