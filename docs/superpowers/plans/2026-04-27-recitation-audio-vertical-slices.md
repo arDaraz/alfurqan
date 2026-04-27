@@ -275,11 +275,11 @@ git commit -m "feat(recitation): play selected ayah with mini player"
 - The green mic remains non-audio and does not call `recitationEngine.start`.
 - Toolbar and mini-player do not overlap `PageIndicator`.
 
-- [ ] **Step 1: Write repository test**
+- [x] **Step 1: Write repository test**
 
 Create `src/data/__tests__/quranRepository.recitation.test.ts` and mock the database query to verify `getTopAyahForPage(2)` returns the first ordered row.
 
-- [ ] **Step 2: Implement `getTopAyahForPage`**
+- [x] **Step 2: Implement `getTopAyahForPage`**
 
 Add to `src/data/quranRepository.ts`:
 
@@ -300,7 +300,7 @@ export async function getTopAyahForPage(pageNumber: number): Promise<{ surahNumb
 }
 ```
 
-- [ ] **Step 3: Create toolbar component**
+- [x] **Step 3: Create toolbar component**
 
 Create `src/components/quran/MushafBottomToolbar.tsx` with RTL slots:
 - info
@@ -311,7 +311,7 @@ Create `src/components/quran/MushafBottomToolbar.tsx` with RTL slots:
 
 The playback button receives `onPlayPress` and reads `recitationStore.state` to choose icon state.
 
-- [ ] **Step 4: Wire toolbar to page playback**
+- [x] **Step 4: Wire toolbar to page playback**
 
 Modify `MushafReader` to track `currentPage`, render `MushafBottomToolbar`, and call:
 
@@ -326,7 +326,7 @@ await recitationEngine.start({
 });
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -351,7 +351,9 @@ Expected:
 - Tap toolbar play while playing and confirm no duplicate session starts.
 - Pause from mini-player, then tap toolbar play and confirm it resumes.
 
-- [ ] **Step 7: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/data/quranRepository.ts src/data/__tests__/quranRepository.recitation.test.ts src/components/quran/MushafBottomToolbar.tsx src/components/quran/MushafReader.tsx src/components/quran/MushafScreenLayout.tsx

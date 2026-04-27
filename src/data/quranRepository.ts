@@ -87,6 +87,23 @@ export async function getSurahLastAyah(surahNumber: number): Promise<number> {
   return surah.ayahCount;
 }
 
+export async function getTopAyahForPage(
+  pageNumber: number
+): Promise<{ surahNumber: number; ayahNumber: number }> {
+  const db = await getDatabase();
+  const row = await db.getFirstAsync<{ surah_number: number; ayah_number: number }>(
+    `SELECT surah_number, ayah_number
+     FROM mushaf_words
+     WHERE page_number = ?
+     GROUP BY surah_number, ayah_number
+     ORDER BY MIN(line_number), MIN(id)
+     LIMIT 1`,
+    [pageNumber]
+  );
+  if (!row) throw new Error(`No ayah found for page ${pageNumber}`);
+  return { surahNumber: row.surah_number, ayahNumber: row.ayah_number };
+}
+
 // TODO: Currently fetches within a single surah. Add cross-surah support when
 // the selection UI allows spanning across surah boundaries.
 export async function getAyahTextRange(

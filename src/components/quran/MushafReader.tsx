@@ -5,7 +5,11 @@ import { MushafPage } from './MushafPage';
 import { PageIndicator } from './PageIndicator';
 import { AyahPopup } from './AyahPopup';
 import { MiniPlayerBar } from './MiniPlayerBar';
+import { MushafBottomToolbar } from './MushafBottomToolbar';
+import { getSurahLastAyah, getTopAyahForPage } from '../../data/quranRepository';
+import { recitationEngine } from '../../services/recitationEngine';
 import { useReadingStore } from '../../stores/readingStore';
+import { useRecitationStore } from '../../stores/recitationStore';
 import { theme } from '../../constants/theme';
 import type { AyahSelection, AyahActionType } from '../../data/types';
 
@@ -16,6 +20,24 @@ interface MushafReaderProps {
   initialPage: number;
   onPageChange?: (pageNumber: number) => void;
   onAyahAction?: (action: AyahActionType, selection: AyahSelection) => void;
+}
+
+export async function startToolbarRecitationFromPage(pageNumber: number): Promise<void> {
+  const playbackState = useRecitationStore.getState().state;
+  if (playbackState === 'playing' || playbackState === 'loading') return;
+  if (playbackState === 'paused') {
+    await recitationEngine.resume();
+    return;
+  }
+
+  const topAyah = await getTopAyahForPage(pageNumber);
+  const stopAyah = await getSurahLastAyah(topAyah.surahNumber);
+  await recitationEngine.start({
+    surah: topAyah.surahNumber,
+    startAyah: topAyah.ayahNumber,
+    stopAyah,
+    trigger: 'toolbar',
+  });
 }
 
 export function MushafReader({ initialPage, onPageChange, onAyahAction }: MushafReaderProps) {
@@ -66,6 +88,10 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
     clearSelectionRef.current?.();
   }, []);
 
+  const handleToolbarPlay = useCallback(() => {
+    void startToolbarRecitationFromPage(currentPage);
+  }, [currentPage]);
+
   return (
     <View style={styles.container}>
       <PagerView
@@ -109,6 +135,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
       )}
 
       <MiniPlayerBar />
+      <MushafBottomToolbar onPlayPress={handleToolbarPlay} />
       <PageIndicator currentPage={currentPage} />
     </View>
   );
