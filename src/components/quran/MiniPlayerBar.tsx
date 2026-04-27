@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PlayerSheet } from './PlayerSheet';
 import { getReciterById, DEFAULT_RECITER_ID } from '../../data/reciters';
 import { recitationEngine } from '../../services/recitationEngine';
 import { useRecitationStore } from '../../stores/recitationStore';
@@ -9,6 +10,7 @@ import { theme } from '../../constants/theme';
 
 export function MiniPlayerBar() {
   const strings = useStrings();
+  const [sheetVisible, setSheetVisible] = useState(false);
   const state = useRecitationStore((s) => s.state);
   const range = useRecitationStore((s) => s.range);
   const currentAyah = useRecitationStore((s) => s.currentAyah);
@@ -36,48 +38,61 @@ export function MiniPlayerBar() {
   };
 
   return (
-    <View style={[styles.container, isError && styles.errorContainer]}>
-      <Pressable
-        onPress={handlePlayPause}
-        style={[styles.roundButton, isLoading && styles.loadingButton]}
-        accessibilityRole="button"
-        accessibilityLabel={isPaused ? strings.recitation.play : strings.recitation.pause}
-      >
-        <MaterialCommunityIcons
-          name={isPaused || isError ? 'play' : 'pause'}
-          size={18}
-          color={theme.colors.surface}
-        />
-      </Pressable>
+    <>
+      <View style={[styles.container, isError && styles.errorContainer]}>
+        <Pressable
+          onPress={handlePlayPause}
+          style={[styles.roundButton, isLoading && styles.loadingButton]}
+          accessibilityRole="button"
+          accessibilityLabel={isPaused ? strings.recitation.play : strings.recitation.pause}
+        >
+          <MaterialCommunityIcons
+            name={isPaused || isError ? 'play' : 'pause'}
+            size={18}
+            color={theme.colors.surface}
+          />
+        </Pressable>
 
-      <Pressable
-        onPress={() => recitationEngine.stop()}
-        style={styles.iconButton}
-        accessibilityRole="button"
-        accessibilityLabel={strings.recitation.stop}
-      >
-        <MaterialCommunityIcons name="stop" size={16} color={theme.colors.text} />
-      </Pressable>
+        <Pressable
+          onPress={() => recitationEngine.stop()}
+          style={styles.iconButton}
+          accessibilityRole="button"
+          accessibilityLabel={strings.recitation.stop}
+        >
+          <MaterialCommunityIcons name="stop" size={16} color={theme.colors.text} />
+        </Pressable>
 
-      <View style={styles.copy}>
-        <Text style={styles.reciterName} numberOfLines={1}>
-          {isLoading ? strings.recitation.loading : reciter.nameAr}
-        </Text>
-        <Text style={[styles.ayahLabel, isError && styles.errorText]} numberOfLines={1}>
-          {isError
-            ? errorMessage ?? strings.recitation.error
-            : strings.recitation.nowPlayingAyah(range.surah, currentAyah)}
-        </Text>
+        <Pressable
+          onPress={() => setSheetVisible(true)}
+          style={styles.copy}
+          accessibilityRole="button"
+          accessibilityLabel={strings.recitation.playing}
+        >
+          <Text style={styles.reciterName} numberOfLines={1}>
+            {isLoading ? strings.recitation.loading : reciter.nameAr}
+          </Text>
+          <Text style={[styles.ayahLabel, isError && styles.errorText]} numberOfLines={1}>
+            {isError
+              ? errorMessage ?? strings.recitation.error
+              : strings.recitation.nowPlayingAyah(range.surah, currentAyah)}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setSheetVisible(true)}
+          style={styles.avatar}
+          accessibilityRole="button"
+          accessibilityLabel={reciter.nameAr}
+        >
+          <Text style={styles.avatarText}>{reciter.avatarInitialAr}</Text>
+        </Pressable>
+
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+        </View>
       </View>
-
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{reciter.avatarInitialAr}</Text>
-      </View>
-
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-      </View>
-    </View>
+      <PlayerSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} />
+    </>
   );
 }
 

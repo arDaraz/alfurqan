@@ -153,4 +153,111 @@ describe('recitationEngine popup start', () => {
       expect.stringContaining('window.setPlayingAyah(1, 1)')
     );
   });
+
+  it('next advances while below the stop ayah', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 3, trigger: 'popup' });
+    await engine.next();
+
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      currentAyah: 2,
+    });
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Husary_128kbps',
+      1,
+      2,
+      expect.any(AbortSignal)
+    );
+  });
+
+  it('next stops in continuous mode at the stop ayah', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 3, stopAyah: 3, trigger: 'popup' });
+    await engine.next();
+
+    expect(adapter.stop).toHaveBeenCalled();
+    expect(engine.getSnapshot().state).toBe('idle');
+  });
+
+  it('next loops to ayah one at the stop ayah in loop-surah mode', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    engine.setMode('loop-surah');
+    await engine.start({ surah: 1, startAyah: 3, stopAyah: 3, trigger: 'popup' });
+    await engine.next();
+
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      currentAyah: 1,
+      mode: 'loop-surah',
+    });
+  });
+
+  it('prev is a no-op at ayah one', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    await engine.prev();
+
+    expect(engine.getSnapshot().currentAyah).toBe(1);
+    expect(cache.getLocalPath).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies a pending seek after loading completes', async () => {
+    let resolvePath!: (path: string) => void;
+    const adapter = createAdapter();
+    const cache = {
+      getLocalPath: jest.fn(
+        () =>
+          new Promise<string>((resolve) => {
+            resolvePath = resolve;
+          })
+      ),
+    };
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    const startPromise = engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    await engine.seek(3);
+    resolvePath('file:///recitation/Husary_128kbps/001/001.mp3');
+    await startPromise;
+
+    expect(adapter.seek).toHaveBeenCalledWith(3);
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      positionSeconds: 3,
+    });
+  });
+
+  it('pauses a loading ayah without autoplaying when the load completes', async () => {
+    let resolvePath!: (path: string) => void;
+    const adapter = createAdapter();
+    const cache = {
+      getLocalPath: jest.fn(
+        () =>
+          new Promise<string>((resolve) => {
+            resolvePath = resolve;
+          })
+      ),
+    };
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    const startPromise = engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    await engine.pause();
+    resolvePath('file:///recitation/Husary_128kbps/001/001.mp3');
+    await startPromise;
+
+    expect(adapter.play).not.toHaveBeenCalled();
+    expect(engine.getSnapshot().state).toBe('paused');
+  });
 });

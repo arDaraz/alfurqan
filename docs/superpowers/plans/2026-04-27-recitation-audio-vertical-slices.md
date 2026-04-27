@@ -468,7 +468,7 @@ git commit -m "feat(recitation): highlight playing ayah in mushaf"
 - Repeat toggles `continuous` and `loop-surah`.
 - Next/previous honor boundaries in design Section 5.4.
 
-- [ ] **Step 1: Add engine transport tests**
+- [x] **Step 1: Add engine transport tests**
 
 Extend `recitationEngine.test.ts` for:
 - `next()` advances current ayah while below `stopAyah`
@@ -478,11 +478,11 @@ Extend `recitationEngine.test.ts` for:
 - `seek()` during loading applies pending seek after load
 - `pause()` during loading ends in paused state
 
-- [ ] **Step 2: Complete transport implementation**
+- [x] **Step 2: Complete transport implementation**
 
 Modify `recitationEngine.ts` to satisfy the tests and update `recitationStore` for `mode`, `speed`, `positionSeconds`, and `durationSeconds`.
 
-- [ ] **Step 3: Create `PlayerSheet`**
+- [x] **Step 3: Create `PlayerSheet`**
 
 Create `src/components/quran/PlayerSheet.tsx` with:
 - close button
@@ -492,11 +492,11 @@ Create `src/components/quran/PlayerSheet.tsx` with:
 - transport row
 - mode strip for info, speed, download, repeat
 
-- [ ] **Step 4: Wire mini-player to sheet**
+- [x] **Step 4: Wire mini-player to sheet**
 
 Modify `MiniPlayerBar.tsx` to open `PlayerSheet` when label or avatar is pressed.
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -519,7 +519,9 @@ Expected:
 - Open sheet.
 - Pause/resume, seek, next, previous, speed cycle, repeat toggle, and stop all update audio and mini-player state.
 
-- [ ] **Step 7: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/quran/MiniPlayerBar.tsx src/components/quran/PlayerSheet.tsx src/services/recitationEngine.ts src/stores/recitationStore.ts src/services/__tests__/recitationEngine.test.ts
