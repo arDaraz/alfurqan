@@ -72,16 +72,43 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
     const isSurahEnd = isSurahEndingLine(line.words);
     const cls = line.isCentered ? `lc${isSurahEnd ? ' surahEnd' : ''}` : 'l';
     const attrs = isSurahEnd ? ' data-surah-end="true"' : '';
-    const text = line.words.map((w) => {
-      const ds = w.surahNumber;
-      const da = w.ayahNumber;
+    const parts: string[] = [];
+    let runSurah: number | null = null;
+    let runAyah: number | null = null;
+    let runTokens: string[] = [];
+
+    const flushRun = () => {
+      if (runSurah === null || runAyah === null || runTokens.length === 0) return;
+      parts.push(`<span class="ayahRun" data-s="${runSurah}" data-a="${runAyah}">${runTokens.join(' ')}</span>`);
+      runSurah = null;
+      runAyah = null;
+      runTokens = [];
+    };
+
+    for (const w of line.words) {
+      if (w.charType === 'end') {
+        flushRun();
+        parts.push(`<span class="ayahMarker">${w.codeV2}</span>`);
+        continue;
+      }
+
+      if (runSurah !== w.surahNumber || runAyah !== w.ayahNumber) {
+        flushRun();
+        runSurah = w.surahNumber;
+        runAyah = w.ayahNumber;
+      }
+
       // Detect ۞ rub al-hizb glyph: first word of an ayah with space-separated code
       if (w.wordPosition === 1 && w.codeV2.includes(' ')) {
-        const parts = w.codeV2.split(' ');
-        return `<span class="rub" data-s="${ds}" data-a="${da}">۞</span> <span class="w" data-s="${ds}" data-a="${da}">${parts.slice(1).join(' ')}</span>`;
+        const codeParts = w.codeV2.split(' ');
+        runTokens.push(`<span class="rub">۞</span> <span class="w">${codeParts.slice(1).join(' ')}</span>`);
+      } else {
+        runTokens.push(`<span class="w">${w.codeV2}</span>`);
       }
-      return `<span class="w" data-s="${ds}" data-a="${da}">${w.codeV2}</span>`;
-    }).join(' ');
+    }
+
+    flushRun();
+    const text = parts.join(' ');
     return `<div class="${cls}"${attrs}><span class="lineInner">${text}</span></div>`;
   };
 
@@ -205,8 +232,8 @@ body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;ba
 .bsm{display:flex;align-items:center;justify-content:center;color:${palette.foreground};font-family:'QCF1';font-palette:--QcfBismillahSepia;font-size:min(${bismillahFontVw}vw,${bismillahFontPx}px);white-space:nowrap}
 .bsm.slot{min-height:max(calc(100vh/15),2.2em);height:auto}
 .rub{font-family:'Noto Naskh Arabic',serif;color:${palette.accent};font-size:1.8em;line-height:0.5;vertical-align:middle}
-.w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.w.sel,.rub.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
+.ayahRun,.w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ayahRun.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
 </style>
 </head>
 <body>
@@ -255,10 +282,10 @@ function clearSelection(){
 
 function highlightRange(s1,a1,s2,a2){
   document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
-  var spans=document.querySelectorAll('[data-s]');
+  var runs=document.querySelectorAll('.ayahRun[data-s]');
   var inRange=false,pastEnd=false;
-  for(var i=0;i<spans.length;i++){
-    var sp=spans[i],ss=+sp.dataset.s,sa=+sp.dataset.a;
+  for(var i=0;i<runs.length;i++){
+    var sp=runs[i],ss=+sp.dataset.s,sa=+sp.dataset.a;
     if(ss===s1&&sa===a1)inRange=true;
     if(inRange&&pastEnd&&!(ss===s2&&sa===a2)){inRange=false;break;}
     if(inRange)sp.classList.add('sel');
@@ -271,9 +298,9 @@ function postMsg(data){
 }
 
 function orderByDom(a,b){
-  var spans=document.querySelectorAll('[data-s]');
-  for(var i=0;i<spans.length;i++){
-    var ss=+spans[i].dataset.s,sa=+spans[i].dataset.a;
+  var runs=document.querySelectorAll('.ayahRun[data-s]');
+  for(var i=0;i<runs.length;i++){
+    var ss=+runs[i].dataset.s,sa=+runs[i].dataset.a;
     if(ss===a.s&&sa===a.a)return[a,b];
     if(ss===b.s&&sa===b.a)return[b,a];
   }
@@ -323,7 +350,7 @@ document.body.addEventListener('touchend',function(e){
     isDragging=false;
     var t=e.changedTouches[0];
     var x=t?t.clientX:0,y=t?t.clientY:0;
-    postMsg({type:'select',startSurah:sel.startS,startAyah:sel.startA,endSurah:sel.endS,endAyah:sel.endA,x:x,y:y});
+    postMsg({type:'select',startSurah:sel.startS,startAyah:sel.startA,endSurah:sel.endS,endAyah:sel.endA,x:x,y:y,openMenu:true});
     return;
   }
   if(!touchStartAyah)return;
@@ -334,14 +361,14 @@ document.body.addEventListener('touchend',function(e){
 
   if(sel.active){
     var isSelected=false;
-    var spans=document.querySelectorAll('[data-s="'+ayah.s+'"][data-a="'+ayah.a+'"]');
+    var spans=document.querySelectorAll('.ayahRun[data-s="'+ayah.s+'"][data-a="'+ayah.a+'"]');
     for(var i=0;i<spans.length;i++){if(spans[i].classList.contains('sel')){isSelected=true;break;}}
     if(isSelected){clearSelection();return;}
   }
   sel.active=true;
   sel.startS=ayah.s;sel.startA=ayah.a;sel.endS=ayah.s;sel.endA=ayah.a;
   highlightRange(ayah.s,ayah.a,ayah.s,ayah.a);
-  postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:tx,y:ty});
+  postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:tx,y:ty,openMenu:false});
 });
 
 document.body.addEventListener('touchcancel',function(){

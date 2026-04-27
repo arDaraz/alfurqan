@@ -75,16 +75,37 @@ export function generateUnicodeMushafHtml(opts: UnicodeMushafHtmlOptions): strin
     const isSurahEnd = isSurahEndingLine(lineWords);
     const lineClass = `line${isSurahEnd ? ' surahEnd' : ''}`;
     const lineAttrs = isSurahEnd ? ' data-surah-end="true"' : '';
-    const text = lineWords
-      .map((word) => {
-        const textValue = escapeHtml(word.codeV2);
-        if (word.charType === 'end') {
-          return `<span class="num ayah" data-s="${word.surahNumber}" data-a="${word.ayahNumber}"><span class="numText">${textValue}</span></span>`;
-        }
-        const cls = 'ayah';
-        return `<span class="${cls}" data-s="${word.surahNumber}" data-a="${word.ayahNumber}">${textValue}</span>`;
-      })
-      .join('');
+    const parts: string[] = [];
+    let runSurah: number | null = null;
+    let runAyah: number | null = null;
+    let runTokens: string[] = [];
+
+    const flushRun = () => {
+      if (runSurah === null || runAyah === null || runTokens.length === 0) return;
+      parts.push(`<span class="ayahRun" data-s="${runSurah}" data-a="${runAyah}">${runTokens.join('')}</span>`);
+      runSurah = null;
+      runAyah = null;
+      runTokens = [];
+    };
+
+    for (const word of lineWords) {
+      const textValue = escapeHtml(word.codeV2);
+      if (word.charType === 'end') {
+        flushRun();
+        parts.push(`<span class="num ayahMarker"><span class="numText">${textValue}</span></span>`);
+        continue;
+      }
+
+      if (runSurah !== word.surahNumber || runAyah !== word.ayahNumber) {
+        flushRun();
+        runSurah = word.surahNumber;
+        runAyah = word.ayahNumber;
+      }
+      runTokens.push(`<span class="ayahText">${textValue}</span>`);
+    }
+
+    flushRun();
+    const text = parts.join('');
     return `<div class="${lineClass}" data-line="${lineNumber}"${lineAttrs}><span class="lineInner">${text}</span></div>`;
   };
 
@@ -163,10 +184,11 @@ body.compact #content{justify-content:flex-start;padding-top:${compactTopPadding
 .empty{min-height:max(calc(100vh/15),2em);height:auto}
 .lineInner{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:0.26em;white-space:nowrap;max-width:none;font-feature-settings:inherit;font-variant-ligatures:inherit;line-height:1.7}
 body.compact .line{height:auto;min-height:${compactLineMinHeightVh}vh;margin:0.2vh 0}
-.ayah{cursor:pointer;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;flex:0 0 auto;min-width:0}
+.ayahRun{cursor:pointer;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;gap:0.26em;flex:0 0 auto;min-width:0}
+.ayahText{display:inline-flex;align-items:center;flex:0 0 auto;min-width:0}
 .num{font-family:'Noto Naskh Arabic','Arial',serif;color:${palette.accent};white-space:nowrap;width:1.32em;height:1.32em;border:1px solid ${palette.accent};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.54em;line-height:1;flex:0 0 auto;margin:0 0.08em}
 .numText{transform:translateY(-0.02em)}
-.ayah.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
+.ayahRun.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
 </style>
 </head>
 <body class="${bodyClass}">
@@ -251,6 +273,11 @@ setTimeout(fitPage,800);
 scheduleFit();
 
 var sel={active:false,s:0,a:0};
+var LONG_PRESS_DELAY=300;
+var longPressTimer=null;
+var longPressAyah=null;
+var didLongPress=false;
+var longPressPoint={x:0,y:0};
 function getAyah(el){
   while(el&&!el.dataset.s)el=el.parentElement;
   if(!el||!el.dataset.s)return null;
@@ -263,20 +290,54 @@ function clearSelection(){
 }
 function highlightAyah(s,a){
   document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
-  document.querySelectorAll('[data-s="'+s+'"][data-a="'+a+'"]').forEach(function(e){e.classList.add('sel')});
+  document.querySelectorAll('.ayahRun[data-s="'+s+'"][data-a="'+a+'"]').forEach(function(e){e.classList.add('sel')});
 }
 function postMsg(data){
   if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify(data));
 }
-document.body.addEventListener('touchend',function(e){
-  var t=e.changedTouches[0];
+function selectAyah(ay,x,y,openMenu){
+  sel.active=true;sel.s=ay.s;sel.a=ay.a;
+  highlightAyah(ay.s,ay.a);
+  postMsg({type:'select',startSurah:ay.s,startAyah:ay.a,endSurah:ay.s,endAyah:ay.a,x:x,y:y,openMenu:openMenu});
+}
+document.body.addEventListener('touchstart',function(e){
+  var t=e.touches[0];
   if(!t)return;
   var ay=getAyah(document.elementFromPoint(t.clientX,t.clientY));
   if(!ay)return;
+  longPressAyah=ay;
+  longPressPoint={x:t.clientX,y:t.clientY};
+  didLongPress=false;
+  longPressTimer=setTimeout(function(){
+    if(!longPressAyah)return;
+    didLongPress=true;
+    sel.active=true;sel.s=longPressAyah.s;sel.a=longPressAyah.a;
+    highlightAyah(longPressAyah.s,longPressAyah.a);
+  },LONG_PRESS_DELAY);
+},{passive:true});
+document.body.addEventListener('touchmove',function(){
+  if(longPressTimer&&!didLongPress){clearTimeout(longPressTimer);longPressTimer=null;}
+},{passive:true});
+document.body.addEventListener('touchend',function(e){
+  var t=e.changedTouches[0];
+  if(!t)return;
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+  if(didLongPress&&longPressAyah){
+    selectAyah(longPressAyah,t.clientX||longPressPoint.x,t.clientY||longPressPoint.y,true);
+    longPressAyah=null;
+    didLongPress=false;
+    return;
+  }
+  longPressAyah=null;
+  var ay=getAyah(document.elementFromPoint(t.clientX,t.clientY));
+  if(!ay)return;
   if(sel.active&&sel.s===ay.s&&sel.a===ay.a){clearSelection();return;}
-  sel.active=true;sel.s=ay.s;sel.a=ay.a;
-  highlightAyah(ay.s,ay.a);
-  postMsg({type:'select',startSurah:ay.s,startAyah:ay.a,endSurah:ay.s,endAyah:ay.a,x:t.clientX,y:t.clientY});
+  selectAyah(ay,t.clientX,t.clientY,false);
+});
+document.body.addEventListener('touchcancel',function(){
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+  longPressAyah=null;
+  didLongPress=false;
 });
 </script>
 </body>
