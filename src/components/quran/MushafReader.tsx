@@ -49,6 +49,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
 
   // Selection state
   const [selection, setSelection] = useState<AyahSelection | null>(null);
+  const [showActions, setShowActions] = useState(false);
   const [popupPos, setPopupPos] = useState({ x: 0, y: 0 });
   const clearSelectionRef = useRef<(() => void) | null>(null);
 
@@ -60,6 +61,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
       onPageChange?.(pageNumber);
       // Clear selection on page change
       setSelection(null);
+      setShowActions(false);
       clearSelectionRef.current?.();
     },
     [setLastReadPage, onPageChange]
@@ -73,20 +75,26 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
         endSurah: data.endSurah,
         endAyah: data.endAyah,
       });
-      setPopupPos({ x: data.x, y: data.y });
+      setShowActions(Boolean(data.openMenu));
+      if (data.openMenu) {
+        setPopupPos({ x: data.x, y: data.y });
+      }
     } else if (data.type === 'deselect') {
       setSelection(null);
+      setShowActions(false);
     }
   }, []);
 
   const handleAction = useCallback((action: AyahActionType, sel: AyahSelection) => {
     onAyahAction?.(action, sel);
     setSelection(null);
+    setShowActions(false);
     clearSelectionRef.current?.();
   }, [onAyahAction]);
 
   const handleDismiss = useCallback(() => {
     setSelection(null);
+    setShowActions(false);
     clearSelectionRef.current?.();
   }, []);
 
@@ -127,7 +135,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
       </PagerView>
 
       {/* Ayah context popup overlay */}
-      {selection && (
+      {selection && showActions && (
         <AyahPopup
           selection={selection}
           x={popupPos.x}

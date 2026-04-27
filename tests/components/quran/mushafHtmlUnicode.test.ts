@@ -127,7 +127,7 @@ describe('generateUnicodeMushafHtml', () => {
       fontMimeType: 'font/otf',
     });
 
-    expect(html).toContain('<span class="num ayah" data-s="2" data-a="1"><span class="numText">١</span></span>');
+    expect(html).toContain('<span class="num ayahMarker"><span class="numText">١</span></span>');
   });
 
   it('enables required OpenType shaping features for Digital Khatt IndoPak', () => {
@@ -173,7 +173,23 @@ describe('generateUnicodeMushafHtml', () => {
     });
 
     expect(html).toContain('.lineInner{display:inline-flex;flex:0 0 auto;');
-    expect(html).toContain('.ayah{cursor:pointer;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;flex:0 0 auto');
+    expect(html).toContain('.ayahRun{cursor:pointer;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;gap:0.26em;flex:0 0 auto');
+  });
+
+  it('selects Unicode ayah runs without including ayah end markers', () => {
+    const html = generateUnicodeMushafHtml({
+      pageNumber: 2,
+      words,
+      fontBase64: 'font-data',
+      fontFamily: 'DigitalKhattIndopak',
+      fontFormat: 'opentype',
+      fontMimeType: 'font/otf',
+    });
+
+    expect(html).toContain('<span class="ayahRun" data-s="2" data-a="1"><span class="ayahText">الٓمّٓۚ‏</span></span><span class="num ayahMarker"><span class="numText">١</span></span>');
+    expect(html).toContain("document.querySelectorAll('.ayahRun[data-s=\"'+s+'\"][data-a=\"'+a+'\"]').forEach(function(e){e.classList.add('sel')})");
+    expect(html).not.toContain('class="num ayah" data-s=');
+    expect(html).not.toContain("document.querySelectorAll('[data-s=\"'+s+'\"][data-a=\"'+a+'\"]')");
   });
 
   it('keeps a safety margin when fitting complex Arabic glyph outlines', () => {
@@ -216,6 +232,22 @@ describe('generateUnicodeMushafHtml', () => {
     });
 
     expect(html).toContain('#content{width:100%;max-width:100%;overflow-x:hidden;min-width:0;min-height:100vh;height:auto;');
+  });
+
+  it('distinguishes Unicode tap selection from long-press action menu selection', () => {
+    const html = generateUnicodeMushafHtml({
+      pageNumber: 2,
+      words,
+      fontBase64: 'font-data',
+      fontFamily: 'DigitalKhattIndopak',
+      fontFormat: 'opentype',
+      fontMimeType: 'font/otf',
+    });
+
+    expect(html).toContain('var LONG_PRESS_DELAY=300;');
+    expect(html).toContain('openMenu:openMenu');
+    expect(html).toContain('selectAyah(longPressAyah,t.clientX||longPressPoint.x,t.clientY||longPressPoint.y,true)');
+    expect(html).toContain('selectAyah(ay,t.clientX,t.clientY,false)');
   });
 
   it('lets oversized Unicode pages scroll vertically instead of overlapping lines', () => {
@@ -329,6 +361,6 @@ describe('generateUnicodeMushafHtml', () => {
 
     expect(html).toContain('body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:#1F1814;color:#F0DAB0;');
     expect(html).toContain('.num{font-family:\'Noto Naskh Arabic\',\'Arial\',serif;color:#E0B265;');
-    expect(html).toContain('.ayah.sel{background:rgba(200,150,74,0.18);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(200,150,74,0.38)}');
+    expect(html).toContain('.ayahRun.sel{background:rgba(200,150,74,0.18);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(200,150,74,0.38)}');
   });
 });

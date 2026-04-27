@@ -37,8 +37,8 @@ describe('generateMushafHtml', () => {
       fontBase64: 'font-data',
     });
 
-    expect(html).toContain('<div class="lc surahEnd" data-surah-end="true"><span class="lineInner"><span class="w" data-s="112" data-a="4">وَلَمْ</span>');
-    expect(html).toContain('<span class="w" data-s="112" data-a="4">أَحَدٌ</span> <span class="w" data-s="112" data-a="4">٤</span></span></div>');
+    expect(html).toContain('<div class="lc surahEnd" data-surah-end="true"><span class="lineInner"><span class="ayahRun" data-s="112" data-a="4"><span class="w">وَلَمْ</span>');
+    expect(html).toContain('<span class="w">أَحَدٌ</span></span> <span class="ayahMarker">٤</span></span></div>');
     expect(html).not.toContain('<div class="l"><span class="w" data-s="112" data-a="4">وَلَمْ</span>');
   });
 
@@ -57,8 +57,29 @@ describe('generateMushafHtml', () => {
       fontBase64: 'font-data',
     });
 
-    expect(html).toContain('<div class="l"><span class="lineInner"><span class="w" data-s="112" data-a="3">لَمْ</span>');
+    expect(html).toContain('<div class="l"><span class="lineInner"><span class="ayahRun" data-s="112" data-a="3"><span class="w">لَمْ</span>');
     expect(html).not.toContain('data-surah-end="true"');
+  });
+
+  it('selects ayah runs instead of individual words or ayah end markers', () => {
+    const html = generateMushafHtml({
+      pageNumber: 604,
+      words: [
+        word(1, 112, 3, 1, 4, 'لَمْ'),
+        word(2, 112, 3, 2, 4, 'يَلِدْ'),
+        word(3, 112, 3, 3, 4, 'وَلَمْ'),
+        word(4, 112, 3, 4, 4, 'يُولَدْ'),
+        word(5, 112, 3, 5, 4, '٣', 'end'),
+      ],
+      fontBase64: 'font-data',
+    });
+
+    expect(html).toContain('<span class="ayahRun" data-s="112" data-a="3"><span class="w">لَمْ</span> <span class="w">يَلِدْ</span>');
+    expect(html).toContain('<span class="ayahMarker">٣</span>');
+    expect(html).toContain("var runs=document.querySelectorAll('.ayahRun[data-s]');");
+    expect(html).not.toContain("var spans=document.querySelectorAll('[data-s]');");
+    expect(html).not.toContain('class="w" data-s=');
+    expect(html).not.toContain('class="ayahMarker" data-s=');
   });
 
   it('centers measured QCF lines instead of stretching short lines', () => {
@@ -81,6 +102,17 @@ describe('generateMushafHtml', () => {
     expect(html).not.toContain("els[i].style.transform='scaleX('+s+')'");
     expect(html).toContain("else els[i].style.justifyContent='center'");
     expect(html).not.toContain('MAX_LINE_STRETCH');
+  });
+
+  it('distinguishes tap selection from long-press action menu selection', () => {
+    const html = generateMushafHtml({
+      pageNumber: 604,
+      words: [word(1, 114, 6, 1, 15, 'مِنَ')],
+      fontBase64: 'font-data',
+    });
+
+    expect(html).toContain("postMsg({type:'select',startSurah:sel.startS,startAyah:sel.startA,endSurah:sel.endS,endAyah:sel.endA,x:x,y:y,openMenu:true})");
+    expect(html).toContain("postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:tx,y:ty,openMenu:false})");
   });
 
   it('applies the configured font size scale to QCF mushaf pages', () => {
@@ -148,6 +180,6 @@ describe('generateMushafHtml', () => {
 
     expect(html).toContain('body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:#0F1428;color:#E2E6F2;');
     expect(html).toContain('.rub{font-family:\'Noto Naskh Arabic\',serif;color:#C8A767;');
-    expect(html).toContain('.w.sel,.rub.sel{background:rgba(123,152,214,0.22);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(123,152,214,0.45)}');
+    expect(html).toContain('.ayahRun.sel{background:rgba(123,152,214,0.22);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(123,152,214,0.45)}');
   });
 });
