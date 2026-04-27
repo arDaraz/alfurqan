@@ -110,6 +110,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
               {isNearby ? (
                 <MushafPage
                   pageNumber={pageNumber}
+                  isActive={pageNumber === currentPage}
                   onSelectionEvent={pageNumber === currentPage ? handleSelectionEvent : undefined}
                   clearSelectionRef={pageNumber === currentPage ? clearSelectionRef : undefined}
                 />

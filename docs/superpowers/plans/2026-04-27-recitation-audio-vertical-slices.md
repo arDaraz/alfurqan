@@ -379,7 +379,7 @@ git commit -m "feat(recitation): start page playback from toolbar"
 - Active WebView ref registration resends current ayah on page change.
 - Audio continues during page swipe.
 
-- [ ] **Step 1: Add WebView highlight JS and CSS**
+- [x] **Step 1: Add WebView highlight JS and CSS**
 
 Modify `mushafHtml.ts` style block:
 
@@ -399,15 +399,15 @@ function setPlayingAyah(s,a){
 window.setPlayingAyah=setPlayingAyah;
 ```
 
-- [ ] **Step 2: Expose active WebView registration**
+- [x] **Step 2: Expose active WebView registration**
 
 Modify `MushafPage.tsx` to accept `isActive?: boolean`. When `isActive` and WebView exists, call `recitationEngine.registerActivePageWebView(webViewRef)`. On inactive/unmount, unregister only if this page owns the active ref.
 
-- [ ] **Step 3: Pass active state from reader**
+- [x] **Step 3: Pass active state from reader**
 
 Modify `MushafReader.tsx` so the current page receives `isActive={pageNumber === currentPage}`.
 
-- [ ] **Step 4: Add engine highlight tests**
+- [x] **Step 4: Add engine highlight tests**
 
 Extend `recitationEngine.test.ts`:
 - starting playback injects `setPlayingAyah(1, 1)`
@@ -415,7 +415,7 @@ Extend `recitationEngine.test.ts`:
 - stopping injects `setPlayingAyah(null, null)`
 - registering a new active page while playing reinjects the current ayah
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -439,7 +439,9 @@ Expected:
 - Swipe to a page that does not contain the ayah.
 - Confirm audio continues and no stale highlight is shown.
 
-- [ ] **Step 7: Commit**
+Note: not run in this worktree because no native `ios/` project is generated; automated Jest and TypeScript checks passed for the slice.
+
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/quran/mushafHtml.ts src/components/quran/MushafPage.tsx src/components/quran/MushafReader.tsx src/services/recitationEngine.ts src/services/__tests__/recitationEngine.test.ts

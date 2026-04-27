@@ -5,15 +5,22 @@ import { useMushafPage } from '../../hooks/useMushafPage';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
 import { useStrings } from '../../constants/strings';
+import { recitationEngine } from '../../services/recitationEngine';
 import { theme } from '../../constants/theme';
 
 interface MushafPageProps {
   pageNumber: number;
+  isActive?: boolean;
   onSelectionEvent?: (data: unknown) => void;
   clearSelectionRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export function MushafPage({ pageNumber, onSelectionEvent, clearSelectionRef }: MushafPageProps) {
+export function MushafPage({
+  pageNumber,
+  isActive = false,
+  onSelectionEvent,
+  clearSelectionRef,
+}: MushafPageProps) {
   const { html, loading, error, retry } = useMushafPage(pageNumber);
   const strings = useStrings();
   const webViewRef = useRef<WebView>(null);
@@ -26,6 +33,14 @@ export function MushafPage({ pageNumber, onSelectionEvent, clearSelectionRef }: 
   React.useEffect(() => {
     if (clearSelectionRef) clearSelectionRef.current = clearSelection;
   }, [clearSelectionRef, clearSelection]);
+
+  React.useEffect(() => {
+    if (!isActive || !html) return;
+    recitationEngine.registerActivePageWebView(webViewRef);
+    return () => {
+      recitationEngine.registerActivePageWebView(null);
+    };
+  }, [html, isActive]);
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     try {

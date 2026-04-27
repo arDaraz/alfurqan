@@ -115,4 +115,42 @@ describe('recitationEngine popup start', () => {
     expect(adapter.load).not.toHaveBeenCalled();
     expect(adapter.play).not.toHaveBeenCalled();
   });
+
+  it('injects playing ayah highlights when playback starts, advances, and stops', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+    const webView = { injectJavaScript: jest.fn() };
+
+    engine.registerActivePageWebView({ current: webView });
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    await engine.next();
+    await engine.stop();
+
+    expect(webView.injectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('window.setPlayingAyah(1, 1)')
+    );
+    expect(webView.injectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('window.setPlayingAyah(1, 2)')
+    );
+    expect(webView.injectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('window.setPlayingAyah(null, null)')
+    );
+  });
+
+  it('reinjects the current ayah when a new active page registers', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+    const firstWebView = { injectJavaScript: jest.fn() };
+    const secondWebView = { injectJavaScript: jest.fn() };
+
+    engine.registerActivePageWebView({ current: firstWebView });
+    await engine.start({ surah: 1, startAyah: 1, stopAyah: 7, trigger: 'popup' });
+    engine.registerActivePageWebView({ current: secondWebView });
+
+    expect(secondWebView.injectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('window.setPlayingAyah(1, 1)')
+    );
+  });
 });

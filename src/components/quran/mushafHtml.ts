@@ -182,6 +182,7 @@ body{height:100%;background:#FAF8F2;color:#1A1A2E;font-family:'QCF';font-size:7v
 .rub{font-family:'Noto Naskh Arabic',serif;color:#B8965A;font-size:1.8em;line-height:0.5;vertical-align:middle}
 .w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .w.sel,.rub.sel{background:rgba(184,150,90,0.25);border-radius:4px}
+.w.playing,.rub.playing{background:rgba(218,165,32,0.30);border-radius:4px;transition:background 120ms ease}
 </style>
 </head>
 <body>
@@ -223,6 +224,14 @@ function clearSelection(){
   if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
   postMsg({type:'deselect'});
 }
+
+function setPlayingAyah(s,a){
+  document.querySelectorAll('.playing').forEach(function(e){e.classList.remove('playing')});
+  if(s==null||a==null)return;
+  var spans=document.querySelectorAll('[data-s="'+s+'"][data-a="'+a+'"]');
+  for(var i=0;i<spans.length;i++)spans[i].classList.add('playing');
+}
+window.setPlayingAyah=setPlayingAyah;
 
 function highlightRange(s1,a1,s2,a2){
   document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
