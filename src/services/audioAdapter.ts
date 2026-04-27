@@ -1,4 +1,8 @@
-import TrackPlayer, { Capability, Event } from 'react-native-track-player';
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+} from 'expo-audio';
 
 export type AudioLoadOptions = {
   uri: string;
@@ -20,9 +24,6 @@ export type AudioAdapter = {
   setSpeed(speed: number): Promise<void>;
 };
 
-let setupPromise: Promise<void> | null = null;
-let remoteListenersRegistered = false;
-
 type AudioRemoteHandlers = {
   next?: () => Promise<void> | void;
   pause?: () => Promise<void> | void;
@@ -32,93 +33,90 @@ type AudioRemoteHandlers = {
   stop?: () => Promise<void> | void;
 };
 
-let remoteHandlers: AudioRemoteHandlers = {};
+let player: AudioPlayer | null = null;
+let setupPromise: Promise<void> | null = null;
 
-export function registerAudioRemoteHandlers(handlers: AudioRemoteHandlers): void {
-  remoteHandlers = handlers;
+export function registerAudioRemoteHandlers(_handlers: AudioRemoteHandlers): void {
+  // expo-audio handles lock-screen play/pause/seek on the active player. This
+  // hook preserves the engine contract for platforms/adapters with custom events.
 }
 
-function registerRemoteListeners(): void {
-  if (remoteListenersRegistered) return;
-  remoteListenersRegistered = true;
-  TrackPlayer.addEventListener(Event.RemotePlay, () => {
-    void remoteHandlers.resume?.();
-  });
-  TrackPlayer.addEventListener(Event.RemotePause, () => {
-    void remoteHandlers.pause?.();
-  });
-  TrackPlayer.addEventListener(Event.RemoteStop, () => {
-    void remoteHandlers.stop?.();
-  });
-  TrackPlayer.addEventListener(Event.RemoteNext, () => {
-    void remoteHandlers.next?.();
-  });
-  TrackPlayer.addEventListener(Event.RemotePrevious, () => {
-    void remoteHandlers.previous?.();
-  });
-  TrackPlayer.addEventListener(Event.RemoteSeek, (event) => {
-    void remoteHandlers.seek?.(event.position);
-  });
-}
-
-async function setup(): Promise<void> {
+async function setup(): Promise<AudioPlayer> {
   if (!setupPromise) {
-    setupPromise = TrackPlayer.setupPlayer()
-      .then(() =>
-        TrackPlayer.updateOptions({
-          capabilities: [
-            Capability.Play,
-            Capability.Pause,
-            Capability.Stop,
-            Capability.SeekTo,
-            Capability.SkipToNext,
-            Capability.SkipToPrevious,
-          ],
-          compactCapabilities: [Capability.Play, Capability.Pause, Capability.Stop],
-          progressUpdateEventInterval: 1,
-        })
-      )
-      .then(registerRemoteListeners)
-      .catch((error) => {
-        setupPromise = null;
-        throw error;
-      });
+    setupPromise = setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: 'doNotMix',
+    }).catch((error) => {
+      setupPromise = null;
+      throw error;
+    });
   }
-  return setupPromise;
+
+  await setupPromise;
+
+  if (!player) {
+    player = createAudioPlayer(null, {
+      updateInterval: 1000,
+      keepAudioSessionActive: true,
+    });
+  }
+
+  return player;
+}
+
+async function waitForLoad(activePlayer: AudioPlayer): Promise<AudioLoadResult> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (activePlayer.isLoaded || activePlayer.duration > 0) {
+      return { durationSeconds: activePlayer.duration || undefined };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  return { durationSeconds: activePlayer.duration || undefined };
 }
 
 export const audioAdapter: AudioAdapter = {
   async load(options) {
-    await setup();
-    await TrackPlayer.reset();
-    await TrackPlayer.load({
-      url: options.uri,
-      title: options.title,
-      artist: options.artist,
-      artwork: options.artwork,
-    });
-    const progress = await TrackPlayer.getProgress();
-    return { durationSeconds: progress.duration || undefined };
+    const activePlayer = await setup();
+    activePlayer.pause();
+    activePlayer.replace({ uri: options.uri, name: options.title });
+    activePlayer.setActiveForLockScreen(
+      true,
+      {
+        title: options.title,
+        artist: options.artist,
+        artworkUrl: options.artwork,
+      },
+      {
+        showSeekBackward: false,
+        showSeekForward: false,
+      }
+    );
+
+    return waitForLoad(activePlayer);
   },
 
   async play() {
-    await setup();
-    await TrackPlayer.play();
+    const activePlayer = await setup();
+    activePlayer.play();
   },
 
   async pause() {
-    await TrackPlayer.pause();
+    player?.pause();
   },
 
   async stop() {
-    await TrackPlayer.stop();
+    player?.pause();
+    await player?.seekTo(0);
+    player?.clearLockScreenControls();
   },
 
   async seek(seconds) {
-    await TrackPlayer.seekTo(seconds);
+    await player?.seekTo(seconds);
   },
 
   async setSpeed(speed) {
-    await TrackPlayer.setRate(speed);
+    player?.setPlaybackRate(speed, 'medium');
   },
 };
