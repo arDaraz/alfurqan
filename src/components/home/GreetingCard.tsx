@@ -7,35 +7,70 @@ import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
 
-interface Props {
+type ContinueProps = {
+  variant: 'continue';
   surahName: string;
   ayahNumber: number;
   juzNumber: number;
   streakDays: number;
   onResume: () => void;
-}
+};
+
+type ColdStartProps = {
+  variant: 'cold-start';
+  onStart: () => void;
+};
+
+type Props = ContinueProps | ColdStartProps;
 
 /**
  * Greeting / "continue reading" card. Gradient teal with a soft gold radial
  * highlight, featuring the user's last position and a resume CTA.
  */
-export function GreetingCard({
-  surahName,
-  ayahNumber,
-  juzNumber,
-  streakDays,
-  onResume,
-}: Props) {
+export function GreetingCard(props: Props) {
   const theme = useTheme();
   const strings = useStrings();
   const isArabic = useSettingsStore((s) => s.language) === 'ar';
   const styles = createStyles(theme, isArabic);
+
+  if (props.variant === 'cold-start') {
+    return (
+      <LinearGradient
+        colors={[theme.palette.teal[700], theme.palette.teal[500], theme.palette.teal[500]]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.card}
+      >
+        <CardGlow theme={theme} styles={styles} />
+        <Text style={styles.label}>{strings.greetingContinueLabel}</Text>
+        <Text style={styles.title}>{strings.greetingBeginPrompt}</Text>
+        <View style={styles.cta}>
+          <Pressable
+            onPress={props.onStart}
+            accessibilityRole="button"
+            accessibilityLabel={strings.greetingStart}
+          >
+            {({ pressed }) => (
+              <View style={[styles.btn, pressed && styles.btnPressed]}>
+                <Svg width={12} height={12} viewBox="0 0 24 24" fill={theme.semantic.fgOnGold}>
+                  <Path d={isArabic ? 'M16 5v14L5 12z' : 'M8 5v14l11-7z'} />
+                </Svg>
+                <Text style={styles.btnText}>{strings.greetingStart}</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+      </LinearGradient>
+    );
+  }
+
   const title = isArabic
-    ? `سورة ${surahName} ‏· الآية ‏﴿${toArabicIndic(ayahNumber)}﴾`
-    : `Surah ${surahName} · Ayah ${ayahNumber}`;
+    ? `سورة ${props.surahName} ‏· الآية ‏﴿${toArabicIndic(props.ayahNumber)}﴾`
+    : `Surah ${props.surahName} · Ayah ${props.ayahNumber}`;
   const subtitle = isArabic
-    ? `آية الكرسي · الجزء ${toArabicIndic(juzNumber)}`
-    : `Āyat al-Kursī · Juz ${juzNumber}`;
+    ? `الجزء ${toArabicIndic(props.juzNumber)}`
+    : `Juz ${props.juzNumber}`;
 
   return (
     <LinearGradient
@@ -45,21 +80,13 @@ export function GreetingCard({
       end={{ x: 0, y: 1 }}
       style={styles.card}
     >
-      <Svg style={styles.glow} width={180} height={180} viewBox="0 0 180 180" pointerEvents="none">
-        <Defs>
-          <SvgRadialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={theme.semantic.accentSoft} stopOpacity={0.18} />
-            <Stop offset="60%" stopColor={theme.semantic.accentSoft} stopOpacity={0} />
-          </SvgRadialGradient>
-        </Defs>
-        <Circle cx={90} cy={90} r={90} fill="url(#glowGrad)" />
-      </Svg>
+      <CardGlow theme={theme} styles={styles} />
       <Text style={styles.label}>{strings.greetingContinueLabel}</Text>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
       <View style={styles.cta}>
         <Pressable
-          onPress={onResume}
+          onPress={props.onResume}
           accessibilityRole="button"
           accessibilityLabel={strings.greetingResume}
         >
@@ -73,15 +100,35 @@ export function GreetingCard({
           )}
         </Pressable>
         {isArabic ? (
-          <Text style={styles.streakLabel}>سلسلة {toArabicIndic(streakDays)} يوم</Text>
+          <Text style={styles.streakLabel}>سلسلة {toArabicIndic(props.streakDays)} يوم</Text>
         ) : (
           <View style={styles.streak}>
-            <Text style={styles.streakNum}>{streakDays}</Text>
+            <Text style={styles.streakNum}>{props.streakDays}</Text>
             <Text style={styles.streakLabel}>day streak</Text>
           </View>
         )}
       </View>
     </LinearGradient>
+  );
+}
+
+function CardGlow({
+  theme,
+  styles,
+}: {
+  theme: ReturnType<typeof useTheme>;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  return (
+    <Svg style={styles.glow} width={180} height={180} viewBox="0 0 180 180" pointerEvents="none">
+      <Defs>
+        <SvgRadialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor={theme.semantic.accentSoft} stopOpacity={0.18} />
+          <Stop offset="60%" stopColor={theme.semantic.accentSoft} stopOpacity={0} />
+        </SvgRadialGradient>
+      </Defs>
+      <Circle cx={90} cy={90} r={90} fill="url(#glowGrad)" />
+    </Svg>
   );
 }
 

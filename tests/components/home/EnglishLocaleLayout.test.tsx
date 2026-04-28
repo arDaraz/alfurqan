@@ -72,6 +72,7 @@ describe('Home English locale layout', () => {
   it('uses English greeting copy without duplicating the continue label', () => {
     const { getByText, queryByText } = render(
       <GreetingCard
+        variant="continue"
         surahName="Al-Baqarah"
         ayahNumber={255}
         juzNumber={3}
@@ -161,6 +162,7 @@ describe('Home Arabic locale layout', () => {
   it('does not leak English-only greeting copy into Arabic', () => {
     const { getByText, queryByText } = render(
       <GreetingCard
+        variant="continue"
         surahName="البقرة"
         ayahNumber={255}
         juzNumber={3}
@@ -169,7 +171,7 @@ describe('Home Arabic locale layout', () => {
       />
     );
 
-    expect(getByText('آية الكرسي · الجزء ٣')).toBeTruthy();
+    expect(getByText('الجزء ٣')).toBeTruthy();
     expect(getByText('سلسلة ٢٧ يوم')).toBeTruthy();
     expect(queryByText('day streak')).toBeNull();
     expect(queryByText(/Juz/)).toBeNull();

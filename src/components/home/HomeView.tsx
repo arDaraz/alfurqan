@@ -28,8 +28,6 @@ interface Props {
   hideGreeting?: boolean;
 }
 
-const STREAK_PLACEHOLDER = 27;
-
 export function HomeView({ hideGreeting = false }: Props) {
   const router = useRouter();
   const strings = useStrings();
@@ -62,6 +60,10 @@ export function HomeView({ hideGreeting = false }: Props) {
     if (lastReadSurah !== null) router.push(`/surah/${lastReadSurah}`);
     else router.push('/surah/1');
   }, [router, lastReadSurah]);
+
+  const handleStart = useCallback(() => {
+    router.push('/surah/1');
+  }, [router]);
 
   const handleRetry = useCallback(() => {
     surahRetry();
@@ -105,25 +107,11 @@ export function HomeView({ hideGreeting = false }: Props) {
     />
   );
 
-  // Greeting card needs a surah name; fall back to Al-Baqarah if no last-read.
-  const greetingSurahName = lastReadSurah
-    ? surahNames.get(lastReadSurah) ?? (isArabic ? 'الفاتحة' : 'Al-Fatihah')
-    : isArabic ? 'البقرة' : 'Al-Baqarah';
-  const greetingAyah = lastReadAyah ?? 255;
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {!hideGreeting && <BrandBar />}
 
-      {!hideGreeting && (
-        <GreetingCard
-          surahName={greetingSurahName}
-          ayahNumber={greetingAyah}
-          juzNumber={3}
-          streakDays={STREAK_PLACEHOLDER}
-          onResume={handleResume}
-        />
-      )}
+      {!hideGreeting && <GreetingCard variant="cold-start" onStart={handleStart} />}
 
       <View style={styles.controls}>
         <PillTabs

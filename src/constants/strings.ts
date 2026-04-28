@@ -18,6 +18,8 @@ const ar = {
   // Home
   greetingContinueLabel: 'تابع',
   greetingResume: 'استأنف',
+  greetingStart: 'ابدأ',
+  greetingBeginPrompt: 'ابدأ بسورة الفاتحة',
   greetingStreak: (n: number) => `سلسلة ${n} يوم`,
   searchPlaceholder: 'ابحث عن سورة...',
   tabSurah: 'السور',
@@ -168,6 +170,8 @@ const en = {
 
   greetingContinueLabel: 'Continue',
   greetingResume: 'Resume',
+  greetingStart: 'Start',
+  greetingBeginPrompt: 'Begin with Al-Fatihah',
   greetingStreak: (n: number) => `${n} day streak`,
   searchPlaceholder: 'Search surahs...',
   tabSurah: 'Surah',
