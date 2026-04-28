@@ -90,6 +90,54 @@ describe('Home English locale layout', () => {
     expect(queryByText(/سورة/)).toBeNull();
   });
 
+  it('does not show a zero-day streak on migrated continue cards', () => {
+    const { queryByText } = render(
+      <GreetingCard
+        variant="continue"
+        surahName="Al-Baqarah"
+        ayahNumber={255}
+        juzNumber={3}
+        pageNumber={42}
+        lastReadAt={Date.now()}
+        streakDays={0}
+        streakAtRisk={false}
+        onResume={jest.fn()}
+      />
+    );
+
+    expect(queryByText('day streak')).toBeNull();
+  });
+
+  it('surfaces streak risk instead of a numeric streak', () => {
+    const { getByText, queryByText } = render(
+      <GreetingCard
+        variant="continue"
+        surahName="Al-Baqarah"
+        ayahNumber={255}
+        juzNumber={3}
+        pageNumber={42}
+        lastReadAt={Date.now()}
+        streakDays={2}
+        streakAtRisk
+        onResume={jest.fn()}
+      />
+    );
+
+    expect(getByText('Read today to keep your streak')).toBeTruthy();
+    expect(queryByText('day streak')).toBeNull();
+  });
+
+  it('shows cold-start copy without progress metadata', () => {
+    const { getByText, queryByText } = render(
+      <GreetingCard variant="cold-start" onStart={jest.fn()} />
+    );
+
+    expect(getByText('Begin with Al-Fatihah')).toBeTruthy();
+    expect(getByText('Start')).toBeTruthy();
+    expect(queryByText(/Juz/)).toBeNull();
+    expect(queryByText(/day streak/)).toBeNull();
+  });
+
   it('puts surah row content in English-first LTR visual order', () => {
     const { getByLabelText, getByText, queryByText } = render(
       <SurahListItem

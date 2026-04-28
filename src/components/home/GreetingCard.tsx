@@ -107,7 +107,7 @@ export function GreetingCard(props: Props) {
         </Pressable>
         {props.streakAtRisk ? (
           <Text style={styles.streakRisk}>{strings.greetingStreakAtRisk}</Text>
-        ) : isArabic ? (
+        ) : props.streakDays <= 0 ? null : isArabic ? (
           <Text style={styles.streakLabel}>سلسلة {toArabicIndic(props.streakDays)} يوم</Text>
         ) : (
           <View style={styles.streak}>

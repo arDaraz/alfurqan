@@ -125,10 +125,13 @@ export function HomeView({ hideGreeting = false }: Props) {
     lastReadJuz !== null &&
     lastReadPage !== null &&
     lastReadAt !== null;
+  const today = todayLocalDateKey();
+  const lastReadDate = lastReadAt !== null ? todayLocalDateKey(new Date(lastReadAt)) : null;
+  const displayedStreakDays =
+    streakDays > 0 ? streakDays : lastReadDate === today ? 1 : 0;
   const streakAtRisk =
-    streakDays > 0 &&
-    streakLastReadDate !== null &&
-    streakLastReadDate !== todayLocalDateKey();
+    displayedStreakDays > 0 &&
+    (streakLastReadDate ?? lastReadDate) !== today;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -143,7 +146,7 @@ export function HomeView({ hideGreeting = false }: Props) {
             juzNumber={lastReadJuz}
             pageNumber={lastReadPage}
             lastReadAt={lastReadAt}
-            streakDays={streakDays}
+            streakDays={displayedStreakDays}
             streakAtRisk={streakAtRisk}
             onResume={handleResume}
           />
