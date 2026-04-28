@@ -1,10 +1,4 @@
-import {
-  createAudioPlayer,
-  setAudioModeAsync,
-  setIsAudioActiveAsync,
-  type AudioPlayer,
-  type AudioStatus,
-} from 'expo-audio';
+import type { AudioPlayer, AudioStatus } from 'expo-audio';
 
 export type AudioLoadOptions = {
   uri: string;
@@ -48,8 +42,28 @@ let player: AudioPlayer | null = null;
 let setupPromise: Promise<void> | null = null;
 let statusListener: ((status: AudioPlaybackStatus) => void) | null = null;
 let statusSubscription: { remove: () => void } | null = null;
+let audioModule: typeof import('expo-audio') | null = null;
+
+async function getAudioModule(): Promise<typeof import('expo-audio')> {
+  if (!audioModule) {
+    try {
+      // Keep this guarded so older physical dev-client binaries can still boot
+      // screens that import recitation services before the app is reinstalled.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      audioModule = require('expo-audio') as typeof import('expo-audio');
+    } catch (error) {
+      const wrapped = new Error(
+        'ExpoAudio native module is unavailable. Rebuild and reinstall the development client on this device.'
+      );
+      (wrapped as Error & { cause?: unknown }).cause = error;
+      throw wrapped;
+    }
+  }
+  return audioModule;
+}
 
 async function activateAudioSession(activePlayer?: AudioPlayer): Promise<void> {
+  const { setIsAudioActiveAsync } = await getAudioModule();
   await setIsAudioActiveAsync(true);
   if (activePlayer) {
     activePlayer.muted = false;
@@ -63,6 +77,8 @@ export function registerAudioRemoteHandlers(_handlers: AudioRemoteHandlers): voi
 }
 
 async function setup(): Promise<AudioPlayer> {
+  const { createAudioPlayer, setAudioModeAsync } = await getAudioModule();
+
   if (!setupPromise) {
     setupPromise = setAudioModeAsync({
       allowsRecording: false,
@@ -160,7 +176,6 @@ export const audioAdapter: AudioAdapter = {
 
   subscribeStatus(listener) {
     statusListener = listener;
-    void setup();
     return () => {
       if (statusListener === listener) {
         statusListener = null;

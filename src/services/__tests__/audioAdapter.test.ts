@@ -10,6 +10,16 @@ describe('audioAdapter', () => {
     jest.clearAllMocks();
   });
 
+  it('does not initialize ExpoAudio when only subscribing to status updates', () => {
+    const unsubscribe = audioAdapter.subscribeStatus?.(jest.fn());
+
+    expect(mockedCreateAudioPlayer).not.toHaveBeenCalled();
+    expect(mockedSetAudioModeAsync).not.toHaveBeenCalled();
+    expect(mockedSetIsAudioActiveAsync).not.toHaveBeenCalled();
+
+    unsubscribe?.();
+  });
+
   it('reactivates and unmutes the native audio session before playback', async () => {
     await audioAdapter.load({
       uri: 'file:///documents/recitation/Husary_128kbps/001/001.mp3',
