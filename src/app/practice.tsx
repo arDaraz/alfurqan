@@ -15,6 +15,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useStrings } from '../constants/strings';
 import { OrnamentDivider } from '../components/brand/OrnamentDivider';
 import { MicVisualizer } from '../components/practice/MicVisualizer';
+import { recitationEngine } from '../services/recitationEngine';
 import { toArabicIndic } from '../utils/arabic';
 
 type WordState = 'ok' | 'cur' | 'bad' | 'pending';
@@ -39,6 +40,14 @@ export default function PracticeScreen() {
   const strings = useStrings();
   const router = useRouter();
   const styles = createStyles(theme);
+  const handleListenSample = () => {
+    void recitationEngine.start({
+      surah: 1,
+      startAyah: ACTIVE_AYAH_NUMBER,
+      stopAyah: ACTIVE_AYAH_NUMBER,
+      trigger: 'practice',
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -87,7 +96,12 @@ export default function PracticeScreen() {
             <Text style={styles.chipWord}>ٱلْعَٰلَمِينَ</Text>
             <Text style={styles.chipExplain}>{strings.practiceMistakeHint}</Text>
             <View style={styles.chipActions}>
-              <Pressable style={[styles.chipBtn, styles.chipBtnPrimary]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={strings.practiceListenSample}
+                onPress={handleListenSample}
+                style={[styles.chipBtn, styles.chipBtnPrimary]}
+              >
                 <Svg width={11} height={11} viewBox="0 0 24 24" fill={theme.palette.paper[50]}>
                   <Path d="M8 5v14l11-7z" />
                 </Svg>

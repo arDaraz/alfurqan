@@ -45,10 +45,13 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { PlayerSheet } from '../PlayerSheet';
+import { getAyahTextRange } from '../../../data/quranRepository';
 import { recitationEngine } from '../../../services/recitationEngine';
 import { downloadKey, useReciterStore } from '../../../stores/reciterStore';
 import { useRecitationStore } from '../../../stores/recitationStore';
 import { theme } from '../../../constants/theme';
+
+const getAyahTextRangeMock = getAyahTextRange as jest.MockedFunction<typeof getAyahTextRange>;
 
 describe('PlayerSheet', () => {
   const startSurahDownload = jest.fn();
@@ -91,17 +94,40 @@ describe('PlayerSheet', () => {
     expect(recitationEngine.stop).toHaveBeenCalledTimes(1);
   });
 
-  it('renders the current ayah with the Mushaf Quran font and RTL direction', async () => {
+  it('renders the current ayah with the Mushaf Quran font and physical-right RTL alignment', async () => {
     const { getByText } = render(<PlayerSheet visible onClose={jest.fn()} />);
 
     const ayah = await waitFor(() => getByText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'));
+    const meta = getByText('السورة 1 · الآية 1');
     const style = StyleSheet.flatten(ayah.props.style);
+    const metaStyle = StyleSheet.flatten(meta.props.style);
 
     expect(style).toMatchObject({
       fontFamily: theme.fonts.quran,
-      textAlign: 'right',
+      direction: 'rtl',
+      alignSelf: 'stretch',
+      textAlign: 'left',
       writingDirection: 'rtl',
     });
+    expect(metaStyle).toMatchObject({
+      textAlign: 'left',
+      writingDirection: 'rtl',
+    });
+  });
+
+  it('removes copied ayah number glyphs from the now-playing ayah text', async () => {
+    getAyahTextRangeMock.mockResolvedValueOnce(
+      'صراط الذين أنعمت عليهم غير المغضوب عليهم ولا الضالين ﴿٧﴾'
+    );
+
+    const { getByText, queryByText } = render(<PlayerSheet visible onClose={jest.fn()} />);
+
+    expect(
+      await waitFor(() =>
+        getByText('صراط الذين أنعمت عليهم غير المغضوب عليهم ولا الضالين')
+      )
+    ).toBeTruthy();
+    expect(queryByText('صراط الذين أنعمت عليهم غير المغضوب عليهم ولا الضالين ﴿٧﴾')).toBeNull();
   });
 
   it('cycles speed and toggles repeat mode', async () => {

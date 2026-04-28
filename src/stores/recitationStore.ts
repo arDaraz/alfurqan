@@ -9,7 +9,7 @@ export type PlaybackRange = {
   surah: number;
   startAyah: number;
   stopAyah: number;
-  trigger: 'popup' | 'toolbar';
+  trigger: 'popup' | 'toolbar' | 'practice';
   selectedEndSurah?: number;
   selectedEndAyah?: number;
 };

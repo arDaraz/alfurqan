@@ -16,6 +16,12 @@ interface PlayerSheetProps {
 }
 
 const SPEEDS: PlaybackSpeed[] = [0.75, 1, 1.25, 1.5];
+const AYAH_NUMBER_MARKER_PATTERN =
+  /\s*(?:﴿[\u0660-\u0669\u06F0-\u06F9\d]+﴾|\u06DD\s*[\u0660-\u0669\u06F0-\u06F9\d]+)\s*$/gm;
+
+function formatNowPlayingAyahText(text: string): string {
+  return text.replace(AYAH_NUMBER_MARKER_PATTERN, '').trim();
+}
 
 export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
   const strings = useStrings();
@@ -43,7 +49,7 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
 
     getAyahTextRange(range.surah, currentAyah, currentAyah)
       .then((text) => {
-        if (!cancelled) setAyahText(text);
+        if (!cancelled) setAyahText(formatNowPlayingAyahText(text));
       })
       .catch(() => {
         if (!cancelled) setAyahText('');
@@ -323,15 +329,19 @@ const styles = StyleSheet.create({
   ayahMeta: {
     color: theme.colors.textSecondary,
     fontSize: 12,
-    textAlign: 'right',
+    // Global forceRTL mirrors physical alignment; left renders at the card's visual right.
+    textAlign: 'left',
     writingDirection: 'rtl',
   },
   ayahText: {
+    alignSelf: 'stretch',
     color: theme.colors.text,
+    direction: 'rtl',
     fontFamily: theme.fonts.quran,
     fontSize: theme.typeScale.quranSm.size,
     lineHeight: theme.typeScale.quranSm.size * theme.typeScale.quranSm.lineHeight,
-    textAlign: 'right',
+    // Global forceRTL mirrors physical alignment; left renders at the card's visual right.
+    textAlign: 'left',
     writingDirection: 'rtl',
     marginTop: theme.spacing.sm,
   },
