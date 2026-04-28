@@ -89,6 +89,10 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
   );
 
   useEffect(() => {
+    applyPageChange(initialPage);
+  }, [applyPageChange, initialPage]);
+
+  useEffect(() => {
     let cancelled = false;
     const playbackSurah = playbackRange?.surah;
     if (!playbackSurah || playbackAyah === null || playbackState === 'idle' || playbackState === 'error') {

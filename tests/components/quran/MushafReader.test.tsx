@@ -1,5 +1,7 @@
 const mockMushafPageProps: Record<string, any>[] = [];
 const mockSetLastRead = jest.fn();
+const mockGetTopAyahForPage = jest.fn();
+const mockGetJuzAndPageForAyah = jest.fn();
 
 jest.mock('react-native-mmkv', () => ({
   createMMKV: jest.fn(() => ({
@@ -26,6 +28,13 @@ jest.mock('react-native-pager-view', () => {
     <View ref={ref} testID="pager-view" {...props} />
   ));
 });
+
+jest.mock('../../../src/data/quranRepository', () => ({
+  getTopAyahForPage: (...args: unknown[]) => mockGetTopAyahForPage(...args),
+  getJuzAndPageForAyah: (...args: unknown[]) => mockGetJuzAndPageForAyah(...args),
+  getPageForAyah: jest.fn(),
+  getSurahLastAyah: jest.fn(),
+}));
 
 jest.mock('../../../src/components/quran/MushafPage', () => {
   const React = require('react');
@@ -71,7 +80,7 @@ jest.mock('../../../src/stores/readingStore', () => ({
 }));
 
 import React from 'react';
-import { act, render, screen } from '@testing-library/react-native';
+import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { MushafReader } from '../../../src/components/quran/MushafReader';
 
 const selectEvent = (openMenu: boolean) => ({
@@ -89,6 +98,18 @@ describe('MushafReader', () => {
   beforeEach(() => {
     mockMushafPageProps.length = 0;
     mockSetLastRead.mockClear();
+    mockGetTopAyahForPage.mockReset();
+    mockGetJuzAndPageForAyah.mockReset();
+    mockGetTopAyahForPage.mockResolvedValue({ surahNumber: 2, ayahNumber: 1 });
+    mockGetJuzAndPageForAyah.mockResolvedValue({ juz: 1, page: 1 });
+  });
+
+  it('persists reading activity for the initially opened page', async () => {
+    render(<MushafReader initialPage={1} />);
+
+    await waitFor(() => {
+      expect(mockSetLastRead).toHaveBeenCalledWith(2, 1, 1, 1);
+    });
   });
 
   it('keeps a tapped ayah selected without opening the action popup', () => {

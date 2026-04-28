@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, ScrollView, Text, Alert, StyleSheet, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSelectionStore } from '../../stores/selectionStore';
 import { useReadingStore } from '../../stores/readingStore';
@@ -6,7 +6,7 @@ import { type AyahSelectionState } from './AyahText';
 import { SurahHeaderBanner } from './SurahHeaderBanner';
 import { Bismillah } from './Bismillah';
 import { RangeSelectionBar } from './RangeSelectionBar';
-import { toArabicIndic, cleanUthmaniForDisplay } from '../../utils/arabic';
+import { toArabicIndic } from '../../utils/arabic';
 import { theme } from '../../constants/theme';
 import { surahHasBismillah } from '../../constants/quran';
 import { useStrings } from '../../constants/strings';
@@ -31,6 +31,8 @@ export function QuranReader({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Store Y positions of ayah layout markers for scroll-to-ayah
   const ayahPositionsRef = useRef<Map<number, number>>(new Map());
+  const scrollContentHeightRef = useRef(0);
+  const scrollViewportHeightRef = useRef(0);
 
   // Selection store
   const startSurah = useSelectionStore((s) => s.startSurah);
@@ -44,6 +46,49 @@ export function QuranReader({
 
   // Reading store for auto-bookmark
   const setLastRead = useReadingStore((s) => s.setLastRead);
+
+  const saveLastRead = useCallback(
+    (ayahNumber: number) => {
+      getJuzAndPageForAyah(surahNumber, ayahNumber)
+        .then(({ juz, page }) => setLastRead(surahNumber, ayahNumber, juz, page))
+        .catch(() => undefined);
+    },
+    [surahNumber, setLastRead]
+  );
+
+  const getClosestAyahForScroll = useCallback(
+    (scrollY: number) => {
+      let closestAyah = ayahs[0]?.ayahNumber ?? 1;
+      for (const [ayahNum, yPos] of ayahPositionsRef.current.entries()) {
+        if (yPos <= scrollY + 100) {
+          closestAyah = ayahNum;
+        }
+      }
+
+      if (ayahPositionsRef.current.size > 0 || ayahs.length <= 1) {
+        return closestAyah;
+      }
+
+      const scrollableHeight = Math.max(
+        scrollContentHeightRef.current - scrollViewportHeightRef.current,
+        1
+      );
+      const progress = Math.max(0, Math.min(1, scrollY / scrollableHeight));
+      const estimatedIndex = Math.min(
+        ayahs.length - 1,
+        Math.max(0, Math.round(progress * (ayahs.length - 1)))
+      );
+      return ayahs[estimatedIndex]?.ayahNumber ?? closestAyah;
+    },
+    [ayahs]
+  );
+
+  useEffect(() => {
+    const firstAyah = initialAyahNumber ?? ayahs[0]?.ayahNumber;
+    if (firstAyah === undefined) return;
+
+    saveLastRead(firstAyah);
+  }, [ayahs, initialAyahNumber, saveLastRead]);
 
   // Clear selection on unmount
   useEffect(() => {
@@ -100,9 +145,9 @@ export function QuranReader({
 
   const handleStartPractice = useCallback(() => {
     Alert.alert(strings.practiceComingSoon, strings.practiceComingSoonMsg);
-  }, []);
+  }, [strings.practiceComingSoon, strings.practiceComingSoonMsg]);
 
-  // Auto-bookmark on scroll — save the surah + approximate ayah position
+  // Save reading activity on scroll using the closest available ayah estimate.
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const scrollY = event.nativeEvent.contentOffset.y;
@@ -110,19 +155,10 @@ export function QuranReader({
         clearTimeout(debounceTimerRef.current);
       }
       debounceTimerRef.current = setTimeout(() => {
-        // Find the ayah closest to the current scroll position
-        let closestAyah = 1;
-        for (const [ayahNum, yPos] of ayahPositionsRef.current.entries()) {
-          if (yPos <= scrollY + 100) {
-            closestAyah = ayahNum;
-          }
-        }
-        getJuzAndPageForAyah(surahNumber, closestAyah)
-          .then(({ juz, page }) => setLastRead(surahNumber, closestAyah, juz, page))
-          .catch(() => undefined);
+        saveLastRead(getClosestAyahForScroll(scrollY));
       }, 500);
     },
-    [surahNumber, setLastRead]
+    [getClosestAyahForScroll, saveLastRead]
   );
 
   // Get highlight style for selected ayahs in flowing text
@@ -150,9 +186,16 @@ export function QuranReader({
   return (
     <View style={styles.container}>
       <ScrollView
+        testID="quran-reader-scroll"
         ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        onContentSizeChange={(_, height) => {
+          scrollContentHeightRef.current = height;
+        }}
+        onLayout={(event) => {
+          scrollViewportHeightRef.current = event.nativeEvent.layout.height;
+        }}
         onScroll={handleScroll}
         scrollEventThrottle={200}
         showsVerticalScrollIndicator={false}
