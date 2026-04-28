@@ -69,9 +69,19 @@ export function HomeView({ hideGreeting = false }: Props) {
   const handleJuzOpen = useCallback((n: number) => router.push(`/juz/${n}`), [router]);
 
   const handleResume = useCallback(() => {
-    if (lastReadSurah !== null) router.push(`/surah/${lastReadSurah}`);
-    else router.push('/surah/1');
-  }, [router, lastReadSurah]);
+    if (lastReadSurah !== null) {
+      if (lastReadPage !== null) {
+        router.push({
+          pathname: '/surah/[id]',
+          params: { id: String(lastReadSurah), page: String(lastReadPage) },
+        });
+      } else {
+        router.push(`/surah/${lastReadSurah}`);
+      }
+    } else {
+      router.push('/surah/1');
+    }
+  }, [router, lastReadSurah, lastReadPage]);
 
   const handleStart = useCallback(() => {
     router.push('/surah/1');
