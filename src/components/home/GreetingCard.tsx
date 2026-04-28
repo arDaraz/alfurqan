@@ -16,6 +16,7 @@ type ContinueProps = {
   pageNumber: number;
   lastReadAt: number;
   streakDays: number;
+  streakAtRisk: boolean;
   onResume: () => void;
 };
 
@@ -104,7 +105,9 @@ export function GreetingCard(props: Props) {
             </View>
           )}
         </Pressable>
-        {isArabic ? (
+        {props.streakAtRisk ? (
+          <Text style={styles.streakRisk}>{strings.greetingStreakAtRisk}</Text>
+        ) : isArabic ? (
           <Text style={styles.streakLabel}>سلسلة {toArabicIndic(props.streakDays)} يوم</Text>
         ) : (
           <View style={styles.streak}>
@@ -233,6 +236,14 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 12,
       color: theme.palette.paper[50],
+      writingDirection: isArabic ? 'rtl' : 'ltr',
+    },
+    streakRisk: {
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
+      fontSize: 12,
+      fontWeight: isArabic ? 'normal' : '700',
+      color: theme.semantic.accent,
+      textAlign: 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
   });

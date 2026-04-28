@@ -19,6 +19,8 @@ describe('readingStore', () => {
       lastReadPage: null,
       lastReadJuz: null,
       lastReadAt: null,
+      streakDays: 0,
+      streakLastReadDate: null,
       hasCompletedOnboarding: false,
       bookmarks: [],
     });
@@ -31,6 +33,8 @@ describe('readingStore', () => {
     expect(state.lastReadJuz).toBeNull();
     expect(state.lastReadPage).toBeNull();
     expect(state.lastReadAt).toBeNull();
+    expect(state.streakDays).toBe(0);
+    expect(state.streakLastReadDate).toBeNull();
     expect(state.hasCompletedOnboarding).toBe(false);
   });
 

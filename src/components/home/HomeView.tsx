@@ -28,6 +28,13 @@ interface Props {
   hideGreeting?: boolean;
 }
 
+function todayLocalDateKey(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function HomeView({ hideGreeting = false }: Props) {
   const router = useRouter();
   const strings = useStrings();
@@ -48,6 +55,8 @@ export function HomeView({ hideGreeting = false }: Props) {
   const lastReadJuz = useReadingStore((s) => s.lastReadJuz);
   const lastReadPage = useReadingStore((s) => s.lastReadPage);
   const lastReadAt = useReadingStore((s) => s.lastReadAt);
+  const streakDays = useReadingStore((s) => s.streakDays);
+  const streakLastReadDate = useReadingStore((s) => s.streakLastReadDate);
 
   const surahNames = useMemo(
     () => new Map(surahs.map((s) => [s.number, isArabic ? s.nameArabic : s.nameEnglish])),
@@ -116,6 +125,10 @@ export function HomeView({ hideGreeting = false }: Props) {
     lastReadJuz !== null &&
     lastReadPage !== null &&
     lastReadAt !== null;
+  const streakAtRisk =
+    streakDays > 0 &&
+    streakLastReadDate !== null &&
+    streakLastReadDate !== todayLocalDateKey();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -130,7 +143,8 @@ export function HomeView({ hideGreeting = false }: Props) {
             juzNumber={lastReadJuz}
             pageNumber={lastReadPage}
             lastReadAt={lastReadAt}
-            streakDays={0}
+            streakDays={streakDays}
+            streakAtRisk={streakAtRisk}
             onResume={handleResume}
           />
         ) : (

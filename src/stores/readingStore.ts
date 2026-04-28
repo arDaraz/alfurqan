@@ -23,6 +23,8 @@ interface ReadingState {
   lastReadPage: number | null;
   lastReadJuz: number | null;
   lastReadAt: number | null;
+  streakDays: number;
+  streakLastReadDate: string | null;
   hasCompletedOnboarding: boolean;
   bookmarks: Bookmark[];
   setLastRead: (
@@ -38,6 +40,24 @@ interface ReadingState {
   toggleBookmark: (surah: number, ayah: number) => void;
 }
 
+function localDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function nextStreak(previousDays: number, previousDate: string | null, today: string): number {
+  if (previousDate === today) return previousDays || 1;
+  if (previousDate === null) return 1;
+
+  const previousMs = new Date(`${previousDate}T00:00:00`).getTime();
+  const todayMs = new Date(`${today}T00:00:00`).getTime();
+  const diffDays = Math.round((todayMs - previousMs) / 86_400_000);
+
+  return diffDays === 1 ? previousDays + 1 : 1;
+}
+
 export const useReadingStore = create<ReadingState>()(
   persist(
     (set, get) => ({
@@ -46,16 +66,23 @@ export const useReadingStore = create<ReadingState>()(
       lastReadPage: null,
       lastReadJuz: null,
       lastReadAt: null,
+      streakDays: 0,
+      streakLastReadDate: null,
       hasCompletedOnboarding: false,
       bookmarks: [],
-      setLastRead: (surah, ayah, juz, page, now = new Date()) =>
+      setLastRead: (surah, ayah, juz, page, now = new Date()) => {
+        const today = localDateKey(now);
+        const { streakDays, streakLastReadDate } = get();
         set({
           lastReadSurah: surah,
           lastReadAyah: ayah,
           lastReadJuz: juz,
           lastReadPage: page,
           lastReadAt: now.getTime(),
-        }),
+          streakDays: nextStreak(streakDays, streakLastReadDate, today),
+          streakLastReadDate: today,
+        });
+      },
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       addBookmark: (surah, ayah) => {
         const exists = get().bookmarks.some(

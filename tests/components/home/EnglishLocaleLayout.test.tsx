@@ -79,6 +79,7 @@ describe('Home English locale layout', () => {
         pageNumber={42}
         lastReadAt={Date.now()}
         streakDays={27}
+        streakAtRisk={false}
         onResume={jest.fn()}
       />
     );
@@ -171,6 +172,7 @@ describe('Home Arabic locale layout', () => {
         pageNumber={42}
         lastReadAt={Date.now()}
         streakDays={27}
+        streakAtRisk={false}
         onResume={jest.fn()}
       />
     );
