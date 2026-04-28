@@ -27,13 +27,12 @@ const SETTINGS_STREAK = 27;
 export default function SettingsScreen() {
   const theme = useTheme();
   const strings = useStrings();
-  const styles = createStyles(theme);
-
   const [pickerVisible, setPickerVisible] = useState(false);
   const [savedVisible, setSavedVisible] = useState(false);
 
   const language = useSettingsStore((s) => s.language);
   const isArabic = language === 'ar';
+  const styles = createStyles(theme, isArabic);
 
   const themeMode = useSettingsStore((s) => s.themeMode);
   const setThemeMode = useSettingsStore((s) => s.setThemeMode);
@@ -339,12 +338,12 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
-      direction: 'rtl',
+      direction: isArabic ? 'rtl' : 'ltr',
     },
     header: {
       paddingHorizontal: theme.gutter.screen,

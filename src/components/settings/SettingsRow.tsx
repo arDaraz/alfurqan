@@ -20,7 +20,7 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
   const styles = createStyles(theme, !!isLast, isArabic);
 
   const row = (
-    <View style={styles.row}>
+    <View testID={`settings-row-${label}`} style={styles.row}>
       <View style={styles.iconWrap}>{icon}</View>
       <View style={styles.text}>
         <Text style={styles.k}>{label}</Text>
@@ -30,7 +30,7 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
         {trailing ?? (
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
             <Path
-              d="m15 6-6 6 6 6"
+              d={isArabic ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'}
               stroke={theme.semantic.fgSubtle}
               strokeWidth={1.75}
               strokeLinecap="round"
@@ -46,7 +46,7 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
       {({ pressed }) => (
-        <View style={[styles.row, pressed && { opacity: 0.7 }]}>
+        <View testID={`settings-row-${label}`} style={[styles.row, pressed && { opacity: 0.7 }]}>
           <View style={styles.iconWrap}>{icon}</View>
           <View style={styles.text}>
             <Text style={styles.k}>{label}</Text>
@@ -56,7 +56,7 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
             {trailing ?? (
               <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
                 <Path
-                  d="m15 6-6 6 6 6"
+                  d={isArabic ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'}
                   stroke={theme.semantic.fgSubtle}
                   strokeWidth={1.75}
                   strokeLinecap="round"
@@ -74,6 +74,7 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
 function createStyles(theme: ReturnType<typeof useTheme>, isLast: boolean, isArabic: boolean) {
   return StyleSheet.create({
     row: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: 13,
@@ -97,7 +98,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isLast: boolean, isAra
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 15,
       color: theme.semantic.fg,
-      textAlign: 'left',
+      textAlign: isArabic ? 'left' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
       lineHeight: 18,
       fontWeight: isArabic ? 'normal' : '500',
@@ -108,7 +109,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isLast: boolean, isAra
       color: theme.semantic.fgMuted,
       marginTop: 3,
       letterSpacing: 0.22,
-      textAlign: 'left',
+      textAlign: isArabic ? 'left' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     trailing: {

@@ -10,6 +10,7 @@ import { useSearch } from '../../hooks/useSearch';
 import { useReadingStore } from '../../stores/readingStore';
 import { useStrings } from '../../constants/strings';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 import { BrandBar } from './BrandBar';
 import { GreetingCard } from './GreetingCard';
@@ -33,7 +34,9 @@ export function HomeView({ hideGreeting = false }: Props) {
   const router = useRouter();
   const strings = useStrings();
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const language = useSettingsStore((s) => s.language);
+  const isArabic = language === 'ar';
+  const styles = createStyles(theme, isArabic);
 
   const [activeTab, setActiveTab] = useState<'surah' | 'juz'>('surah');
   const [selectedSurah, setSelectedSurah] = useState<number | null>(null);
@@ -46,8 +49,8 @@ export function HomeView({ hideGreeting = false }: Props) {
   const lastReadAyah = useReadingStore((s) => s.lastReadAyah);
 
   const surahNames = useMemo(
-    () => new Map(surahs.map((s) => [s.number, s.nameArabic])),
-    [surahs]
+    () => new Map(surahs.map((s) => [s.number, isArabic ? s.nameArabic : s.nameEnglish])),
+    [surahs, isArabic]
   );
 
   const handleSurahSelect = useCallback((n: number) => setSelectedSurah((prev) => prev === n ? null : n), []);
@@ -104,8 +107,8 @@ export function HomeView({ hideGreeting = false }: Props) {
 
   // Greeting card needs a surah name; fall back to Al-Baqarah if no last-read.
   const greetingSurahName = lastReadSurah
-    ? surahNames.get(lastReadSurah) ?? 'الفاتحة'
-    : 'البقرة';
+    ? surahNames.get(lastReadSurah) ?? (isArabic ? 'الفاتحة' : 'Al-Fatihah')
+    : isArabic ? 'البقرة' : 'Al-Baqarah';
   const greetingAyah = lastReadAyah ?? 255;
 
   return (
@@ -160,24 +163,24 @@ export function HomeView({ hideGreeting = false }: Props) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
-      direction: 'rtl',
+      direction: isArabic ? 'rtl' : 'ltr',
     },
     loadingContainer: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
-      direction: 'rtl',
+      direction: isArabic ? 'rtl' : 'ltr',
       alignItems: 'center',
       justifyContent: 'center',
     },
     errorContainer: {
       flex: 1,
       backgroundColor: theme.semantic.bg,
-      direction: 'rtl',
+      direction: isArabic ? 'rtl' : 'ltr',
     },
     controls: {
       paddingHorizontal: theme.gutter.screen - 6,

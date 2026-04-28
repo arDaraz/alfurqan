@@ -28,18 +28,17 @@ export function SurahListItem({ surah, onSelect, onOpen, isActive = false }: Sur
   const theme = useTheme();
   const strings = useStrings();
   const language = useSettingsStore((s) => s.language);
-  const styles = createStyles(theme);
-
   const isArabic = language === 'ar';
+  const styles = createStyles(theme, isArabic);
   const meaning = surahMeanings[surah.number];
   const revelation = surah.revelationType === 'Makki' ? strings.makki : strings.madani;
 
-  // Latin metadata: "Al-Fātiḥah · The Opening · Meccan" (3-part when meaning known,
-  // 2-part fallback otherwise). In Arabic locale we drop this line entirely —
-  // the Arabic name + Arabic ayat count carry the full meaning.
-  const latinMeta = meaning
-    ? `${surah.nameEnglish} · ${meaning} · ${revelation}`
-    : `${surah.nameEnglish} · ${revelation}`;
+  const primaryName = isArabic ? surah.nameArabic : surah.nameEnglish;
+  const secondaryMeta = isArabic
+    ? revelation
+    : meaning
+      ? `${meaning} · ${revelation}`
+      : revelation;
 
   const ayatNumber = isArabic ? toArabicIndic(surah.ayahCount) : String(surah.ayahCount);
   const ayatLabel = strings.ayat;
@@ -71,24 +70,23 @@ export function SurahListItem({ surah, onSelect, onOpen, isActive = false }: Sur
       onPress={handlePress}
       onLongPress={() => onOpen(surah.number)}
       delayLongPress={400}
-      accessibilityLabel={surah.nameArabic}
+      accessibilityLabel={isArabic ? surah.nameArabic : surah.nameEnglish}
       accessibilityRole="button"
       style={[styles.container, isActive && styles.activeContainer]}
     >
       {isActive && <View style={styles.activeBar} />}
 
-      {/* Order matters under forceRTL: 1st child = visual right (start). */}
       <View style={styles.badge}>
         <KhatamStar size={44} color={strokeColor} fill={fillColor} strokeWidth={1} />
         <Text style={[styles.badgeNumber, { color: numberColor }]}>{surah.number}</Text>
       </View>
 
       <View style={styles.textBlock}>
-        <Text style={[styles.arabicName, isActive && styles.arabicNameActive]} numberOfLines={1}>
-          {surah.nameArabic}
+        <Text style={[styles.primaryName, isActive && styles.primaryNameActive]} numberOfLines={1}>
+          {primaryName}
         </Text>
         <Text style={[styles.metadata, isArabic && styles.metadataArabic]} numberOfLines={1}>
-          {isArabic ? revelation : latinMeta}
+          {secondaryMeta}
         </Text>
       </View>
 
@@ -100,9 +98,10 @@ export function SurahListItem({ surah, onSelect, onOpen, isActive = false }: Sur
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     container: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -121,7 +120,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       position: 'absolute',
       top: 6,
       bottom: 6,
-      left: 0,
+      ...(isArabic ? { right: 0 } : { left: 0 }),
       width: 3,
       borderRadius: 2,
       backgroundColor: theme.semantic.primary,
@@ -151,19 +150,20 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       marginTop: 2,
     },
 
-    // Middle stack: Arabic surah name on top, English transliteration meta below.
+    // Middle stack: locale primary name on top, locale metadata below.
     textBlock: {
       flex: 1,
     },
-    arabicName: {
-      fontFamily: theme.fonts.quran,
-      fontSize: 19,
+    primaryName: {
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
+      fontSize: isArabic ? 19 : 16,
+      fontWeight: isArabic ? 'normal' : '600',
       color: theme.semantic.fg,
       lineHeight: 28,
-      textAlign: 'left', // physical right under forceRTL
-      writingDirection: 'rtl',
+      textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
-    arabicNameActive: {
+    primaryNameActive: {
       color: theme.semantic.primary,
     },
     metadata: {
@@ -172,7 +172,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.semantic.fgMuted,
       marginTop: 4,
       letterSpacing: 0.2,
-      textAlign: 'left', // physical right under forceRTL
+      textAlign: isArabic ? 'left' : 'left',
       writingDirection: 'ltr',
     },
     metadataArabic: {

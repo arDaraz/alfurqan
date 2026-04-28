@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { Juz } from '../../data/types';
 import { toArabicIndic } from '../../utils/arabic';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { KhatamStar } from '../brand/KhatamStar';
 
 interface JuzListItemProps {
@@ -15,9 +16,16 @@ interface JuzListItemProps {
 
 export function JuzListItem({ juz, surahNames, onSelect, onOpen, isActive = false }: JuzListItemProps) {
   const theme = useTheme();
-  const arabicNumber = toArabicIndic(juz.number);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const displayNumber = isArabic ? toArabicIndic(juz.number) : String(juz.number);
+  const ayahNumber = isArabic ? toArabicIndic(juz.startAyah) : String(juz.startAyah);
   const surahName = surahNames.get(juz.startSurah) || '';
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isArabic);
+  const title = isArabic ? 'الجزء' : `Juz ${juz.number}`;
+  const subtitle = isArabic
+    ? `يبدأ من سورة ${surahName} الآية ${toArabicIndic(juz.startAyah)}`
+    : `Starts at Surah ${surahName}, Ayah ${juz.startAyah}`;
+  const accessibilityLabel = isArabic ? `الجزء ${juz.number}` : `Juz ${juz.number}`;
 
   const lastTapRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,7 +54,7 @@ export function JuzListItem({ juz, surahNames, onSelect, onOpen, isActive = fals
       onPress={handlePress}
       onLongPress={() => onOpen(juz.number)}
       delayLongPress={400}
-      accessibilityLabel={`الجزء ${juz.number}`}
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       style={[styles.container, isActive && styles.activeContainer]}
     >
@@ -54,24 +62,31 @@ export function JuzListItem({ juz, surahNames, onSelect, onOpen, isActive = fals
 
       <View style={styles.badge}>
         <KhatamStar size={44} color={strokeColor} fill={fillColor} strokeWidth={1} />
-        <Text style={[styles.badgeNumber, { color: numberColor }]}>{arabicNumber}</Text>
+        <Text style={[styles.badgeNumber, { color: numberColor }]}>{displayNumber}</Text>
       </View>
 
       <View style={styles.textContent}>
         <Text style={[styles.heading, isActive && styles.headingActive]} numberOfLines={1}>
-          الجزء
+          {title}
         </Text>
         <Text style={styles.subtitle} numberOfLines={1}>
-          يبدأ من سورة {surahName} الآية <Text style={styles.ayahNum}>{toArabicIndic(juz.startAyah)}</Text>
+          {isArabic ? (
+            <>
+              يبدأ من سورة {surahName} الآية <Text style={styles.ayahNum}>{ayahNumber}</Text>
+            </>
+          ) : (
+            subtitle
+          )}
         </Text>
       </View>
     </Pressable>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     container: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: 14,
@@ -89,7 +104,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       position: 'absolute',
       top: 6,
       bottom: 6,
-      left: 0,
+      ...(isArabic ? { right: 0 } : { left: 0 }),
       width: 3,
       borderRadius: 2,
       backgroundColor: theme.semantic.primary,
@@ -113,24 +128,25 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       justifyContent: 'center',
     },
     heading: {
-      fontFamily: theme.fonts.quran,
-      fontSize: 19,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
+      fontSize: isArabic ? 19 : 16,
+      fontWeight: isArabic ? 'normal' : '600',
       color: theme.semantic.fg,
       lineHeight: 24,
-      textAlign: 'left',
-      writingDirection: 'rtl',
+      textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     headingActive: {
       color: theme.semantic.primary,
     },
     subtitle: {
-      fontFamily: theme.fonts.quran,
-      fontSize: 15,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
+      fontSize: isArabic ? 15 : 12,
       color: theme.semantic.fgMuted,
-      marginTop: 8,
-      textAlign: 'left',
-      writingDirection: 'rtl',
-      lineHeight: 28,
+      marginTop: isArabic ? 8 : 4,
+      textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
+      lineHeight: isArabic ? 28 : 18,
     },
     ayahNum: {
       fontSize: 22,

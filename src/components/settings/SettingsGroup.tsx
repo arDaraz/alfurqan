@@ -32,7 +32,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       marginTop: theme.spacing.md,
       marginBottom: theme.spacing.sm,
       marginHorizontal: 6,
-      textAlign: 'left',
+      textAlign: isArabic ? 'left' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     group: {

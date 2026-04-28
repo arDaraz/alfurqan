@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 interface Props {
   label: string;
@@ -15,13 +16,20 @@ interface Props {
  */
 export function Pill({ label, onPress, withChevron = true }: Props) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
   const content = (
-    <View style={styles.pill}>
+    <View testID={`settings-pill-${label}`} style={styles.pill}>
       <Text style={styles.label}>{label}</Text>
       {withChevron && (
         <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
-          <Path d="m15 6-6 6 6 6" stroke={theme.semantic.fg} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          <Path
+            d={isArabic ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'}
+            stroke={theme.semantic.fg}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </Svg>
       )}
     </View>
@@ -35,9 +43,10 @@ export function Pill({ label, onPress, withChevron = true }: Props) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     pill: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
@@ -49,10 +58,11 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       paddingVertical: 6,
     },
     label: {
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 12,
       color: theme.semantic.fg,
-      writingDirection: 'rtl',
+      fontWeight: isArabic ? 'normal' : '600',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
   });
 }

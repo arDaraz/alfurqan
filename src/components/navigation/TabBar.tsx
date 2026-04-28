@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 /**
  * 5-column tab bar with a central Tasmi' FAB. Layout from the v2 design:
@@ -18,7 +19,8 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const theme = useTheme();
   const strings = useStrings();
   const router = useRouter();
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
 
   const tabsByName = Object.fromEntries(state.routes.map((r) => [r.name, r]));
 
@@ -56,7 +58,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={styles.barWrapper}>
-      <View style={styles.bar}>
+      <View testID="bottom-tab-bar" style={styles.bar}>
         {renderTab('index', strings.tabHome, IconHome)}
         {renderTab('surahs', strings.tabSurahs, IconSurahs)}
         <View style={styles.fabSlot} />
@@ -133,7 +135,7 @@ function IconProfile({ color, size }: { color: string; size: number }) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     barWrapper: {
       position: 'relative',
@@ -142,10 +144,8 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       backgroundColor: theme.semantic.bgRaised,
       borderTopColor: theme.semantic.border,
       borderTopWidth: StyleSheet.hairlineWidth,
-      // Design uses `direction:ltr` on .tabbar so HOME-SURAHS-FAB-REVIEW-PROFILE
-      // stays in that visual order regardless of locale. Under global forceRTL,
-      // we undo the flip with row-reverse.
-      flexDirection: 'row-reverse',
+      direction: isArabic ? 'rtl' : 'ltr',
+      flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 8,
       paddingTop: 8,

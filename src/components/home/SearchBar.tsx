@@ -3,6 +3,7 @@ import { View, TextInput, Pressable, StyleSheet } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 interface SearchBarProps {
   value: string;
@@ -15,7 +16,8 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
   const strings = useStrings();
   const resolvedPlaceholder = placeholder ?? strings.searchPlaceholder;
   const [isFocused, setIsFocused] = useState(false);
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
 
   return (
     <View
@@ -59,9 +61,10 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     container: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
@@ -80,12 +83,12 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     input: {
       flex: 1,
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 14,
       color: theme.semantic.fg,
       padding: 0,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      textAlign: isArabic ? 'right' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
   });
 }

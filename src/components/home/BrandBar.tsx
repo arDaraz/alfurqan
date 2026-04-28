@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { LogoGlyph } from '../brand/LogoGlyph';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 interface Props {
   /** Avatar initial — first character of the user's name. */
@@ -16,7 +17,8 @@ interface Props {
 export function BrandBar({ avatarInitial = 'أ' }: Props) {
   const theme = useTheme();
   const strings = useStrings();
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
 
   return (
     <View style={styles.row}>
@@ -34,9 +36,10 @@ export function BrandBar({ avatarInitial = 'أ' }: Props) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     row: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -45,21 +48,22 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       paddingBottom: theme.spacing.sm,
     },
     brand: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
     },
     wordmarkText: {
-      // Logical start in RTL = right edge of the stack (next to the brand mark).
-      alignItems: 'flex-start',
+      alignItems: isArabic ? 'flex-end' : 'flex-start',
     },
     brandArabic: {
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 20,
       color: theme.semantic.fg,
       lineHeight: 22,
-      textAlign: 'left',
-      writingDirection: 'rtl',
+      textAlign: isArabic ? 'right' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
+      fontWeight: isArabic ? 'normal' : '700',
     },
     brandRoman: {
       fontFamily: theme.fonts.latin,

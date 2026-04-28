@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 export interface PillTabItem<T extends string> {
   id: T;
@@ -19,7 +20,8 @@ interface Props<T extends string> {
  */
 export function PillTabs<T extends string>({ tabs, active, onChange }: Props<T>) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
 
   return (
     <View style={styles.track}>
@@ -41,9 +43,10 @@ export function PillTabs<T extends string>({ tabs, active, onChange }: Props<T>)
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     track: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       backgroundColor: theme.semantic.bgSunken,
       borderRadius: theme.radii.xl,
@@ -63,9 +66,10 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       ...theme.elevation.shadow1,
     },
     label: {
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 14,
       color: theme.semantic.fgMuted,
+      fontWeight: isArabic ? 'normal' : '600',
     },
     labelActive: {
       color: theme.semantic.fgOnPrimary,

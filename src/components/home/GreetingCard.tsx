@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Path, RadialGradient as SvgRadialGradient, Stop } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
 
 interface Props {
@@ -27,7 +28,14 @@ export function GreetingCard({
 }: Props) {
   const theme = useTheme();
   const strings = useStrings();
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
+  const title = isArabic
+    ? `سورة ${surahName} ‏· الآية ‏﴿${toArabicIndic(ayahNumber)}﴾`
+    : `Surah ${surahName} · Ayah ${ayahNumber}`;
+  const subtitle = isArabic
+    ? `آية الكرسي · الجزء ${toArabicIndic(juzNumber)}`
+    : `Āyat al-Kursī · Juz ${juzNumber}`;
 
   return (
     <LinearGradient
@@ -46,13 +54,9 @@ export function GreetingCard({
         </Defs>
         <Circle cx={90} cy={90} r={90} fill="url(#glowGrad)" />
       </Svg>
-      <Text style={styles.label}>Continue · {strings.greetingContinueLabel}</Text>
-      <Text style={styles.title}>
-        {`سورة ${surahName} ‏· الآية ‏﴿${toArabicIndic(ayahNumber)}﴾`}
-      </Text>
-      <Text style={styles.subtitle}>
-        Āyat al-Kursī · Juz {juzNumber}
-      </Text>
+      <Text style={styles.label}>{strings.greetingContinueLabel}</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
       <View style={styles.cta}>
         <Pressable
           onPress={onResume}
@@ -62,24 +66,29 @@ export function GreetingCard({
           {({ pressed }) => (
             <View style={[styles.btn, pressed && styles.btnPressed]}>
               <Svg width={12} height={12} viewBox="0 0 24 24" fill={theme.semantic.fgOnGold}>
-                <Path d="M8 5v14l11-7z" />
+                <Path d={isArabic ? 'M16 5v14L5 12z' : 'M8 5v14l11-7z'} />
               </Svg>
               <Text style={styles.btnText}>{strings.greetingResume}</Text>
             </View>
           )}
         </Pressable>
-        <View style={styles.streak}>
-          <Text style={styles.streakNum}>{streakDays}</Text>
-          <Text style={styles.streakLabel}>day streak</Text>
-        </View>
+        {isArabic ? (
+          <Text style={styles.streakLabel}>سلسلة {toArabicIndic(streakDays)} يوم</Text>
+        ) : (
+          <View style={styles.streak}>
+            <Text style={styles.streakNum}>{streakDays}</Text>
+            <Text style={styles.streakLabel}>day streak</Text>
+          </View>
+        )}
       </View>
     </LinearGradient>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     card: {
+      direction: isArabic ? 'rtl' : 'ltr',
       marginHorizontal: theme.gutter.screen - 6,
       marginTop: theme.spacing.sm,
       marginBottom: theme.spacing.md,
@@ -94,34 +103,34 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       left: -30,
     },
     label: {
-      fontFamily: theme.fonts.latin,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 10,
-      letterSpacing: 2.2,
-      fontWeight: '700',
+      letterSpacing: isArabic ? 0 : 2.2,
+      fontWeight: isArabic ? 'normal' : '700',
       color: theme.semantic.accentSoft,
-      textTransform: 'uppercase',
-      // forceRTL flips physical alignment, so `'left'` => physical right.
-      textAlign: 'left',
-      writingDirection: 'ltr',
+      textTransform: isArabic ? 'none' : 'uppercase',
+      textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     title: {
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 22,
       color: theme.palette.paper[50],
       marginTop: 6,
       marginBottom: 2,
-      textAlign: 'left',
-      writingDirection: 'rtl',
+      textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
       lineHeight: 34,
+      fontWeight: isArabic ? 'normal' : '700',
     },
     subtitle: {
-      fontFamily: theme.fonts.latin,
-      fontSize: 11,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
+      fontSize: isArabic ? 13 : 11,
       color: theme.palette.paper[50],
       opacity: 0.78,
-      letterSpacing: 0.4,
-      textAlign: 'left',
-      writingDirection: 'ltr',
+      letterSpacing: isArabic ? 0 : 0.4,
+      textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     cta: {
       flexDirection: 'row',
@@ -130,6 +139,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       marginTop: theme.spacing.md - 2,
     },
     btn: {
+      direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
@@ -142,14 +152,13 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       backgroundColor: theme.palette.gold[700],
     },
     btnText: {
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 14,
       color: theme.semantic.fgOnGold,
+      fontWeight: isArabic ? 'normal' : '600',
     },
-    // `direction:ltr` in design — number reads first, then label.
-    // `row-reverse` undoes the global forceRTL so JSX order = visual order.
     streak: {
-      flexDirection: 'row-reverse',
+      flexDirection: 'row',
       alignItems: 'baseline',
       gap: 4,
     },
@@ -160,9 +169,10 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.semantic.accent,
     },
     streakLabel: {
-      fontFamily: theme.fonts.latin,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 12,
       color: theme.palette.paper[50],
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
   });
 }

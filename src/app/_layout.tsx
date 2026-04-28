@@ -7,11 +7,12 @@ import { I18nManager } from 'react-native';
 import '../../global.css';
 import { useTheme, useResolvedThemeMode } from '../hooks/useTheme';
 import { useReadingStore } from '../stores/readingStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { SplashView } from '../components/splash/SplashView';
 
-// Arabic-first app: lock layout to RTL regardless of device locale.
-// Plain `flex-direction: 'row'` mirrors visually; tab bar / streak opt out
-// with `'row-reverse'` to preserve LTR ordering where the design requires it.
+// Arabic-first app: keep React Native's native layout manager RTL so Mushaf
+// and Quran surfaces stay stable. English UI surfaces opt out locally with
+// language-aware row direction and text alignment.
 if (!I18nManager.isRTL) {
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(true);
@@ -22,6 +23,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const theme = useTheme();
   const resolvedMode = useResolvedThemeMode();
+  const language = useSettingsStore((s) => s.language);
+  const isArabic = language === 'ar';
 
   const [fontsLoaded] = useFonts({
     // Quranic fonts (existing)
@@ -76,7 +79,7 @@ export default function RootLayout() {
   }
 
   const stackScreenOptions = {
-    contentStyle: { backgroundColor: theme.semantic.bg, direction: 'rtl' },
+    contentStyle: { backgroundColor: theme.semantic.bg, direction: isArabic ? 'rtl' : 'ltr' },
     headerShown: false,
   } as const;
 
