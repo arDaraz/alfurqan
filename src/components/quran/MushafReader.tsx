@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import { MushafPage } from './MushafPage';
@@ -6,7 +6,7 @@ import { PageIndicator } from './PageIndicator';
 import { AyahPopup } from './AyahPopup';
 import { MiniPlayerBar } from './MiniPlayerBar';
 import { MushafBottomToolbar } from './MushafBottomToolbar';
-import { getSurahLastAyah, getTopAyahForPage } from '../../data/quranRepository';
+import { getPageForAyah, getSurahLastAyah, getTopAyahForPage } from '../../data/quranRepository';
 import { recitationEngine } from '../../services/recitationEngine';
 import { useReadingStore } from '../../stores/readingStore';
 import { useRecitationStore } from '../../stores/recitationStore';
@@ -42,10 +42,14 @@ export async function startToolbarRecitationFromPage(pageNumber: number): Promis
 
 export function MushafReader({ initialPage, onPageChange, onAyahAction }: MushafReaderProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
+  const currentPageRef = useRef(initialPage);
   const pagerRef = useRef<PagerView>(null);
   const { colors } = useReaderColors();
   const styles = createStyles(colors);
   const setLastReadPage = useReadingStore((s) => s.setLastReadPage);
+  const playbackRange = useRecitationStore((s) => s.range);
+  const playbackAyah = useRecitationStore((s) => s.currentAyah);
+  const playbackState = useRecitationStore((s) => s.state);
 
   // Selection state
   const [selection, setSelection] = useState<AyahSelection | null>(null);
@@ -53,19 +57,46 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
   const [popupPos, setPopupPos] = useState({ x: 0, y: 0 });
   const clearSelectionRef = useRef<(() => void) | null>(null);
 
-  const handlePageSelected = useCallback(
-    (event: PagerViewOnPageSelectedEvent) => {
-      const pageNumber = event.nativeEvent.position + 1;
+  const applyPageChange = useCallback(
+    (pageNumber: number) => {
+      currentPageRef.current = pageNumber;
       setCurrentPage(pageNumber);
       setLastReadPage(pageNumber);
       onPageChange?.(pageNumber);
-      // Clear selection on page change
       setSelection(null);
       setShowActions(false);
       clearSelectionRef.current?.();
     },
     [setLastReadPage, onPageChange]
   );
+
+  const handlePageSelected = useCallback(
+    (event: PagerViewOnPageSelectedEvent) => {
+      const pageNumber = event.nativeEvent.position + 1;
+      applyPageChange(pageNumber);
+    },
+    [applyPageChange]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const playbackSurah = playbackRange?.surah;
+    if (!playbackSurah || playbackAyah === null || playbackState === 'idle' || playbackState === 'error') {
+      return undefined;
+    }
+
+    getPageForAyah(playbackSurah, playbackAyah)
+      .then((pageNumber) => {
+        if (cancelled || pageNumber === currentPageRef.current) return;
+        pagerRef.current?.setPage(pageNumber - 1);
+        applyPageChange(pageNumber);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [playbackRange?.surah, playbackAyah, playbackState, applyPageChange]);
 
   const handleSelectionEvent = useCallback((data: any) => {
     if (data.type === 'select') {

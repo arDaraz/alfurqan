@@ -291,16 +291,42 @@ describe('recitationEngine popup start', () => {
     );
   });
 
-  it('next stops in continuous mode at the stop ayah', async () => {
+  it('next stops in continuous mode at the final surah stop ayah', async () => {
     const adapter = createAdapter();
     const cache = createCache();
     const engine = createRecitationEngineForTest({ adapter, cache });
 
-    await engine.start({ surah: 1, startAyah: 3, stopAyah: 3, trigger: 'popup' });
+    await engine.start({ surah: 114, startAyah: 6, stopAyah: 6, trigger: 'popup' });
     await engine.next();
 
     expect(adapter.stop).toHaveBeenCalled();
     expect(engine.getSnapshot().state).toBe('idle');
+  });
+
+  it('next advances to the next surah in continuous mode at the stop ayah', async () => {
+    const adapter = createAdapter();
+    const cache = createCache();
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 7, stopAyah: 7, trigger: 'toolbar' });
+    await engine.next();
+
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      currentAyah: 1,
+      range: {
+        surah: 2,
+        startAyah: 1,
+        stopAyah: 286,
+        trigger: 'toolbar',
+      },
+    });
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Husary_128kbps',
+      2,
+      1,
+      expect.any(AbortSignal)
+    );
   });
 
   it('next loops to ayah one at the stop ayah in loop-surah mode', async () => {

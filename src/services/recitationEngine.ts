@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { SURAH_METADATA, TOTAL_SURAHS } from '../constants/quran';
 import { getReciterById } from '../data/reciters';
 import { useReciterStore } from '../stores/reciterStore';
 import { useRecitationStore, type PlaybackRange, type PlaybackMode, type PlaybackSpeed } from '../stores/recitationStore';
@@ -27,6 +28,14 @@ type RecitationEngineDeps = {
 type LoadIntent = 'play' | 'pause';
 const LOCK_SCREEN_ARTWORK: string | undefined = undefined;
 const PREFETCH_AHEAD_AYAHS = 3;
+
+function getSurahAyahCount(surah: number): number {
+  const metadata = SURAH_METADATA[surah - 1];
+  if (!metadata || metadata.number !== surah) {
+    throw new Error(`Surah ${surah} not found`);
+  }
+  return metadata.ayahCount;
+}
 
 function mapError(error: unknown): { category: 'network' | 'audio-unavailable' | 'storage'; message: string } {
   if (error instanceof CacheError) {
@@ -123,15 +132,22 @@ export class RecitationEngine {
   async next(): Promise<void> {
     const snapshot = this.getSnapshot();
     if (!snapshot.range || !snapshot.currentAyah) return;
+    const intent = snapshot.state === 'paused' ? 'pause' : 'play';
     if (snapshot.currentAyah >= snapshot.range.stopAyah) {
       if (snapshot.mode === 'loop-surah') {
-        await this.loadAyah(1, snapshot.state === 'paused' ? 'pause' : 'play');
+        await this.loadAyah(1, intent);
       } else {
-        await this.stop();
+        const nextRange = this.getNextSurahRange(snapshot.range);
+        if (!nextRange) {
+          await this.stop();
+          return;
+        }
+        useRecitationStore.getState()._setSession(nextRange, nextRange.startAyah);
+        await this.loadAyah(nextRange.startAyah, intent);
       }
       return;
     }
-    await this.loadAyah(snapshot.currentAyah + 1, snapshot.state === 'paused' ? 'pause' : 'play');
+    await this.loadAyah(snapshot.currentAyah + 1, intent);
   }
 
   async prev(): Promise<void> {
@@ -222,6 +238,17 @@ export class RecitationEngine {
     this.activePageWebViewRef?.current?.injectJavaScript(
       `window.setPlayingAyah(${surah ?? 'null'}, ${ayah ?? 'null'}); true;`
     );
+  }
+
+  private getNextSurahRange(range: PlaybackRange): PlaybackRange | null {
+    if (range.surah >= TOTAL_SURAHS) return null;
+    const nextSurah = range.surah + 1;
+    return {
+      surah: nextSurah,
+      startAyah: 1,
+      stopAyah: getSurahAyahCount(nextSurah),
+      trigger: range.trigger,
+    };
   }
 
   private prefetchUpcoming(range: PlaybackRange, ayah: number): void {

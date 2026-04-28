@@ -7,12 +7,19 @@ jest.mock('react-native-mmkv', () => ({
   })),
 }));
 
+const mockSetPage = jest.fn();
+
 jest.mock('react-native-pager-view', () => {
   const React = require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, ref: any) => <View ref={ref} {...props} />),
+    default: React.forwardRef((props: any, ref: any) => {
+      React.useImperativeHandle(ref, () => ({
+        setPage: mockSetPage,
+      }));
+      return <View {...props} />;
+    }),
   };
 });
 
@@ -20,7 +27,16 @@ jest.mock('../MushafPage', () => ({
   MushafPage: () => null,
 }));
 
+jest.mock('../MiniPlayerBar', () => ({
+  MiniPlayerBar: () => null,
+}));
+
+jest.mock('../MushafBottomToolbar', () => ({
+  MushafBottomToolbar: () => null,
+}));
+
 jest.mock('../../../data/quranRepository', () => ({
+  getPageForAyah: jest.fn(),
   getSurahLastAyah: jest.fn(),
   getTopAyahForPage: jest.fn(),
 }));
@@ -32,11 +48,14 @@ jest.mock('../../../services/recitationEngine', () => ({
   },
 }));
 
-import { getSurahLastAyah, getTopAyahForPage } from '../../../data/quranRepository';
+import React from 'react';
+import { act, render, waitFor } from '@testing-library/react-native';
+import { getPageForAyah, getSurahLastAyah, getTopAyahForPage } from '../../../data/quranRepository';
 import { recitationEngine } from '../../../services/recitationEngine';
 import { useRecitationStore } from '../../../stores/recitationStore';
-import { startToolbarRecitationFromPage } from '../MushafReader';
+import { MushafReader, startToolbarRecitationFromPage } from '../MushafReader';
 
+const getPageForAyahMock = getPageForAyah as jest.MockedFunction<typeof getPageForAyah>;
 const getTopAyahForPageMock = getTopAyahForPage as jest.MockedFunction<typeof getTopAyahForPage>;
 const getSurahLastAyahMock = getSurahLastAyah as jest.MockedFunction<typeof getSurahLastAyah>;
 
@@ -92,5 +111,29 @@ describe('startToolbarRecitationFromPage', () => {
       stopAyah: 286,
       trigger: 'toolbar',
     });
+  });
+});
+
+describe('MushafReader recitation page sync', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockSetPage.mockClear();
+    useRecitationStore.getState()._reset();
+    getPageForAyahMock.mockResolvedValue(2);
+  });
+
+  it('moves the pager to the page containing the currently playing ayah', async () => {
+    const onPageChange = jest.fn();
+    render(<MushafReader initialPage={1} onPageChange={onPageChange} />);
+
+    act(() => {
+      const store = useRecitationStore.getState();
+      store._setSession({ surah: 2, startAyah: 1, stopAyah: 286, trigger: 'toolbar' }, 1);
+      store._setState('playing');
+    });
+
+    await waitFor(() => expect(getPageForAyahMock).toHaveBeenCalledWith(2, 1));
+    await waitFor(() => expect(mockSetPage).toHaveBeenCalledWith(1));
+    expect(onPageChange).toHaveBeenCalledWith(2);
   });
 });

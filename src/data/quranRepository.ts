@@ -104,6 +104,16 @@ export async function getTopAyahForPage(
   return { surahNumber: row.surah_number, ayahNumber: row.ayah_number };
 }
 
+export async function getPageForAyah(surahNumber: number, ayahNumber: number): Promise<number> {
+  const db = await getDatabase();
+  const row = await db.getFirstAsync<{ page_number: number }>(
+    'SELECT page_number FROM ayahs WHERE surah_number = ? AND ayah_number = ?',
+    [surahNumber, ayahNumber]
+  );
+  if (!row) throw new Error(`No page found for surah ${surahNumber}, ayah ${ayahNumber}`);
+  return row.page_number;
+}
+
 // TODO: Currently fetches within a single surah. Add cross-surah support when
 // the selection UI allows spanning across surah boundaries.
 export async function getAyahTextRange(
