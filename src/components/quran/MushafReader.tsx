@@ -5,7 +5,12 @@ import { MushafPage } from './MushafPage';
 import { AyahPopup } from './AyahPopup';
 import { MiniPlayerBar } from './MiniPlayerBar';
 import { MushafBottomToolbar } from './MushafBottomToolbar';
-import { getPageForAyah, getSurahLastAyah, getTopAyahForPage } from '../../data/quranRepository';
+import {
+  getJuzAndPageForAyah,
+  getPageForAyah,
+  getSurahLastAyah,
+  getTopAyahForPage,
+} from '../../data/quranRepository';
 import { recitationEngine } from '../../services/recitationEngine';
 import { useReadingStore } from '../../stores/readingStore';
 import { useRecitationStore } from '../../stores/recitationStore';
@@ -45,7 +50,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
   const pagerRef = useRef<PagerView>(null);
   const { colors } = useReaderColors();
   const styles = createStyles(colors);
-  const setLastReadPage = useReadingStore((s) => s.setLastReadPage);
+  const setLastRead = useReadingStore((s) => s.setLastRead);
   const playbackRange = useRecitationStore((s) => s.range);
   const playbackAyah = useRecitationStore((s) => s.currentAyah);
   const playbackState = useRecitationStore((s) => s.state);
@@ -60,13 +65,19 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
     (pageNumber: number) => {
       currentPageRef.current = pageNumber;
       setCurrentPage(pageNumber);
-      setLastReadPage(pageNumber);
+      getTopAyahForPage(pageNumber)
+        .then(({ surahNumber, ayahNumber }) =>
+          getJuzAndPageForAyah(surahNumber, ayahNumber).then(({ juz }) =>
+            setLastRead(surahNumber, ayahNumber, juz, pageNumber)
+          )
+        )
+        .catch(() => undefined);
       onPageChange?.(pageNumber);
       setSelection(null);
       setShowActions(false);
       clearSelectionRef.current?.();
     },
-    [setLastReadPage, onPageChange]
+    [setLastRead, onPageChange]
   );
 
   const handlePageSelected = useCallback(

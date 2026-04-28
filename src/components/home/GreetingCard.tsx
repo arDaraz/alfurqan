@@ -6,12 +6,15 @@ import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
+import { formatRelativeTime } from '../../utils/formatRelativeTime';
 
 type ContinueProps = {
   variant: 'continue';
   surahName: string;
   ayahNumber: number;
   juzNumber: number;
+  pageNumber: number;
+  lastReadAt: number;
   streakDays: number;
   onResume: () => void;
 };
@@ -69,8 +72,9 @@ export function GreetingCard(props: Props) {
     ? `سورة ${props.surahName} ‏· الآية ‏﴿${toArabicIndic(props.ayahNumber)}﴾`
     : `Surah ${props.surahName} · Ayah ${props.ayahNumber}`;
   const subtitle = isArabic
-    ? `الجزء ${toArabicIndic(props.juzNumber)}`
-    : `Juz ${props.juzNumber}`;
+    ? strings.greetingJuzPage(toArabicIndic(props.juzNumber), toArabicIndic(props.pageNumber))
+    : strings.greetingJuzPage(props.juzNumber, props.pageNumber);
+  const relative = formatRelativeTime(Date.now(), props.lastReadAt, isArabic ? 'ar' : 'en');
 
   return (
     <LinearGradient
@@ -84,6 +88,7 @@ export function GreetingCard(props: Props) {
       <Text style={styles.label}>{strings.greetingContinueLabel}</Text>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.timestamp}>{strings.greetingLastReadAgo(relative)}</Text>
       <View style={styles.cta}>
         <Pressable
           onPress={props.onResume}
@@ -177,6 +182,15 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       opacity: 0.78,
       letterSpacing: isArabic ? 0 : 0.4,
       textAlign: isArabic ? 'left' : 'left',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
+    },
+    timestamp: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 11,
+      color: theme.palette.paper[50],
+      opacity: 0.6,
+      marginTop: 4,
+      textAlign: 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     cta: {

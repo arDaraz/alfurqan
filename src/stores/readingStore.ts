@@ -21,10 +21,17 @@ interface ReadingState {
   lastReadSurah: number | null;
   lastReadAyah: number | null;
   lastReadPage: number | null;
+  lastReadJuz: number | null;
+  lastReadAt: number | null;
   hasCompletedOnboarding: boolean;
   bookmarks: Bookmark[];
-  setLastRead: (surah: number, ayah: number) => void;
-  setLastReadPage: (page: number) => void;
+  setLastRead: (
+    surah: number,
+    ayah: number,
+    juz: number,
+    page: number,
+    now?: Date
+  ) => void;
   completeOnboarding: () => void;
   addBookmark: (surah: number, ayah: number) => void;
   removeBookmark: (surah: number, ayah: number) => void;
@@ -37,11 +44,18 @@ export const useReadingStore = create<ReadingState>()(
       lastReadSurah: null,
       lastReadAyah: null,
       lastReadPage: null,
+      lastReadJuz: null,
+      lastReadAt: null,
       hasCompletedOnboarding: false,
       bookmarks: [],
-      setLastRead: (surah, ayah) =>
-        set({ lastReadSurah: surah, lastReadAyah: ayah }),
-      setLastReadPage: (page) => set({ lastReadPage: page }),
+      setLastRead: (surah, ayah, juz, page, now = new Date()) =>
+        set({
+          lastReadSurah: surah,
+          lastReadAyah: ayah,
+          lastReadJuz: juz,
+          lastReadPage: page,
+          lastReadAt: now.getTime(),
+        }),
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       addBookmark: (surah, ayah) => {
         const exists = get().bookmarks.some(

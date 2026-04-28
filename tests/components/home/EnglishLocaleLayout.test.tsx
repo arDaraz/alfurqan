@@ -76,6 +76,8 @@ describe('Home English locale layout', () => {
         surahName="Al-Baqarah"
         ayahNumber={255}
         juzNumber={3}
+        pageNumber={42}
+        lastReadAt={Date.now()}
         streakDays={27}
         onResume={jest.fn()}
       />
@@ -166,12 +168,14 @@ describe('Home Arabic locale layout', () => {
         surahName="البقرة"
         ayahNumber={255}
         juzNumber={3}
+        pageNumber={42}
+        lastReadAt={Date.now()}
         streakDays={27}
         onResume={jest.fn()}
       />
     );
 
-    expect(getByText('الجزء ٣')).toBeTruthy();
+    expect(getByText('الجزء ٣ · صفحة ٤٢')).toBeTruthy();
     expect(getByText('سلسلة ٢٧ يوم')).toBeTruthy();
     expect(queryByText('day streak')).toBeNull();
     expect(queryByText(/Juz/)).toBeNull();

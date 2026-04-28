@@ -45,6 +45,9 @@ export function HomeView({ hideGreeting = false }: Props) {
 
   const lastReadSurah = useReadingStore((s) => s.lastReadSurah);
   const lastReadAyah = useReadingStore((s) => s.lastReadAyah);
+  const lastReadJuz = useReadingStore((s) => s.lastReadJuz);
+  const lastReadPage = useReadingStore((s) => s.lastReadPage);
+  const lastReadAt = useReadingStore((s) => s.lastReadAt);
 
   const surahNames = useMemo(
     () => new Map(surahs.map((s) => [s.number, isArabic ? s.nameArabic : s.nameEnglish])),
@@ -107,11 +110,33 @@ export function HomeView({ hideGreeting = false }: Props) {
     />
   );
 
+  const hasLastRead =
+    lastReadSurah !== null &&
+    lastReadAyah !== null &&
+    lastReadJuz !== null &&
+    lastReadPage !== null &&
+    lastReadAt !== null;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {!hideGreeting && <BrandBar />}
 
-      {!hideGreeting && <GreetingCard variant="cold-start" onStart={handleStart} />}
+      {!hideGreeting && (
+        hasLastRead ? (
+          <GreetingCard
+            variant="continue"
+            surahName={surahNames.get(lastReadSurah) ?? (isArabic ? 'الفاتحة' : 'Al-Fatihah')}
+            ayahNumber={lastReadAyah}
+            juzNumber={lastReadJuz}
+            pageNumber={lastReadPage}
+            lastReadAt={lastReadAt}
+            streakDays={0}
+            onResume={handleResume}
+          />
+        ) : (
+          <GreetingCard variant="cold-start" onStart={handleStart} />
+        )
+      )}
 
       <View style={styles.controls}>
         <PillTabs

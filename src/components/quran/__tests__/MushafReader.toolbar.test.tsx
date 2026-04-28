@@ -36,6 +36,7 @@ jest.mock('../MushafBottomToolbar', () => ({
 }));
 
 jest.mock('../../../data/quranRepository', () => ({
+  getJuzAndPageForAyah: jest.fn(),
   getPageForAyah: jest.fn(),
   getSurahLastAyah: jest.fn(),
   getTopAyahForPage: jest.fn(),
@@ -50,12 +51,18 @@ jest.mock('../../../services/recitationEngine', () => ({
 
 import React from 'react';
 import { act, render, waitFor } from '@testing-library/react-native';
-import { getPageForAyah, getSurahLastAyah, getTopAyahForPage } from '../../../data/quranRepository';
+import {
+  getJuzAndPageForAyah,
+  getPageForAyah,
+  getSurahLastAyah,
+  getTopAyahForPage,
+} from '../../../data/quranRepository';
 import { recitationEngine } from '../../../services/recitationEngine';
 import { useRecitationStore } from '../../../stores/recitationStore';
 import { MushafReader, startToolbarRecitationFromPage } from '../MushafReader';
 
 const getPageForAyahMock = getPageForAyah as jest.MockedFunction<typeof getPageForAyah>;
+const getJuzAndPageForAyahMock = getJuzAndPageForAyah as jest.MockedFunction<typeof getJuzAndPageForAyah>;
 const getTopAyahForPageMock = getTopAyahForPage as jest.MockedFunction<typeof getTopAyahForPage>;
 const getSurahLastAyahMock = getSurahLastAyah as jest.MockedFunction<typeof getSurahLastAyah>;
 
@@ -120,6 +127,7 @@ describe('MushafReader recitation page sync', () => {
     mockSetPage.mockClear();
     useRecitationStore.getState()._reset();
     getPageForAyahMock.mockResolvedValue(2);
+    getJuzAndPageForAyahMock.mockResolvedValue({ juz: 1, page: 2 });
   });
 
   it('moves the pager to the page containing the currently playing ayah', async () => {

@@ -10,6 +10,7 @@ import { toArabicIndic, cleanUthmaniForDisplay } from '../../utils/arabic';
 import { theme } from '../../constants/theme';
 import { surahHasBismillah } from '../../constants/quran';
 import { useStrings } from '../../constants/strings';
+import { getJuzAndPageForAyah } from '../../data/quranRepository';
 import type { Ayah, Surah } from '../../data/types';
 
 interface QuranReaderProps {
@@ -116,7 +117,9 @@ export function QuranReader({
             closestAyah = ayahNum;
           }
         }
-        setLastRead(surahNumber, closestAyah);
+        getJuzAndPageForAyah(surahNumber, closestAyah)
+          .then(({ juz, page }) => setLastRead(surahNumber, closestAyah, juz, page))
+          .catch(() => undefined);
       }, 500);
     },
     [surahNumber, setLastRead]

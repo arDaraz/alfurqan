@@ -1,5 +1,5 @@
 const mockMushafPageProps: Record<string, any>[] = [];
-const mockSetLastReadPage = jest.fn();
+const mockSetLastRead = jest.fn();
 
 jest.mock('react-native-mmkv', () => ({
   createMMKV: jest.fn(() => ({
@@ -66,8 +66,8 @@ jest.mock('../../../src/hooks/useReaderColors', () => ({
 }));
 
 jest.mock('../../../src/stores/readingStore', () => ({
-  useReadingStore: (selector: (state: { setLastReadPage: jest.Mock }) => unknown) =>
-    selector({ setLastReadPage: mockSetLastReadPage }),
+  useReadingStore: (selector: (state: { setLastRead: jest.Mock }) => unknown) =>
+    selector({ setLastRead: mockSetLastRead }),
 }));
 
 import React from 'react';
@@ -88,7 +88,7 @@ const selectEvent = (openMenu: boolean) => ({
 describe('MushafReader', () => {
   beforeEach(() => {
     mockMushafPageProps.length = 0;
-    mockSetLastReadPage.mockClear();
+    mockSetLastRead.mockClear();
   });
 
   it('keeps a tapped ayah selected without opening the action popup', () => {
