@@ -321,12 +321,88 @@ describe('recitationEngine popup start', () => {
         trigger: 'toolbar',
       },
     });
+  });
+
+  it('plays Basmalah before the next surah first ayah when auto-advancing', async () => {
+    const adapter = createStatusAdapter();
+    const cache = {
+      getLocalPath: jest.fn(async (_reciterId: string, surah: number, ayah: number) => {
+        return `file:///recitation/${surah}/${ayah}.mp3`;
+      }),
+    };
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 7, stopAyah: 7, trigger: 'toolbar' });
+    await engine.next();
+
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'playing',
+      currentAyah: 1,
+      range: {
+        surah: 2,
+        startAyah: 1,
+        stopAyah: 286,
+        trigger: 'toolbar',
+      },
+    });
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Husary_128kbps',
+      1,
+      1,
+      expect.any(AbortSignal)
+    );
+    expect(adapter.load).toHaveBeenLastCalledWith(
+      expect.objectContaining({ uri: 'file:///recitation/1/1.mp3' })
+    );
+
+    adapter.emitStatus({ currentTime: 7, duration: 7, didJustFinish: true, playing: false });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(cache.getLocalPath).toHaveBeenLastCalledWith(
       'Husary_128kbps',
       2,
       1,
       expect.any(AbortSignal)
     );
+    expect(adapter.load).toHaveBeenLastCalledWith(
+      expect.objectContaining({ uri: 'file:///recitation/2/1.mp3' })
+    );
+  });
+
+  it('continues into the first ayah after resuming a paused Basmalah transition', async () => {
+    const adapter = createStatusAdapter();
+    const cache = {
+      getLocalPath: jest.fn(async (_reciterId: string, surah: number, ayah: number) => {
+        return `file:///recitation/${surah}/${ayah}.mp3`;
+      }),
+    };
+    const engine = createRecitationEngineForTest({ adapter, cache });
+
+    await engine.start({ surah: 1, startAyah: 7, stopAyah: 7, trigger: 'toolbar' });
+    await engine.pause();
+    adapter.play.mockClear();
+
+    await engine.next();
+    expect(engine.getSnapshot()).toMatchObject({
+      state: 'paused',
+      currentAyah: 1,
+      range: {
+        surah: 2,
+      },
+    });
+    expect(adapter.play).not.toHaveBeenCalled();
+
+    await engine.resume();
+    adapter.emitStatus({ currentTime: 7, duration: 7, didJustFinish: true, playing: false });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(cache.getLocalPath).toHaveBeenLastCalledWith(
+      'Husary_128kbps',
+      2,
+      1,
+      expect.any(AbortSignal)
+    );
+    expect(engine.getSnapshot().state).toBe('playing');
   });
 
   it('next loops to ayah one at the stop ayah in loop-surah mode', async () => {

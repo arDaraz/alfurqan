@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import { MushafPage } from './MushafPage';
-import { PageIndicator } from './PageIndicator';
 import { AyahPopup } from './AyahPopup';
 import { MiniPlayerBar } from './MiniPlayerBar';
 import { MushafBottomToolbar } from './MushafBottomToolbar';
@@ -178,7 +177,6 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
 
       <MiniPlayerBar />
       <MushafBottomToolbar onPlayPress={handleToolbarPlay} />
-      <PageIndicator currentPage={currentPage} />
     </View>
   );
 }

@@ -49,7 +49,11 @@ jest.mock('../../../src/components/quran/AyahPopup', () => {
 });
 
 jest.mock('../../../src/components/quran/PageIndicator', () => ({
-  PageIndicator: () => null,
+  PageIndicator: () => {
+    const React = require('react');
+    const { View } = require('react-native');
+    return <View testID="page-indicator" />;
+  },
 }));
 
 jest.mock('../../../src/hooks/useReaderColors', () => ({
@@ -103,5 +107,11 @@ describe('MushafReader', () => {
     act(() => currentPage?.onSelectionEvent(selectEvent(true)));
 
     expect(screen.getByTestId('ayah-popup')).toBeTruthy();
+  });
+
+  it('does not render the duplicate bottom page indicator', () => {
+    render(<MushafReader initialPage={1} />);
+
+    expect(screen.queryByTestId('page-indicator')).toBeNull();
   });
 });

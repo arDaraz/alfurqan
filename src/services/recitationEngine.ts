@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { SURAH_METADATA, TOTAL_SURAHS } from '../constants/quran';
+import { SURAH_AL_FATIHA, SURAH_METADATA, surahHasBismillah, TOTAL_SURAHS } from '../constants/quran';
 import { getReciterById } from '../data/reciters';
 import { useReciterStore } from '../stores/reciterStore';
 import { useRecitationStore, type PlaybackRange, type PlaybackMode, type PlaybackSpeed } from '../stores/recitationStore';
@@ -28,6 +28,7 @@ type RecitationEngineDeps = {
 type LoadIntent = 'play' | 'pause';
 const LOCK_SCREEN_ARTWORK: string | undefined = undefined;
 const PREFETCH_AHEAD_AYAHS = 3;
+const BASMALAH_AUDIO_AYAH = 1;
 
 function getSurahAyahCount(surah: number): number {
   const metadata = SURAH_METADATA[surah - 1];
@@ -58,6 +59,7 @@ export class RecitationEngine {
   private pendingSeek: number | null = null;
   private pendingPause = false;
   private handlingFinish = false;
+  private pendingBasmalahTarget: { ayah: number } | null = null;
   private activePageWebViewRef: RefObject<WebViewLike | null> | null = null;
 
   constructor(deps: RecitationEngineDeps) {
@@ -75,6 +77,7 @@ export class RecitationEngine {
     this.pendingSeek = null;
     this.pendingPause = false;
     this.handlingFinish = false;
+    this.pendingBasmalahTarget = null;
     useRecitationStore.getState()._setSession(range, range.startAyah);
     await this.loadAyah(range.startAyah, 'play');
   }
@@ -108,6 +111,7 @@ export class RecitationEngine {
     this.pendingSeek = null;
     this.pendingPause = false;
     this.handlingFinish = false;
+    this.pendingBasmalahTarget = null;
     await this.adapter.stop();
     useRecitationStore.getState()._reset();
     this.highlightInWebView(null, null);
@@ -143,7 +147,11 @@ export class RecitationEngine {
           return;
         }
         useRecitationStore.getState()._setSession(nextRange, nextRange.startAyah);
-        await this.loadAyah(nextRange.startAyah, intent);
+        if (surahHasBismillah(nextRange.surah)) {
+          await this.loadBasmalahBeforeAyah(nextRange.startAyah, intent);
+        } else {
+          await this.loadAyah(nextRange.startAyah, intent);
+        }
       }
       return;
     }
@@ -186,6 +194,7 @@ export class RecitationEngine {
     const snapshot = this.getSnapshot();
     if (!snapshot.range) return;
 
+    this.pendingBasmalahTarget = null;
     this.abortController?.abort();
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
@@ -234,6 +243,61 @@ export class RecitationEngine {
     }
   }
 
+  private async loadBasmalahBeforeAyah(ayah: number, intent: LoadIntent): Promise<void> {
+    const snapshot = this.getSnapshot();
+    if (!snapshot.range) return;
+
+    this.abortController?.abort();
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
+    const token = ++this.loadToken;
+    this.handlingFinish = false;
+    this.pendingBasmalahTarget = { ayah };
+    useRecitationStore.getState()._setCurrentAyah(ayah);
+    useRecitationStore.getState()._setState('loading');
+
+    try {
+      const localPath = await this.cache.getLocalPath(
+        this.reciterId,
+        SURAH_AL_FATIHA,
+        BASMALAH_AUDIO_AYAH,
+        signal
+      );
+      if (token !== this.loadToken) return;
+      void this.cache.prefetch?.(this.reciterId, snapshot.range.surah, ayah).catch(() => undefined);
+      this.prefetchUpcoming(snapshot.range, ayah);
+
+      const reciter = getReciterById(this.reciterId);
+      const result = await this.adapter.load({
+        uri: localPath,
+        title: `البسملة - سورة ${snapshot.range.surah}`,
+        artist: reciter.nameAr,
+        artwork: LOCK_SCREEN_ARTWORK,
+      });
+      if (token !== this.loadToken) return;
+
+      const durationSeconds = result.durationSeconds ?? 0;
+      useRecitationStore.getState()._setProgress(0, durationSeconds);
+
+      const shouldPause = this.pendingPause || intent === 'pause';
+      this.pendingSeek = null;
+      this.pendingPause = false;
+
+      this.highlightInWebView(snapshot.range.surah, ayah);
+      if (shouldPause) {
+        useRecitationStore.getState()._setState('paused');
+      } else {
+        await this.adapter.play();
+        useRecitationStore.getState()._setState('playing');
+      }
+    } catch (error) {
+      if (token !== this.loadToken) return;
+      this.pendingBasmalahTarget = null;
+      const mapped = mapError(error);
+      useRecitationStore.getState()._setError(mapped.category, mapped.message);
+    }
+  }
+
   private highlightInWebView(surah: number | null, ayah: number | null): void {
     this.activePageWebViewRef?.current?.injectJavaScript(
       `window.setPlayingAyah(${surah ?? 'null'}, ${ayah ?? 'null'}); true;`
@@ -273,6 +337,15 @@ export class RecitationEngine {
     if (!status.didJustFinish || snapshot.state !== 'playing' || this.handlingFinish) return;
 
     this.handlingFinish = true;
+    if (this.pendingBasmalahTarget) {
+      const target = this.pendingBasmalahTarget;
+      this.pendingBasmalahTarget = null;
+      void this.loadAyah(target.ayah, 'play').finally(() => {
+        this.handlingFinish = false;
+      });
+      return;
+    }
+
     void this.next().finally(() => {
       this.handlingFinish = false;
     });
