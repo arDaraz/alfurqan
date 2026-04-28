@@ -12,14 +12,17 @@ const mockSetPage = jest.fn();
 jest.mock('react-native-pager-view', () => {
   const React = require('react');
   const { View } = require('react-native');
+  const MockPagerView = React.forwardRef((props: any, ref: any) => {
+    React.useImperativeHandle(ref, () => ({
+      setPage: mockSetPage,
+    }));
+    return <View {...props} />;
+  });
+  MockPagerView.displayName = 'MockPagerView';
+
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, ref: any) => {
-      React.useImperativeHandle(ref, () => ({
-        setPage: mockSetPage,
-      }));
-      return <View {...props} />;
-    }),
+    default: MockPagerView,
   };
 });
 
