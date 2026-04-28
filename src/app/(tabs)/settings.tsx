@@ -6,12 +6,10 @@ import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore, type CorrectionSensitivity, type ThemeMode, type MushafFont } from '../../stores/settingsStore';
 import { isNightReadingEnabled, type ActiveNightReadingMode } from '../../constants/nightReading';
-import { useReadingStore } from '../../stores/readingStore';
 import { ReciterPickerSheet } from '../../components/quran/ReciterPickerSheet';
 import { getReciterById } from '../../data/reciters';
 import { useReciterStore } from '../../stores/reciterStore';
 
-import { ProfileCard } from '../../components/settings/ProfileCard';
 import { SettingsGroup } from '../../components/settings/SettingsGroup';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { Toggle } from '../../components/settings/Toggle';
@@ -20,9 +18,6 @@ import { FontSizeRow } from '../../components/settings/FontSizeRow';
 import { NightReadingPicker } from '../../components/settings/NightReadingPicker';
 
 const ICON_PROPS = { width: 17, height: 17, fill: 'none', strokeWidth: 1.75 } as const;
-
-const SETTINGS_PROFILE_NAME = 'أبو يوسف';
-const SETTINGS_STREAK = 27;
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -52,9 +47,6 @@ export default function SettingsScreen() {
   const selectedReciter = getReciterById(selectedReciterId);
   const savedDownloads = Object.entries(downloads).filter(([, download]) => download.status === 'complete');
   const savedBytes = savedDownloads.reduce((total, [, download]) => total + (download.bytes ?? 0), 0);
-
-  const lastReadPage = useReadingStore((s) => s.lastReadPage) ?? 14;
-  const lastReadJuz = Math.max(1, Math.min(30, Math.ceil(lastReadPage / (604 / 30))));
 
   const mushafFont = useSettingsStore((s) => s.mushafFont);
   const setMushafFont = useSettingsStore((s) => s.setMushafFont);
@@ -147,13 +139,6 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileCard
-          name={SETTINGS_PROFILE_NAME}
-          juzNumber={lastReadJuz}
-          pageNumber={lastReadPage}
-          streakDays={SETTINGS_STREAK}
-        />
-
         <SettingsGroup label={strings.settingsSectionReading}>
           <FontSizeRow
             label={strings.settingsQuranSize}
