@@ -236,6 +236,65 @@ describe('Home Arabic locale layout', () => {
     });
   });
 
+  it('uses readable UI typography for Arabic greeting card metadata', () => {
+    const { getByTestId, getByText, queryByText } = render(
+      <GreetingCard
+        variant="continue"
+        surahName="آل عمران"
+        ayahNumber={3}
+        juzNumber={3}
+        pageNumber={51}
+        lastReadAt={Date.now()}
+        streakDays={1}
+        streakAtRisk={false}
+        onResume={jest.fn()}
+      />
+    );
+
+    const title = getByText('سورة آل عمران ‏· الآية ‏﴿٣﴾');
+    expect(queryByText('سورة آل عمران ‏· الآية ‏٣')).toBeNull();
+    expect(StyleSheet.flatten(getByText('تابع').props.style)).toMatchObject({
+      fontFamily: 'ReemKufi-Medium',
+      fontSize: 22,
+    });
+    expect(StyleSheet.flatten(title.props.style)).toMatchObject({
+      fontFamily: 'ReemKufi-Medium',
+      fontSize: 32,
+    });
+    expect(StyleSheet.flatten(getByTestId('greeting-title-glyph').props.style)).toMatchObject({
+      fontFamily: 'KFGQPC-Uthmani',
+      fontSize: 30,
+    });
+    expect(StyleSheet.flatten(getByText('الجزء ٣ · صفحة ٥١').props.style)).toMatchObject({
+      fontFamily: 'ReemKufi',
+      fontSize: 24,
+    });
+    expect(StyleSheet.flatten(getByText('آخر قراءة الآن').props.style)).toMatchObject({
+      fontFamily: 'ReemKufi',
+      fontSize: 20,
+    });
+    expect(StyleSheet.flatten(getByText('استأنف').props.style)).toMatchObject({
+      fontFamily: 'ReemKufi-Medium',
+      fontSize: 23,
+    });
+    expect(StyleSheet.flatten(getByText('سلسلة ١ يوم').props.style)).toMatchObject({
+      fontFamily: 'ReemKufi',
+      fontSize: 22,
+    });
+    expect(StyleSheet.flatten(getByTestId('greeting-juz-glyph').props.style)).toMatchObject({
+      fontFamily: 'KFGQPC-Uthmani',
+      fontSize: 38,
+    });
+    expect(StyleSheet.flatten(getByTestId('greeting-page-glyph').props.style)).toMatchObject({
+      fontFamily: 'KFGQPC-Uthmani',
+      fontSize: 38,
+    });
+    expect(StyleSheet.flatten(getByTestId('greeting-streak-glyph').props.style)).toMatchObject({
+      fontFamily: 'KFGQPC-Uthmani',
+      fontSize: 34,
+    });
+  });
+
   it('keeps Arabic surah and juz row text on the visual right', () => {
     const { getByLabelText, getByText } = render(
       <>

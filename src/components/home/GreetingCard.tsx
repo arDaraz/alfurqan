@@ -69,9 +69,7 @@ export function GreetingCard(props: Props) {
     );
   }
 
-  const title = isArabic
-    ? `سورة ${props.surahName} ‏· الآية ‏﴿${toArabicIndic(props.ayahNumber)}﴾`
-    : `Surah ${props.surahName} · Ayah ${props.ayahNumber}`;
+  const title = `Surah ${props.surahName} · Ayah ${props.ayahNumber}`;
   const subtitle = isArabic
     ? strings.greetingJuzPage(toArabicIndic(props.juzNumber), toArabicIndic(props.pageNumber))
     : strings.greetingJuzPage(props.juzNumber, props.pageNumber);
@@ -87,8 +85,22 @@ export function GreetingCard(props: Props) {
     >
       <CardGlow theme={theme} styles={styles} />
       <Text style={styles.label}>{strings.greetingContinueLabel}</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      {isArabic ? (
+        <Text style={styles.title}>
+          {`سورة ${props.surahName} ‏· الآية ‏`}
+          <Text testID="greeting-title-glyph" style={styles.titleGlyph}>{`﴿${toArabicIndic(props.ayahNumber)}﴾`}</Text>
+        </Text>
+      ) : (
+        <Text style={styles.title}>{title}</Text>
+      )}
+      {isArabic ? (
+        <Text style={styles.subtitle}>
+          الجزء <Text testID="greeting-juz-glyph" style={styles.metaGlyph}>{toArabicIndic(props.juzNumber)}</Text>
+          {' · '}صفحة <Text testID="greeting-page-glyph" style={styles.metaGlyph}>{toArabicIndic(props.pageNumber)}</Text>
+        </Text>
+      ) : (
+        <Text style={styles.subtitle}>{subtitle}</Text>
+      )}
       <Text style={styles.timestamp}>{strings.greetingLastReadAgo(relative)}</Text>
       <View style={styles.cta}>
         <Pressable
@@ -108,7 +120,9 @@ export function GreetingCard(props: Props) {
         {props.streakAtRisk ? (
           <Text style={styles.streakRisk}>{strings.greetingStreakAtRisk}</Text>
         ) : props.streakDays <= 0 ? null : isArabic ? (
-          <Text style={styles.streakLabel}>سلسلة {toArabicIndic(props.streakDays)} يوم</Text>
+          <Text style={styles.streakLabel}>
+            سلسلة <Text testID="greeting-streak-glyph" style={styles.streakGlyph}>{toArabicIndic(props.streakDays)}</Text> يوم
+          </Text>
         ) : (
           <View style={styles.streak}>
             <Text style={styles.streakNum}>{props.streakDays}</Text>
@@ -158,8 +172,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       left: -30,
     },
     label: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: 10,
+      fontFamily: isArabic ? theme.fonts.arabicMedium : theme.fonts.latin,
+      fontSize: isArabic ? 22 : 10,
+      lineHeight: isArabic ? 34 : undefined,
       letterSpacing: isArabic ? 0 : 2.2,
       fontWeight: isArabic ? 'normal' : '700',
       color: theme.semantic.accentSoft,
@@ -168,33 +183,48 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     title: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: 22,
+      fontFamily: isArabic ? theme.fonts.arabicMedium : theme.fonts.latin,
+      fontSize: isArabic ? 32 : 22,
       color: theme.palette.paper[50],
-      marginTop: 6,
+      marginTop: isArabic ? 8 : 6,
       marginBottom: 2,
       textAlign: isArabic ? 'left' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
-      lineHeight: 34,
+      lineHeight: isArabic ? 50 : 34,
       fontWeight: isArabic ? 'normal' : '700',
     },
+    titleGlyph: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 30,
+      lineHeight: 50,
+      color: theme.palette.paper[50],
+    },
     subtitle: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 13 : 11,
+      fontFamily: isArabic ? theme.fonts.arabic : theme.fonts.latin,
+      fontSize: isArabic ? 24 : 11,
       color: theme.palette.paper[50],
       opacity: 0.78,
       letterSpacing: isArabic ? 0 : 0.4,
       textAlign: isArabic ? 'left' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
+      lineHeight: isArabic ? 46 : undefined,
+    },
+    metaGlyph: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 38,
+      lineHeight: 46,
+      color: theme.palette.paper[50],
+      opacity: 0.78,
     },
     timestamp: {
-      fontFamily: theme.fonts.latin,
-      fontSize: 11,
+      fontFamily: isArabic ? theme.fonts.arabic : theme.fonts.latin,
+      fontSize: isArabic ? 20 : 11,
       color: theme.palette.paper[50],
       opacity: 0.6,
       marginTop: 4,
       textAlign: 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
+      lineHeight: isArabic ? 32 : undefined,
     },
     cta: {
       flexDirection: 'row',
@@ -216,8 +246,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       backgroundColor: theme.palette.gold[700],
     },
     btnText: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: 14,
+      fontFamily: isArabic ? theme.fonts.arabicMedium : theme.fonts.latin,
+      fontSize: isArabic ? 23 : 14,
+      lineHeight: isArabic ? 36 : undefined,
       color: theme.semantic.fgOnGold,
       fontWeight: isArabic ? 'normal' : '600',
     },
@@ -233,14 +264,22 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       color: theme.semantic.accent,
     },
     streakLabel: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: 12,
+      fontFamily: isArabic ? theme.fonts.arabic : theme.fonts.latin,
+      fontSize: isArabic ? 22 : 12,
+      lineHeight: isArabic ? 40 : undefined,
       color: theme.palette.paper[50],
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
+    streakGlyph: {
+      fontFamily: theme.fonts.quran,
+      fontSize: 34,
+      lineHeight: 40,
+      color: theme.palette.paper[50],
+    },
     streakRisk: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: 12,
+      fontFamily: isArabic ? theme.fonts.arabic : theme.fonts.latin,
+      fontSize: isArabic ? 22 : 12,
+      lineHeight: isArabic ? 34 : undefined,
       fontWeight: isArabic ? 'normal' : '700',
       color: theme.semantic.accent,
       textAlign: 'left',
