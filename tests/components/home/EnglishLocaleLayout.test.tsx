@@ -47,7 +47,7 @@ describe('Home English locale layout', () => {
   });
 
   it('keeps the brand wordmark and search field in LTR text flow', () => {
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getByText, queryByText } = render(
       <>
         <BrandBar avatarInitial="A" />
         <SearchBar value="" onChangeText={jest.fn()} />
@@ -55,6 +55,8 @@ describe('Home English locale layout', () => {
     );
 
     const titleStyle = StyleSheet.flatten(getByText('Al Furqan').props.style);
+    expect(queryByText('ALFURQAN')).toBeNull();
+    expect(queryByText('الفرقان')).toBeNull();
     expect(titleStyle).toMatchObject({
       fontFamily: 'Manrope',
       textAlign: 'left',
@@ -170,6 +172,19 @@ describe('Home English locale layout', () => {
 describe('Home Arabic locale layout', () => {
   beforeEach(() => {
     useSettingsStore.setState({ language: 'ar' });
+  });
+
+  it('uses only the Arabic app name in the brand bar', () => {
+    const { getByText, queryByText } = render(<BrandBar />);
+
+    expect(getByText('الفرقان')).toBeTruthy();
+    expect(queryByText('ALFURQAN')).toBeNull();
+    expect(queryByText('Al Furqan')).toBeNull();
+    expect(StyleSheet.flatten(getByText('الفرقان').props.style)).toMatchObject({
+      fontFamily: 'KFGQPC-Uthmani',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    });
   });
 
   it('does not leak English-only greeting copy into Arabic', () => {

@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * Top-of-Home brand bar: rosette glyph + الفرقان wordmark + avatar.
+ * Top-of-Home brand bar: rosette glyph + localized wordmark + avatar.
  * Brand sits at the start (right edge in RTL); avatar pushes to the end.
  */
 export function BrandBar({ avatarInitial = 'أ' }: Props) {
@@ -25,8 +25,7 @@ export function BrandBar({ avatarInitial = 'أ' }: Props) {
       <View style={styles.brand}>
         <LogoGlyph size={36} bg={theme.semantic.primary} gold={theme.semantic.accentSoft} goldSoft={theme.semantic.accentSoft} />
         <View style={styles.wordmarkText}>
-          <Text style={styles.brandArabic}>{strings.appTitle}</Text>
-          <Text style={styles.brandRoman}>{strings.appWordmarkRoman}</Text>
+          <Text style={styles.brandTitle}>{strings.appTitle}</Text>
         </View>
       </View>
       <View style={styles.avatar}>
@@ -56,23 +55,14 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     wordmarkText: {
       alignItems: isArabic ? 'flex-end' : 'flex-start',
     },
-    brandArabic: {
+    brandTitle: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: 20,
+      fontSize: isArabic ? 20 : 18,
       color: theme.semantic.fg,
-      lineHeight: 22,
+      lineHeight: isArabic ? 28 : 24,
       textAlign: isArabic ? 'right' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
       fontWeight: isArabic ? 'normal' : '700',
-    },
-    brandRoman: {
-      fontFamily: theme.fonts.latin,
-      fontSize: 9,
-      letterSpacing: 2.7,
-      fontWeight: '700',
-      color: theme.semantic.fgMuted,
-      marginTop: 3,
-      writingDirection: 'ltr',
     },
     avatar: {
       width: 40,
