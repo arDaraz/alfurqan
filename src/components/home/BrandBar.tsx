@@ -5,16 +5,10 @@ import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 
-interface Props {
-  /** Avatar initial — first character of the user's name. */
-  avatarInitial?: string;
-}
-
 /**
- * Top-of-Home brand bar: rosette glyph + localized wordmark + avatar.
- * Brand sits at the start (right edge in RTL); avatar pushes to the end.
+ * Top-of-Home brand bar: rosette glyph + localized wordmark.
  */
-export function BrandBar({ avatarInitial = 'أ' }: Props) {
+export function BrandBar() {
   const theme = useTheme();
   const strings = useStrings();
   const isArabic = useSettingsStore((s) => s.language) === 'ar';
@@ -28,9 +22,6 @@ export function BrandBar({ avatarInitial = 'أ' }: Props) {
           <Text style={styles.brandTitle}>{strings.appTitle}</Text>
         </View>
       </View>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{avatarInitial}</Text>
-      </View>
     </View>
   );
 }
@@ -41,7 +32,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       direction: isArabic ? 'rtl' : 'ltr',
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-start',
       paddingHorizontal: theme.gutter.screen,
       paddingTop: theme.spacing.sm,
       paddingBottom: theme.spacing.sm,
@@ -66,19 +57,6 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       writingDirection: isArabic ? 'rtl' : 'ltr',
       fontWeight: isArabic ? 'normal' : '700',
       includeFontPadding: false,
-    },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 13,
-      backgroundColor: theme.semantic.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    avatarText: {
-      fontFamily: theme.fonts.arabicSemiBold,
-      fontSize: 16,
-      color: theme.semantic.fgOnPrimary,
     },
   });
 }

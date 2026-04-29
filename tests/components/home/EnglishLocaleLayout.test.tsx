@@ -49,7 +49,7 @@ describe('Home English locale layout', () => {
   it('keeps the brand wordmark and search field in LTR text flow', () => {
     const { getByPlaceholderText, getByText, queryByText } = render(
       <>
-        <BrandBar avatarInitial="A" />
+        <BrandBar />
         <SearchBar value="" onChangeText={jest.fn()} />
       </>
     );
@@ -57,6 +57,7 @@ describe('Home English locale layout', () => {
     const titleStyle = StyleSheet.flatten(getByText('Al Furqan').props.style);
     expect(queryByText('ALFURQAN')).toBeNull();
     expect(queryByText('الفرقان')).toBeNull();
+    expect(queryByText('A')).toBeNull();
     expect(titleStyle).toMatchObject({
       fontFamily: 'Manrope',
       lineHeight: 36,
