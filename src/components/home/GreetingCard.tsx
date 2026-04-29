@@ -172,7 +172,11 @@ function renderArabicTimestamp(text: string, digitStyle: object) {
     if (!part) return null;
     if (/^[٠-٩0-9]+$/.test(part)) {
       return (
-        <Text key={`${part}-${index}`} testID={`greeting-time-digit-${index}`} style={digitStyle}>
+        <Text
+          key={`${part}-${index}`}
+          testID={`greeting-time-digit-${index}`}
+          style={digitStyle}
+        >
           {part}
         </Text>
       );
@@ -235,8 +239,8 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     label: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 22 : 10,
-      lineHeight: isArabic ? 34 : undefined,
+      fontSize: isArabic ? 20 : 10,
+      lineHeight: isArabic ? 30 : undefined,
       letterSpacing: isArabic ? 0 : 2.2,
       fontWeight: isArabic ? "normal" : "700",
       color: theme.semantic.accentSoft,
@@ -246,52 +250,50 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     title: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 32 : 22,
+      fontSize: isArabic ? 24 : 22,
       color: theme.palette.paper[50],
       marginTop: isArabic ? 8 : 6,
       marginBottom: 2,
       textAlign: isArabic ? "left" : "left",
       writingDirection: isArabic ? "rtl" : "ltr",
-      lineHeight: isArabic ? 50 : 34,
+      lineHeight: isArabic ? 40 : 34,
       fontWeight: isArabic ? "normal" : "700",
     },
     titleGlyph: {
       fontFamily: theme.fonts.quran,
-      fontSize: 34,
-      lineHeight: 50,
+      fontSize: 30,
+      lineHeight: 40,
       color: theme.palette.paper[50],
     },
     subtitle: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 24 : 11,
+      fontSize: isArabic ? 20 : 11,
       color: theme.palette.paper[50],
       opacity: 0.78,
       letterSpacing: isArabic ? 0 : 0.4,
       textAlign: isArabic ? "left" : "left",
       writingDirection: isArabic ? "rtl" : "ltr",
-      lineHeight: isArabic ? 46 : undefined,
+      lineHeight: isArabic ? 40 : undefined,
     },
     metaGlyph: {
       fontFamily: theme.fonts.quran,
-      fontSize: 34,
-      lineHeight: 46,
+      fontSize: 30,
+      lineHeight: 30,
       color: theme.palette.paper[50],
       opacity: 0.78,
     },
     timestamp: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 24 : 11,
+      fontSize: isArabic ? 20 : 11,
       color: theme.palette.paper[50],
       opacity: 0.68,
       flexShrink: 1,
       textAlign: "left",
       writingDirection: isArabic ? "rtl" : "ltr",
-      lineHeight: isArabic ? 38 : undefined,
     },
     timestampDigit: {
       fontFamily: theme.fonts.arabicSerif,
-      fontSize: 23,
-      lineHeight: 38,
+      fontSize: 20,
       color: theme.palette.paper[50],
     },
     cta: {
@@ -304,10 +306,10 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       direction: isArabic ? "rtl" : "ltr",
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: 6,
       backgroundColor: theme.semantic.accent,
-      paddingHorizontal: 14,
-      paddingVertical: 9,
+      paddingHorizontal: 15,
+      paddingVertical: 5,
       borderRadius: theme.radii.sm + 4,
     },
     btnPressed: {
@@ -315,8 +317,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     btnText: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 23 : 14,
-      lineHeight: isArabic ? 36 : undefined,
+      fontSize: isArabic ? 20 : 14,
       color: theme.semantic.fgOnGold,
       fontWeight: isArabic ? "normal" : "600",
     },
