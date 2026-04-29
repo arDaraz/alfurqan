@@ -16,6 +16,7 @@ jest.mock('expo-clipboard', () => ({
 // Mock quranRepository
 jest.mock('../../src/data/quranRepository', () => ({
   getAyahTextRange: jest.fn().mockResolvedValue('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
+  getJuzAndPageForAyah: jest.fn().mockResolvedValue({ juz: 3, page: 51 }),
   getSurahLastAyah: jest.fn().mockResolvedValue(7),
 }));
 
@@ -28,7 +29,11 @@ jest.mock('../../src/services/recitationEngine', () => ({
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
 import { handleAyahAction } from '../../src/actions/ayahActions';
-import { getAyahTextRange, getSurahLastAyah } from '../../src/data/quranRepository';
+import {
+  getAyahTextRange,
+  getJuzAndPageForAyah,
+  getSurahLastAyah,
+} from '../../src/data/quranRepository';
 import { recitationEngine } from '../../src/services/recitationEngine';
 import { useReadingStore } from '../../src/stores/readingStore';
 import type { AyahSelection } from '../../src/data/types';
@@ -43,7 +48,16 @@ const mockSelection: AyahSelection = {
 describe('handleAyahAction', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useReadingStore.setState({ bookmarks: [] });
+    useReadingStore.setState({
+      bookmarks: [],
+      lastReadSurah: null,
+      lastReadAyah: null,
+      lastReadJuz: null,
+      lastReadPage: null,
+      lastReadAt: null,
+      streakDays: 0,
+      streakLastReadDate: null,
+    });
   });
 
   describe('copy action', () => {
@@ -79,6 +93,23 @@ describe('handleAyahAction', () => {
       expect(state.bookmarks).toHaveLength(1);
       expect(state.bookmarks[0].surahNumber).toBe(1);
       expect(state.bookmarks[0].ayahNumber).toBe(1);
+    });
+
+    it('marks the selected ayah as the exact reading cursor', async () => {
+      await handleAyahAction('bookmark', {
+        startSurah: 3,
+        startAyah: 10,
+        endSurah: 3,
+        endAyah: 10,
+      });
+
+      expect(getJuzAndPageForAyah).toHaveBeenCalledWith(3, 10);
+      expect(useReadingStore.getState()).toMatchObject({
+        lastReadSurah: 3,
+        lastReadAyah: 10,
+        lastReadJuz: 3,
+        lastReadPage: 51,
+      });
     });
   });
 

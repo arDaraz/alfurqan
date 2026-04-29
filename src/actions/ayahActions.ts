@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
-import { getAyahTextRange, getSurahLastAyah } from '../data/quranRepository';
+import { getAyahTextRange, getJuzAndPageForAyah, getSurahLastAyah } from '../data/quranRepository';
 import { useReadingStore } from '../stores/readingStore';
 import { recitationEngine } from '../services/recitationEngine';
 import type { AyahActionType, AyahSelection } from '../data/types';
@@ -23,7 +23,10 @@ export async function handleAyahAction(
       break;
     }
     case 'bookmark': {
-      useReadingStore.getState().toggleBookmark(startSurah, startAyah);
+      const { juz, page } = await getJuzAndPageForAyah(startSurah, startAyah);
+      const store = useReadingStore.getState();
+      store.toggleBookmark(startSurah, startAyah);
+      store.setLastRead(startSurah, startAyah, juz, page);
       break;
     }
     case 'play': {
