@@ -54,15 +54,18 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     wordmarkText: {
       alignItems: isArabic ? 'flex-end' : 'flex-start',
+      height: 36,
+      justifyContent: 'center',
     },
     brandTitle: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: isArabic ? 20 : 18,
       color: theme.semantic.fg,
-      lineHeight: isArabic ? 28 : 24,
+      lineHeight: 36,
       textAlign: isArabic ? 'right' : 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
       fontWeight: isArabic ? 'normal' : '700',
+      includeFontPadding: false,
     },
     avatar: {
       width: 40,

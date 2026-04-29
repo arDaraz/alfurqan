@@ -59,6 +59,7 @@ describe('Home English locale layout', () => {
     expect(queryByText('الفرقان')).toBeNull();
     expect(titleStyle).toMatchObject({
       fontFamily: 'Manrope',
+      lineHeight: 36,
       textAlign: 'left',
       writingDirection: 'ltr',
     });
@@ -182,6 +183,7 @@ describe('Home Arabic locale layout', () => {
     expect(queryByText('Al Furqan')).toBeNull();
     expect(StyleSheet.flatten(getByText('الفرقان').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
+      lineHeight: 36,
       textAlign: 'right',
       writingDirection: 'rtl',
     });
