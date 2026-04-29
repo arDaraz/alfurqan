@@ -94,6 +94,7 @@ export function GreetingCard(props: Props) {
     props.lastReadAt,
     isArabic ? "ar" : "en",
   );
+  const timestamp = strings.greetingLastReadAgo(relative);
 
   return (
     <LinearGradient
@@ -154,10 +155,31 @@ export function GreetingCard(props: Props) {
             </View>
           )}
         </Pressable>
-        <Text style={styles.timestamp}>{strings.greetingLastReadAgo(relative)}</Text>
+        {isArabic ? (
+          <Text style={styles.timestamp}>
+            {renderArabicTimestamp(timestamp, styles.timestampDigit)}
+          </Text>
+        ) : (
+          <Text style={styles.timestamp}>{timestamp}</Text>
+        )}
       </View>
     </LinearGradient>
   );
+}
+
+function renderArabicTimestamp(text: string, digitStyle: object) {
+  return text.split(/([٠-٩0-9]+)/g).map((part, index) => {
+    if (!part) return null;
+    if (/^[٠-٩0-9]+$/.test(part)) {
+      return (
+        <Text key={`${part}-${index}`} testID={`greeting-time-digit-${index}`} style={digitStyle}>
+          {part}
+        </Text>
+      );
+    }
+
+    return part;
+  });
 }
 
 function CardGlow({
@@ -265,6 +287,12 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       textAlign: "left",
       writingDirection: isArabic ? "rtl" : "ltr",
       lineHeight: isArabic ? 38 : undefined,
+    },
+    timestampDigit: {
+      fontFamily: theme.fonts.arabicSerif,
+      fontSize: 23,
+      lineHeight: 38,
+      color: theme.palette.paper[50],
     },
     cta: {
       flexDirection: "row",

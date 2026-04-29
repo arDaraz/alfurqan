@@ -245,6 +245,26 @@ describe('Home Arabic locale layout', () => {
     });
   });
 
+  it('renders last-read time digits without Quranic glyph styling', () => {
+    const { getByTestId, getByText } = render(
+      <GreetingCard
+        variant="continue"
+        surahName="آل عمران"
+        ayahNumber={3}
+        juzNumber={3}
+        pageNumber={51}
+        lastReadAt={Date.now() - 18 * 60 * 1000}
+        onResume={jest.fn()}
+      />
+    );
+
+    expect(getByText('آخر قراءة منذ ١٨ د')).toBeTruthy();
+    expect(StyleSheet.flatten(getByTestId('greeting-time-digit-1').props.style)).toMatchObject({
+      fontFamily: 'Amiri',
+      fontSize: 23,
+    });
+  });
+
   it('keeps Arabic surah and juz row text on the visual right', () => {
     const { getByLabelText, getByText } = render(
       <>
