@@ -23,7 +23,7 @@ interface Props {
 }
 
 /**
- * Full wordmark — glyph + الفرقان (Reem Kufi) + ALFURQAN (Manrope letterspaced).
+ * Full wordmark — glyph + الفرقان (KFGQPC Uthmani) + ALFURQAN (Manrope letterspaced).
  * Use on splash, marketing, About page. For nav chrome use {@link LogoGlyph} alone.
  */
 export function Wordmark({
@@ -61,7 +61,7 @@ export function Wordmark({
       <SvgText
         x={352}
         y={44}
-        fontFamily="ReemKufi"
+        fontFamily="KFGQPC-Uthmani"
         fontSize={42}
         fontWeight={600}
         fill={inkColor}

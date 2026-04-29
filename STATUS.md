@@ -65,9 +65,8 @@ Self-hosted TTFs added (downloaded from official Google Fonts repos):
 
 - **Manrope** — Regular/Medium/SemiBold/Bold/ExtraBold (Latin UI)
 - **Fraunces** — Regular/Italic 144pt (editorial Hero only — onboarding pull-quote)
-- **Reem Kufi** — Regular (Arabic UI)
 - **Amiri** — Regular/Italic/Bold (long-form Arabic body)
-- KFGQPC-Uthmani + AmiriQuran (kept — Quranic only)
+- KFGQPC-Uthmani + AmiriQuran (Arabic UI and Quranic text)
 
 All loaded in `src/app/_layout.tsx` via `useFonts`. The design notes call out that production should ship WOFF2; current setup is TTF for parity with Quranic fonts.
 

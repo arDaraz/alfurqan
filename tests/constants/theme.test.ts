@@ -130,7 +130,10 @@ describe('Theme constants — v2 Mushaf palette', () => {
 
   describe('Fonts', () => {
     it('keeps Quranic font references', () => {
-      expect(theme.fonts.arabic).toBe('ReemKufi');
+      expect(theme.fonts.arabic).toBe('KFGQPC-Uthmani');
+      expect(theme.fonts.arabicMedium).toBe('KFGQPC-Uthmani');
+      expect(theme.fonts.arabicSemiBold).toBe('KFGQPC-Uthmani');
+      expect(theme.fonts.arabicBold).toBe('KFGQPC-Uthmani');
       expect(theme.fonts.quran).toBe('KFGQPC-Uthmani');
       expect(theme.fonts.latin).toBe('Manrope');
       expect(theme.fonts.latinDisplay).toBe('Fraunces');

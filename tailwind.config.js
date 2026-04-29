@@ -45,7 +45,7 @@ module.exports = {
       fontFamily: {
         latin: ['Manrope', 'sans-serif'],
         'latin-display': ['Fraunces', 'serif'],
-        'arabic-ui': ['ReemKufi', 'sans-serif'],
+        'arabic-ui': ['KFGQPC-Uthmani', 'serif'],
         'arabic-serif': ['Amiri', 'serif'],
         quran: ['KFGQPC-Uthmani', 'serif'],
       },

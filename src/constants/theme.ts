@@ -156,7 +156,6 @@ const motion = {
 const fontFamilies = {
   latin: 'Manrope',
   latinDisplay: 'Fraunces',
-  arabicUI: 'ReemKufi',
   arabicSerif: 'Amiri',
   quran: 'KFGQPC-Uthmani',
   quranSerif: 'AmiriQuran',
@@ -250,10 +249,10 @@ function buildTheme(mode: 'light' | 'dark') {
     },
 
     fonts: {
-      arabic: fontFamilies.arabicUI,
-      arabicMedium: 'ReemKufi-Medium',
-      arabicSemiBold: 'ReemKufi-SemiBold',
-      arabicBold: 'ReemKufi-Bold',
+      arabic: fontFamilies.quran,
+      arabicMedium: fontFamilies.quran,
+      arabicSemiBold: fontFamilies.quran,
+      arabicBold: fontFamilies.quran,
       arabicSerif: fontFamilies.arabicSerif,
       quran: fontFamilies.quran,
       quranSerif: fontFamilies.quranSerif,

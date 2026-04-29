@@ -39,14 +39,6 @@ export default function RootLayout() {
     'Fraunces': require('../../assets/fonts/Fraunces-Variable.ttf'),
     'Fraunces-Italic': require('../../assets/fonts/Fraunces-VariableItalic.ttf'),
 
-    // Arabic UI — Reem Kufi at 4 static weights. iOS doesn't reliably activate
-    // variable wght axis from `fontWeight`; loading separate files lets components
-    // pick `ReemKufi-Medium`/`-SemiBold`/`-Bold` directly.
-    'ReemKufi': require('../../assets/fonts/ReemKufi-Regular.ttf'),
-    'ReemKufi-Medium': require('../../assets/fonts/ReemKufi-Medium.ttf'),
-    'ReemKufi-SemiBold': require('../../assets/fonts/ReemKufi-SemiBold.ttf'),
-    'ReemKufi-Bold': require('../../assets/fonts/ReemKufi-Bold.ttf'),
-
     // Arabic body
     'Amiri': require('../../assets/fonts/Amiri-Regular.ttf'),
     'Amiri-Italic': require('../../assets/fonts/Amiri-Italic.ttf'),
