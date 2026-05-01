@@ -231,35 +231,35 @@ describe('Home Arabic locale layout', () => {
     expect(queryByText(/﴿٣﴾/)).toBeNull();
     expect(StyleSheet.flatten(getByText('تابع').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 22,
+      fontSize: 20,
     });
     expect(StyleSheet.flatten(title.props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 32,
+      fontSize: 24,
     });
     expect(StyleSheet.flatten(getByTestId('greeting-title-glyph').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 34,
+      fontSize: 30,
     });
     expect(StyleSheet.flatten(getByText('الجزء ٣ · صفحة ٥١').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 24,
+      fontSize: 20,
     });
     expect(StyleSheet.flatten(getByText('آخر قراءة الآن').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 24,
+      fontSize: 20,
     });
     expect(StyleSheet.flatten(getByText('استأنف').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 23,
+      fontSize: 20,
     });
     expect(StyleSheet.flatten(getByTestId('greeting-juz-glyph').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 34,
+      fontSize: 30,
     });
     expect(StyleSheet.flatten(getByTestId('greeting-page-glyph').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 34,
+      fontSize: 30,
     });
   });
 
@@ -279,7 +279,7 @@ describe('Home Arabic locale layout', () => {
     expect(getByText('آخر قراءة منذ ١٨ د')).toBeTruthy();
     expect(StyleSheet.flatten(getByTestId('greeting-time-digit-1').props.style)).toMatchObject({
       fontFamily: 'Amiri',
-      fontSize: 23,
+      fontSize: 20,
     });
   });
 
