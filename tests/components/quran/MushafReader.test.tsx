@@ -33,7 +33,12 @@ jest.mock('../../../src/data/quranRepository', () => ({
   getTopAyahForPage: (...args: unknown[]) => mockGetTopAyahForPage(...args),
   getJuzAndPageForAyah: (...args: unknown[]) => mockGetJuzAndPageForAyah(...args),
   getPageForAyah: jest.fn(),
+  getSurahByNumber: jest.fn().mockResolvedValue(null),
   getSurahLastAyah: jest.fn(),
+}));
+
+jest.mock('../../../src/components/quran/BookmarkSavedSnackbar', () => ({
+  BookmarkSavedSnackbar: () => null,
 }));
 
 jest.mock('../../../src/components/quran/MushafPage', () => {
@@ -74,9 +79,24 @@ jest.mock('../../../src/hooks/useReaderColors', () => ({
   }),
 }));
 
+const mockAddBookmark = jest.fn();
+const mockRemoveBookmark = jest.fn();
+
 jest.mock('../../../src/stores/readingStore', () => ({
-  useReadingStore: (selector: (state: { setLastRead: jest.Mock }) => unknown) =>
-    selector({ setLastRead: mockSetLastRead }),
+  useReadingStore: (
+    selector: (state: {
+      setLastRead: jest.Mock;
+      bookmarks: unknown[];
+      addBookmark: jest.Mock;
+      removeBookmark: jest.Mock;
+    }) => unknown
+  ) =>
+    selector({
+      setLastRead: mockSetLastRead,
+      bookmarks: [],
+      addBookmark: mockAddBookmark,
+      removeBookmark: mockRemoveBookmark,
+    }),
 }));
 
 import React from 'react';

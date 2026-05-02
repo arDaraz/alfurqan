@@ -7,9 +7,15 @@ import { useRecitationStore } from '../../stores/recitationStore';
 
 interface MushafBottomToolbarProps {
   onPlayPress: () => void;
+  bookmarkActive?: boolean;
+  onBookmarkPress?: () => void;
 }
 
-export function MushafBottomToolbar({ onPlayPress }: MushafBottomToolbarProps) {
+export function MushafBottomToolbar({
+  onPlayPress,
+  bookmarkActive = false,
+  onBookmarkPress,
+}: MushafBottomToolbarProps) {
   const strings = useStrings();
   const playbackState = useRecitationStore((s) => s.state);
   const playbackDisabled = playbackState === 'playing' || playbackState === 'loading';
@@ -31,7 +37,12 @@ export function MushafBottomToolbar({ onPlayPress }: MushafBottomToolbarProps) {
         onPress={onPlayPress}
         disabled={playbackDisabled}
       />
-      <ToolbarIcon label="علامة" icon="bookmark-outline" />
+      <ToolbarIcon
+        label="علامة"
+        icon={bookmarkActive ? 'bookmark' : 'bookmark-outline'}
+        onPress={onBookmarkPress}
+        active={bookmarkActive}
+      />
     </View>
   );
 }
@@ -41,14 +52,15 @@ interface ToolbarIconProps {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   onPress?: () => void;
   disabled?: boolean;
+  active?: boolean;
 }
 
-function ToolbarIcon({ label, icon, onPress, disabled = false }: ToolbarIconProps) {
+function ToolbarIcon({ label, icon, onPress, disabled = false, active = false }: ToolbarIconProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, selected: active }}
       disabled={disabled}
       onPress={onPress}
       style={[styles.iconButton, disabled && styles.disabledButton]}
@@ -58,6 +70,7 @@ function ToolbarIcon({ label, icon, onPress, disabled = false }: ToolbarIconProp
         size={21}
         color={disabled ? theme.colors.textDisabled : theme.colors.text}
       />
+      {active && <View style={styles.activeIndicator} />}
     </Pressable>
   );
 }
@@ -89,6 +102,14 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.55,
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 4,
+    width: 18,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: theme.colors.accent,
   },
   micButton: {
     width: 48,

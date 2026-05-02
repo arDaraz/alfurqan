@@ -38,9 +38,14 @@ jest.mock('../MushafBottomToolbar', () => ({
   MushafBottomToolbar: () => null,
 }));
 
+jest.mock('../BookmarkSavedSnackbar', () => ({
+  BookmarkSavedSnackbar: () => null,
+}));
+
 jest.mock('../../../data/quranRepository', () => ({
   getJuzAndPageForAyah: jest.fn(),
   getPageForAyah: jest.fn(),
+  getSurahByNumber: jest.fn().mockResolvedValue(null),
   getSurahLastAyah: jest.fn(),
   getTopAyahForPage: jest.fn(),
 }));

@@ -104,6 +104,14 @@ const ar = {
   toolTranslation: 'ترجمة',
   toolInfo: 'معلومات',
 
+  // Bookmark snackbar
+  bookmark: {
+    savedTitle: 'تم حفظ الصفحة',
+    savedSubtitle: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · صفحة ${page} · جزء ${juz}`,
+    undo: 'تراجع',
+  },
+
   // Settings — sections
   settingsTitle: 'الإعدادات',
   settingsRomanLabel: 'SETTINGS',
@@ -250,6 +258,13 @@ const en = {
   toolTasmi: 'Tasmīʿ',
   toolTranslation: 'Translation',
   toolInfo: 'Info',
+
+  bookmark: {
+    savedTitle: 'Page saved',
+    savedSubtitle: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · Page ${page} · Juz ${juz}`,
+    undo: 'Undo',
+  },
 
   settingsTitle: 'Settings',
   settingsRomanLabel: 'SETTINGS',

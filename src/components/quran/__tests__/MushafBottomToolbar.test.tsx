@@ -46,4 +46,29 @@ describe('MushafBottomToolbar', () => {
 
     expect(onPlayPress).not.toHaveBeenCalled();
   });
+
+  it('renders the bookmark slot as outline by default and routes presses', () => {
+    const onBookmarkPress = jest.fn();
+    const { getByLabelText, queryByText } = render(
+      <MushafBottomToolbar onPlayPress={jest.fn()} onBookmarkPress={onBookmarkPress} />
+    );
+
+    expect(queryByText('bookmark-outline')).toBeTruthy();
+    expect(queryByText('bookmark')).toBeNull();
+
+    fireEvent.press(getByLabelText('علامة'));
+    expect(onBookmarkPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('flips to the filled bookmark icon when the page is bookmarked', () => {
+    const { queryByText, getByLabelText } = render(
+      <MushafBottomToolbar onPlayPress={jest.fn()} bookmarkActive />
+    );
+
+    expect(queryByText('bookmark')).toBeTruthy();
+    expect(queryByText('bookmark-outline')).toBeNull();
+    expect(getByLabelText('علامة').props.accessibilityState).toEqual(
+      expect.objectContaining({ selected: true })
+    );
+  });
 });
