@@ -9,7 +9,7 @@ export default function TabsLayout() {
       tabBar={(props) => <TabBar {...props} />}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="surahs" />
+      <Tabs.Screen name="search" />
       <Tabs.Screen name="review" />
       <Tabs.Screen name="settings" />
     </Tabs>

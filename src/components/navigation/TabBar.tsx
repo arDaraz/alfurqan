@@ -60,7 +60,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
     <View style={styles.barWrapper}>
       <View testID="bottom-tab-bar" style={styles.bar}>
         {renderTab('index', strings.tabHome, IconHome)}
-        {renderTab('surahs', strings.tabSurahs, IconSurahs)}
+        {renderTab('search', strings.tabSearch, IconSearch)}
         <View style={styles.fabSlot} />
         {renderTab('review', strings.tabReview, IconReview)}
         {renderTab('settings', strings.tabProfile, IconProfile)}
@@ -101,12 +101,11 @@ function IconHome({ color, size }: { color: string; size: number }) {
   );
 }
 
-function IconSurahs({ color, size }: { color: string; size: number }) {
+function IconSearch({ color, size }: { color: string; size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M4 4h12a4 4 0 0 1 4 4v12" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M4 4v16h12" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M8 9h8M8 13h6" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={11} cy={11} r={7} stroke={color} strokeWidth={1.75} />
+      <Path d="m20 20-3.5-3.5" stroke={color} strokeWidth={1.75} strokeLinecap="round" />
     </Svg>
   );
 }
