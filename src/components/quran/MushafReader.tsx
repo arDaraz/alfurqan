@@ -5,7 +5,6 @@ import { MushafPage } from './MushafPage';
 import { AyahPopup } from './AyahPopup';
 import { MiniPlayerBar } from './MiniPlayerBar';
 import { MushafBottomToolbar } from './MushafBottomToolbar';
-import { BookmarkSavedSnackbar } from './BookmarkSavedSnackbar';
 import {
   getJuzAndPageForAyah,
   getPageForAyah,
@@ -26,6 +25,7 @@ interface MushafReaderProps {
   initialPage: number;
   onPageChange?: (pageNumber: number) => void;
   onAyahAction?: (action: AyahActionType, selection: AyahSelection) => void;
+  onPageBookmarkRequest?: (selection: AyahSelection) => void;
 }
 
 export async function startToolbarRecitationFromPage(pageNumber: number): Promise<void> {
@@ -35,7 +35,6 @@ export async function startToolbarRecitationFromPage(pageNumber: number): Promis
     await recitationEngine.resume();
     return;
   }
-
   const topAyah = await getTopAyahForPage(pageNumber);
   const stopAyah = await getSurahLastAyah(topAyah.surahNumber);
   await recitationEngine.start({
@@ -54,7 +53,12 @@ interface PageTopAyahInfo {
   surahName: string;
 }
 
-export function MushafReader({ initialPage, onPageChange, onAyahAction }: MushafReaderProps) {
+export function MushafReader({
+  initialPage,
+  onPageChange,
+  onAyahAction,
+  onPageBookmarkRequest,
+}: MushafReaderProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const currentPageRef = useRef(initialPage);
   const pagerRef = useRef<PagerView>(null);
@@ -62,27 +66,21 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
   const styles = createStyles(colors);
   const setLastRead = useReadingStore((s) => s.setLastRead);
   const bookmarks = useReadingStore((s) => s.bookmarks);
-  const addBookmark = useReadingStore((s) => s.addBookmark);
-  const removeBookmark = useReadingStore((s) => s.removeBookmark);
   const playbackRange = useRecitationStore((s) => s.range);
   const playbackAyah = useRecitationStore((s) => s.currentAyah);
   const playbackState = useRecitationStore((s) => s.state);
 
-  // Selection state
   const [selection, setSelection] = useState<AyahSelection | null>(null);
   const [showActions, setShowActions] = useState(false);
   const [popupPos, setPopupPos] = useState({ x: 0, y: 0 });
   const clearSelectionRef = useRef<(() => void) | null>(null);
 
-  // Page bookmark state — top ayah of the current page + last-saved snackbar info
   const [pageTopAyah, setPageTopAyah] = useState<PageTopAyahInfo | null>(null);
-  const [lastSaved, setLastSaved] = useState<PageTopAyahInfo | null>(null);
 
   const applyPageChange = useCallback(
     (pageNumber: number) => {
       currentPageRef.current = pageNumber;
       setCurrentPage(pageNumber);
-      setLastSaved(null);
       setPageTopAyah(null);
       (async () => {
         try {
@@ -130,7 +128,6 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
     if (!playbackSurah || playbackAyah === null || playbackState === 'idle' || playbackState === 'error') {
       return undefined;
     }
-
     getPageForAyah(playbackSurah, playbackAyah)
       .then((pageNumber) => {
         if (cancelled || pageNumber === currentPageRef.current) return;
@@ -138,7 +135,6 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
         applyPageChange(pageNumber);
       })
       .catch(() => undefined);
-
     return () => {
       cancelled = true;
     };
@@ -162,12 +158,15 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
     }
   }, []);
 
-  const handleAction = useCallback((action: AyahActionType, sel: AyahSelection) => {
-    onAyahAction?.(action, sel);
-    setSelection(null);
-    setShowActions(false);
-    clearSelectionRef.current?.();
-  }, [onAyahAction]);
+  const handleAction = useCallback(
+    (action: AyahActionType, sel: AyahSelection) => {
+      onAyahAction?.(action, sel);
+      setSelection(null);
+      setShowActions(false);
+      clearSelectionRef.current?.();
+    },
+    [onAyahAction]
+  );
 
   const handleDismiss = useCallback(() => {
     setSelection(null);
@@ -182,33 +181,19 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
   const bookmarkActive = useMemo(() => {
     if (!pageTopAyah) return false;
     return bookmarks.some(
-      (b) =>
-        b.surahNumber === pageTopAyah.surahNumber &&
-        b.ayahNumber === pageTopAyah.ayahNumber &&
-        b.category === 'reading'
+      (b) => b.surahNumber === pageTopAyah.surahNumber && b.ayahNumber === pageTopAyah.ayahNumber
     );
   }, [bookmarks, pageTopAyah]);
 
   const handleBookmarkPress = useCallback(() => {
-    if (!pageTopAyah) return;
-    if (bookmarkActive) {
-      removeBookmark(pageTopAyah.surahNumber, pageTopAyah.ayahNumber, 'reading');
-      setLastSaved(null);
-      return;
-    }
-    addBookmark(pageTopAyah.surahNumber, pageTopAyah.ayahNumber, 'reading');
-    setLastSaved(pageTopAyah);
-  }, [pageTopAyah, bookmarkActive, addBookmark, removeBookmark]);
-
-  const handleUndoBookmark = useCallback(() => {
-    if (!lastSaved) return;
-    removeBookmark(lastSaved.surahNumber, lastSaved.ayahNumber, 'reading');
-    setLastSaved(null);
-  }, [lastSaved, removeBookmark]);
-
-  const handleDismissSnackbar = useCallback(() => {
-    setLastSaved(null);
-  }, []);
+    if (!pageTopAyah || !onPageBookmarkRequest) return;
+    onPageBookmarkRequest({
+      startSurah: pageTopAyah.surahNumber,
+      startAyah: pageTopAyah.ayahNumber,
+      endSurah: pageTopAyah.surahNumber,
+      endAyah: pageTopAyah.ayahNumber,
+    });
+  }, [pageTopAyah, onPageBookmarkRequest]);
 
   return (
     <View style={styles.container}>
@@ -242,7 +227,6 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
         })}
       </PagerView>
 
-      {/* Ayah context popup overlay */}
       {selection && showActions && (
         <AyahPopup
           selection={selection}
@@ -254,17 +238,6 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
       )}
 
       <MiniPlayerBar />
-      {lastSaved && (
-        <BookmarkSavedSnackbar
-          key={`${lastSaved.surahNumber}-${lastSaved.ayahNumber}`}
-          surahName={lastSaved.surahName}
-          pageNumber={lastSaved.page}
-          juzNumber={lastSaved.juz}
-          resultingCategories={[]}
-          onUndo={handleUndoBookmark}
-          onDismiss={handleDismissSnackbar}
-        />
-      )}
       <MushafBottomToolbar
         onPlayPress={handleToolbarPlay}
         bookmarkActive={bookmarkActive}
@@ -276,22 +249,9 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
 
 function createStyles(colors: ReaderColors) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.bg,
-    },
-    pager: {
-      flex: 1,
-    },
-    pageContainer: {
-      flex: 1,
-      overflow: 'hidden',
-    },
-    placeholder: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.bg,
-    },
+    container: { flex: 1, backgroundColor: colors.bg },
+    pager: { flex: 1 },
+    pageContainer: { flex: 1, overflow: 'hidden' },
+    placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
   });
 }
