@@ -36,7 +36,7 @@ export function BookmarkSavedSnackbar({
   useEffect(() => {
     const timer = setTimeout(onDismiss, VISIBLE_MS);
     return () => clearTimeout(timer);
-  }, [onDismiss, surahName, pageNumber, juzNumber, resultingCategories.join('|')]);
+  }, [onDismiss, surahName, pageNumber, juzNumber]);
 
   const pageText = isArabic ? toArabicIndic(pageNumber) : pageNumber;
   const juzText = isArabic ? toArabicIndic(juzNumber) : juzNumber;

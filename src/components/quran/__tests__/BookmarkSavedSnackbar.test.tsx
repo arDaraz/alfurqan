@@ -31,17 +31,27 @@ jest.mock('react-native-reanimated', () => {
 });
 
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { BookmarkSavedSnackbar } from '../BookmarkSavedSnackbar';
 
 describe('BookmarkSavedSnackbar', () => {
-  const baseProps = {
-    surahName: 'البقرة',
-    pageNumber: 42,
-    juzNumber: 3,
-    onUndo: jest.fn(),
-    onDismiss: jest.fn(),
+  let baseProps: {
+    surahName: string;
+    pageNumber: number;
+    juzNumber: number;
+    onUndo: jest.Mock;
+    onDismiss: jest.Mock;
   };
+
+  beforeEach(() => {
+    baseProps = {
+      surahName: 'البقرة',
+      pageNumber: 42,
+      juzNumber: 3,
+      onUndo: jest.fn(),
+      onDismiss: jest.fn(),
+    };
+  });
 
   it('renders the reading-only subtitle', () => {
     const { getByText } = render(
@@ -69,5 +79,42 @@ describe('BookmarkSavedSnackbar', () => {
       <BookmarkSavedSnackbar {...baseProps} resultingCategories={[]} />
     );
     expect(getByText(/تم الحذف$/)).toBeTruthy();
+  });
+
+  it('renders the saved title and the undo button', () => {
+    const { getByText, getByLabelText } = render(
+      <BookmarkSavedSnackbar {...baseProps} resultingCategories={['reading']} />
+    );
+    expect(getByText('تم حفظ الصفحة')).toBeTruthy();
+    expect(getByLabelText('تراجع')).toBeTruthy();
+  });
+
+  it('invokes onUndo when the undo button is pressed', () => {
+    const onUndo = jest.fn();
+    const { getByLabelText } = render(
+      <BookmarkSavedSnackbar
+        {...baseProps}
+        onUndo={onUndo}
+        resultingCategories={['reading']}
+      />
+    );
+    fireEvent.press(getByLabelText('تراجع'));
+    expect(onUndo).toHaveBeenCalledTimes(1);
+  });
+
+  it('auto-dismisses after the visible window elapses', () => {
+    jest.useFakeTimers();
+    const onDismiss = jest.fn();
+    render(
+      <BookmarkSavedSnackbar
+        {...baseProps}
+        onDismiss={onDismiss}
+        resultingCategories={['reading']}
+      />
+    );
+    expect(onDismiss).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(3500);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
   });
 });
