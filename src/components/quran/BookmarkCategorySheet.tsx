@@ -80,7 +80,9 @@ export function BookmarkCategorySheet({
         style={styles.backdrop}
       >
         <Pressable
-          accessibilityLabel="sheet-backdrop"
+          testID="sheet-backdrop"
+          accessibilityRole="button"
+          accessibilityLabel={strings.back}
           style={StyleSheet.absoluteFill}
           onPress={onDismiss}
         />
@@ -89,7 +91,8 @@ export function BookmarkCategorySheet({
         entering={SlideInDown.duration(theme.motion.duration.base)}
         exiting={SlideOutDown.duration(theme.motion.duration.fast)}
         style={styles.sheet}
-        accessibilityRole="alert"
+        accessibilityViewIsModal
+        accessibilityLabel={strings.bookmarks.sheetTitle}
       >
         <Text style={styles.title}>{strings.bookmarks.sheetTitle}</Text>
         <Text style={styles.subtitle}>{`${surahName} · ${strings.searchAyahLabel} ${ayahLabel}`}</Text>
@@ -103,8 +106,9 @@ export function BookmarkCategorySheet({
               <Pressable
                 key={c}
                 accessibilityRole="checkbox"
-                accessibilityLabel={`chip-${c}`}
-                accessibilityState={{ selected: isOn }}
+                accessibilityLabel={label}
+                accessibilityState={{ checked: isOn }}
+                testID={`chip-${c}`}
                 onPress={() => handleToggle(c)}
                 style={[styles.chip, isOn && styles.chipOn]}
               >
@@ -225,7 +229,6 @@ function createStyles(theme: Theme, isArabic: boolean) {
       paddingHorizontal: 22,
       borderRadius: theme.radii.pill,
       backgroundColor: theme.semantic.primary,
-      marginLeft: 'auto',
     },
     saveBtnPressed: { backgroundColor: theme.semantic.primaryPressed },
     saveText: {

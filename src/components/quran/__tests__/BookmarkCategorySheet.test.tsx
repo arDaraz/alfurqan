@@ -47,16 +47,16 @@ function renderSheet(props?: Partial<React.ComponentProps<typeof BookmarkCategor
 
 describe('BookmarkCategorySheet', () => {
   it('renders the reading chip pre-checked when initialCategories includes reading', () => {
-    const { getByLabelText } = renderSheet({ initialCategories: ['reading'] });
-    const reading = getByLabelText('chip-reading');
-    const recitation = getByLabelText('chip-recitation');
-    expect(reading.props.accessibilityState).toMatchObject({ selected: true });
-    expect(recitation.props.accessibilityState).toMatchObject({ selected: false });
+    const { getByTestId } = renderSheet({ initialCategories: ['reading'] });
+    const reading = getByTestId('chip-reading');
+    const recitation = getByTestId('chip-recitation');
+    expect(reading.props.accessibilityState).toMatchObject({ checked: true });
+    expect(recitation.props.accessibilityState).toMatchObject({ checked: false });
   });
 
   it('commits a diff with added=[recitation] when user checks recitation and saves', () => {
-    const { onCommit, getByLabelText, getByText } = renderSheet({ initialCategories: ['reading'] });
-    fireEvent.press(getByLabelText('chip-recitation'));
+    const { onCommit, getByTestId, getByText } = renderSheet({ initialCategories: ['reading'] });
+    fireEvent.press(getByTestId('chip-recitation'));
     fireEvent.press(getByText('حفظ'));
     expect(onCommit).toHaveBeenCalledWith({
       previous: ['reading'],
@@ -83,8 +83,8 @@ describe('BookmarkCategorySheet', () => {
   });
 
   it('dismiss without save is a no-op (no onCommit)', () => {
-    const { onCommit, onDismiss, getByLabelText } = renderSheet({ initialCategories: [] });
-    fireEvent.press(getByLabelText('sheet-backdrop'));
+    const { onCommit, onDismiss, getByTestId } = renderSheet({ initialCategories: [] });
+    fireEvent.press(getByTestId('sheet-backdrop', { includeHiddenElements: true }));
     expect(onCommit).not.toHaveBeenCalled();
     expect(onDismiss).toHaveBeenCalled();
   });
