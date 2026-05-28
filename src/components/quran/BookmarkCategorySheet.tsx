@@ -71,6 +71,7 @@ export function BookmarkCategorySheet({
 
   const ayahLabel = isArabic ? toArabicIndic(ayahNumber) : ayahNumber;
   const showRemoveAll = previous.length > 0;
+  const title = previous.length > 0 ? strings.bookmarks.sheetTitleEdit : strings.bookmarks.sheetTitle;
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -92,9 +93,9 @@ export function BookmarkCategorySheet({
         exiting={SlideOutDown.duration(theme.motion.duration.fast)}
         style={styles.sheet}
         accessibilityViewIsModal
-        accessibilityLabel={strings.bookmarks.sheetTitle}
+        accessibilityLabel={title}
       >
-        <Text style={styles.title}>{strings.bookmarks.sheetTitle}</Text>
+        <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{`${surahName} · ${strings.searchAyahLabel} ${ayahLabel}`}</Text>
 
         <View style={styles.chipRow}>
