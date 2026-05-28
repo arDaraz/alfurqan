@@ -25,7 +25,7 @@ export async function handleAyahAction(
     case 'bookmark': {
       const { juz, page } = await getJuzAndPageForAyah(startSurah, startAyah);
       const store = useReadingStore.getState();
-      store.toggleBookmark(startSurah, startAyah);
+      store.toggleBookmark(startSurah, startAyah, 'reading');
       store.setLastRead(startSurah, startAyah, juz, page);
       break;
     }

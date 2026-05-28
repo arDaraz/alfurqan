@@ -38,7 +38,7 @@ describe('readingStore activity', () => {
   });
 
   it('does not create or mutate bookmarks when reading activity changes', () => {
-    useReadingStore.getState().addBookmark(18, 10);
+    useReadingStore.getState().addBookmark(18, 10, 'reading');
     const before = useReadingStore.getState().bookmarks;
 
     useReadingStore.getState().setLastRead(2, 255, 3, 42, new Date('2026-04-29T12:00:00'));

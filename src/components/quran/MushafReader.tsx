@@ -183,24 +183,26 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
     if (!pageTopAyah) return false;
     return bookmarks.some(
       (b) =>
-        b.surahNumber === pageTopAyah.surahNumber && b.ayahNumber === pageTopAyah.ayahNumber
+        b.surahNumber === pageTopAyah.surahNumber &&
+        b.ayahNumber === pageTopAyah.ayahNumber &&
+        b.category === 'reading'
     );
   }, [bookmarks, pageTopAyah]);
 
   const handleBookmarkPress = useCallback(() => {
     if (!pageTopAyah) return;
     if (bookmarkActive) {
-      removeBookmark(pageTopAyah.surahNumber, pageTopAyah.ayahNumber);
+      removeBookmark(pageTopAyah.surahNumber, pageTopAyah.ayahNumber, 'reading');
       setLastSaved(null);
       return;
     }
-    addBookmark(pageTopAyah.surahNumber, pageTopAyah.ayahNumber);
+    addBookmark(pageTopAyah.surahNumber, pageTopAyah.ayahNumber, 'reading');
     setLastSaved(pageTopAyah);
   }, [pageTopAyah, bookmarkActive, addBookmark, removeBookmark]);
 
   const handleUndoBookmark = useCallback(() => {
     if (!lastSaved) return;
-    removeBookmark(lastSaved.surahNumber, lastSaved.ayahNumber);
+    removeBookmark(lastSaved.surahNumber, lastSaved.ayahNumber, 'reading');
     setLastSaved(null);
   }, [lastSaved, removeBookmark]);
 
