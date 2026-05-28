@@ -18,6 +18,24 @@ const ar = {
   searchError: 'تعذّر البحث. حاول مرة أخرى.',
   searchGroupCount: (n: number) => `${n} آية`,
   searchAyahCrumb: (juz: number | string, page: number | string) => `جزء ${juz} · ص ${page}`,
+  searchClearAria: 'مسح حقل البحث',
+  searchFiltersAria: 'تصفية النتائج',
+  searchSearchingAria: 'جاري البحث',
+  searchResultAria: (surah: string, ayah: number | string, juz: number | string, page: number | string) =>
+    `سورة ${surah}، الآية ${ayah}، جزء ${juz}، صفحة ${page}`,
+  searchResultOpenHint: 'افتح للقراءة في المصحف',
+  searchAyahLabel: 'الآية',
+  searchPageShort: 'صفحة',
+  searchJuzShort: 'جزء',
+  searchInQuran: 'نتيجة في القرآن الكريم',
+  searchFilterAll: 'الكل',
+  searchFilterBookmarks: 'المحفوظات',
+  searchFilterMakki: 'مكية',
+  searchFilterMadani: 'مدنية',
+  searchPlayAyah: 'تشغيل الآية',
+  searchPauseAyah: 'إيقاف الآية مؤقتًا',
+  searchCopyAyah: 'نسخ الآية',
+  searchBookmarkAyah: 'حفظ الآية',
   tabReview: 'مراجعة',
   tabProfile: 'الإعدادات',
   tabSettings: 'الإعدادات',
@@ -115,9 +133,30 @@ const ar = {
   // Bookmark snackbar
   bookmark: {
     savedTitle: 'تم حفظ الصفحة',
-    savedSubtitle: (surahName: string, page: string | number, juz: string | number) =>
-      `${surahName} · صفحة ${page} · جزء ${juz}`,
+    savedSubtitleReading: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · صفحة ${page} · جزء ${juz} · للقراءة`,
+    savedSubtitleRecitation: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · صفحة ${page} · جزء ${juz} · للتلاوة`,
+    savedSubtitleBoth: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · صفحة ${page} · جزء ${juz} · للقراءة والتلاوة`,
+    savedSubtitleRemoved: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · صفحة ${page} · جزء ${juz} · تم الحذف`,
     undo: 'تراجع',
+  },
+  bookmarks: {
+    screenTitle: 'الإشارات المرجعية',
+    tabReading: 'القراءة',
+    tabRecitation: 'التلاوة',
+    openLabel: 'افتح الإشارات المرجعية',
+    emptyReading: 'لم تحفظ آيات للقراءة بعد',
+    emptyRecitation: 'لم تحفظ آيات للتلاوة بعد',
+    deleteAction: 'حذف',
+    sheetTitle: 'حفظ الإشارة المرجعية',
+    sheetSave: 'حفظ',
+    sheetRemoveAll: 'حذف الكل',
+    categoryReading: 'القراءة',
+    categoryRecitation: 'التلاوة',
+    countLabel: (n: number | string) => `${n}`,
   },
 
   // Settings — sections
@@ -188,6 +227,24 @@ const en = {
   searchError: 'Unable to search. Try again.',
   searchGroupCount: (n: number) => `${n} verses`,
   searchAyahCrumb: (juz: number | string, page: number | string) => `Juz ${juz} · p. ${page}`,
+  searchClearAria: 'Clear search field',
+  searchFiltersAria: 'Filter results',
+  searchSearchingAria: 'Searching',
+  searchResultAria: (surah: string, ayah: number | string, juz: number | string, page: number | string) =>
+    `Surah ${surah}, verse ${ayah}, juz ${juz}, page ${page}`,
+  searchResultOpenHint: 'Open in the mushaf to read',
+  searchAyahLabel: 'Verse',
+  searchPageShort: 'Page',
+  searchJuzShort: 'Juz',
+  searchInQuran: 'in the Noble Quran',
+  searchFilterAll: 'All',
+  searchFilterBookmarks: 'Saved',
+  searchFilterMakki: 'Meccan',
+  searchFilterMadani: 'Medinan',
+  searchPlayAyah: 'Play verse',
+  searchPauseAyah: 'Pause verse',
+  searchCopyAyah: 'Copy verse',
+  searchBookmarkAyah: 'Bookmark verse',
   tabReview: 'REVIEW',
   tabProfile: 'PROFILE',
   tabSettings: 'Settings',
@@ -277,9 +334,30 @@ const en = {
 
   bookmark: {
     savedTitle: 'Page saved',
-    savedSubtitle: (surahName: string, page: string | number, juz: string | number) =>
-      `${surahName} · Page ${page} · Juz ${juz}`,
+    savedSubtitleReading: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · Page ${page} · Juz ${juz} · Reading`,
+    savedSubtitleRecitation: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · Page ${page} · Juz ${juz} · Recitation`,
+    savedSubtitleBoth: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · Page ${page} · Juz ${juz} · Reading & Recitation`,
+    savedSubtitleRemoved: (surahName: string, page: string | number, juz: string | number) =>
+      `${surahName} · Page ${page} · Juz ${juz} · Removed`,
     undo: 'Undo',
+  },
+  bookmarks: {
+    screenTitle: 'Bookmarks',
+    tabReading: 'Reading',
+    tabRecitation: 'Recitation',
+    openLabel: 'Open bookmarks',
+    emptyReading: 'No reading bookmarks yet',
+    emptyRecitation: 'No recitation bookmarks yet',
+    deleteAction: 'Delete',
+    sheetTitle: 'Save bookmark',
+    sheetSave: 'Save',
+    sheetRemoveAll: 'Remove all',
+    categoryReading: 'Reading',
+    categoryRecitation: 'Recitation',
+    countLabel: (n: number | string) => `${n}`,
   },
 
   settingsTitle: 'Settings',
