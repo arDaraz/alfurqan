@@ -1,6 +1,6 @@
 import { getDatabase } from './database';
 import type { Surah, Ayah, Juz, MushafWord, PageMarker } from './types';
-import { toArabicIndic, uthmaniToPlainArabic } from '../utils/arabic';
+import { toArabicIndic, uthmaniToPlainArabic, normalizeForSearch } from '../utils/arabic';
 import { QUARTER_LABELS } from '../constants/quran';
 
 interface SurahRow {
@@ -640,4 +640,99 @@ export async function getPageMarkers(pageNumber: number): Promise<PageMarker[]> 
     }
     return { type: 'quarter' as const, lineNumber: row.line_number, label: QUARTER_LABELS[row.quarter_pos] || 'الربع' };
   });
+}
+
+export interface AyahSearchResult {
+  surahNumber: number;
+  ayahNumber: number;
+  textUthmani: string;
+  juzNumber: number;
+  pageNumber: number;
+}
+
+interface AyahSearchRow {
+  id: number;
+  surah_number: number;
+  ayah_number: number;
+  text_uthmani: string;
+  juz_number: number;
+  page_number: number;
+}
+
+interface CachedAyahForSearch {
+  surahNumber: number;
+  ayahNumber: number;
+  textUthmani: string;
+  juzNumber: number;
+  pageNumber: number;
+  normalized: string;
+}
+
+let ayahSearchCache: CachedAyahForSearch[] | null = null;
+
+async function loadAyahSearchCache(): Promise<CachedAyahForSearch[]> {
+  if (ayahSearchCache) return ayahSearchCache;
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<AyahSearchRow>(
+    'SELECT id, surah_number, ayah_number, text_uthmani, juz_number, page_number FROM ayahs ORDER BY surah_number, ayah_number'
+  );
+  ayahSearchCache = rows.map((r) => ({
+    surahNumber: r.surah_number,
+    ayahNumber: r.ayah_number,
+    textUthmani: r.text_uthmani,
+    juzNumber: r.juz_number,
+    pageNumber: r.page_number,
+    normalized: normalizeForSearch(r.text_uthmani),
+  }));
+  return ayahSearchCache;
+}
+
+export async function searchAyahs(query: string, limit?: number): Promise<AyahSearchResult[]> {
+  const needle = normalizeForSearch(query);
+  if (!needle) return [];
+  const cache = await loadAyahSearchCache();
+  const out: AyahSearchResult[] = [];
+  for (const row of cache) {
+    if (row.normalized.includes(needle)) {
+      out.push({
+        surahNumber: row.surahNumber,
+        ayahNumber: row.ayahNumber,
+        textUthmani: row.textUthmani,
+        juzNumber: row.juzNumber,
+        pageNumber: row.pageNumber,
+      });
+      if (limit !== undefined && out.length >= limit) break;
+    }
+  }
+  return out;
+}
+
+/** @internal — for tests to reset the module-level cache between runs. */
+export function __resetAyahSearchCacheForTests(): void {
+  ayahSearchCache = null;
+}
+
+const ayahPreviewCache = new Map<string, string>();
+const PREVIEW_CHAR_LIMIT = 80;
+
+export async function getAyahPreview(surahNumber: number, ayahNumber: number): Promise<string> {
+  const key = `${surahNumber}:${ayahNumber}`;
+  const cached = ayahPreviewCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<{ text_uthmani: string }>(
+    'SELECT text_uthmani FROM ayahs WHERE surah_number = ? AND ayah_number = ? LIMIT 1',
+    [surahNumber, ayahNumber]
+  );
+  const raw = rows[0]?.text_uthmani ?? '';
+  const preview =
+    raw.length <= PREVIEW_CHAR_LIMIT ? raw : `${raw.slice(0, PREVIEW_CHAR_LIMIT)}…`;
+  ayahPreviewCache.set(key, preview);
+  return preview;
+}
+
+/** @internal — for tests to reset the module-level ayah preview cache between runs. */
+export function __resetAyahPreviewCacheForTests(): void {
+  ayahPreviewCache.clear();
 }
