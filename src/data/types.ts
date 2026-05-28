@@ -69,9 +69,12 @@ export interface AyahSelection {
 
 export type AyahActionType = 'play' | 'tafsir' | 'bookmark' | 'copy' | 'share' | 'wordByWord';
 
+export type BookmarkCategory = 'reading' | 'recitation';
+
 export interface Bookmark {
   surahNumber: number;
   ayahNumber: number;
+  category: BookmarkCategory;
   createdAt: number; // Date.now()
 }
 
