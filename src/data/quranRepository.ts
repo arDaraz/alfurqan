@@ -715,6 +715,36 @@ export function __resetAyahSearchCacheForTests(): void {
 const ayahPreviewCache = new Map<string, string>();
 const PREVIEW_CHAR_LIMIT = 80;
 
+// Arabic combining diacritics (tashkeel): U+064B–U+0670 (tanwin/harakat/tatweel range),
+// U+0671 shadda+vowel combos handled via the ranges below, and U+06D6–U+06ED (Quranic
+// annotation marks). The regex covers U+064B–U+0670 and U+06D6–U+06ED.
+const ARABIC_COMBINING_RE = /[ً-ٰۖ-ۭ]/;
+
+/**
+ * Truncates `text` to `limit` UTF-16 code units without leaving an orphaned
+ * Arabic base letter whose combining mark was the first character past the cut.
+ *
+ * Two-pass logic:
+ *  1. Walk the cut point back past any combining marks that fall right AFTER
+ *     position `limit` (i.e. the dropped char is a mark → the last kept char
+ *     would be an orphaned base → step back one more).
+ *  2. Strip any trailing combining marks left inside the trimmed slice (handles
+ *     the case where the cut lands mid-cluster from the other direction).
+ */
+function safeTruncate(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+  let cut = limit;
+  // If the first dropped character is a combining mark, the character just
+  // before cut is its base letter — orphaned. Step back until the char at
+  // `cut` is no longer a combining mark (or we reach the start).
+  while (cut > 0 && ARABIC_COMBINING_RE.test(text[cut])) {
+    cut--;
+  }
+  // Also remove any combining marks that are now trailing inside the slice.
+  const sliced = text.slice(0, cut).replace(/[ً-ٰۖ-ۭ]+$/, '');
+  return `${sliced}…`;
+}
+
 export async function getAyahPreview(surahNumber: number, ayahNumber: number): Promise<string> {
   const key = `${surahNumber}:${ayahNumber}`;
   const cached = ayahPreviewCache.get(key);
@@ -726,8 +756,7 @@ export async function getAyahPreview(surahNumber: number, ayahNumber: number): P
     [surahNumber, ayahNumber]
   );
   const raw = rows[0]?.text_uthmani ?? '';
-  const preview =
-    raw.length <= PREVIEW_CHAR_LIMIT ? raw : `${raw.slice(0, PREVIEW_CHAR_LIMIT)}…`;
+  const preview = safeTruncate(raw, PREVIEW_CHAR_LIMIT);
   ayahPreviewCache.set(key, preview);
   return preview;
 }

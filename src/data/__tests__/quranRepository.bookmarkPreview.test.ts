@@ -42,4 +42,23 @@ describe('getAyahPreview', () => {
     mock.getAllAsync.mockResolvedValueOnce([]);
     await expect(getAyahPreview(99, 99)).resolves.toBe('');
   });
+
+  it('does not orphan an Arabic base letter by stripping its combining mark', async () => {
+    // Construct a string where char[79] is a base letter ('ب') and char[80]
+    // is its fatha combining mark (U+064E). Without the fix, slice(0, 80)
+    // would end on the orphaned 'ب' with its vowel dropped.
+    // Layout: 79 × 'ا' (alef, no mark) + 'بَ' (ba + fatha) + 20 × 'ا' = 101 chars.
+    // slice(0, 80) → 79 alefs + 'ب' (index 79); char[80] = fatha → orphan.
+    // safeTruncate should step back to cut=79, slicing off the orphan base,
+    // so the preview ends with the last alef (index 78) then '…'.
+    const orphan = 'ا'.repeat(79) + 'بَ' + 'ا'.repeat(20);
+    mock.getAllAsync.mockResolvedValueOnce([{ text_uthmani: orphan }]);
+    const preview = await getAyahPreview(5, 5);
+    // The base letter 'ب' must have been dropped (its mark was char[80]).
+    const beforeEllipsis = preview.slice(0, -1); // strip '…'
+    expect(beforeEllipsis.endsWith('ب')).toBe(false);
+    expect(preview.endsWith('…')).toBe(true);
+    // The preview should not exceed the limit + ellipsis length.
+    expect(beforeEllipsis.length).toBeLessThanOrEqual(80);
+  });
 });
