@@ -19,6 +19,7 @@
 - `src/components/bookmarks/__tests__/BookmarksScreen.test.tsx`
 - `src/components/quran/BookmarkCategorySheet.tsx` — bottom-sheet category picker, fires `onCommit({ added, removed })`.
 - `src/components/quran/__tests__/BookmarkCategorySheet.test.tsx`
+- `src/components/quran/__tests__/MushafScreenLayout.bookmarkUndo.test.tsx`
 - `src/stores/__tests__/readingStore.bookmarks.test.ts`
 - `src/data/__tests__/quranRepository.bookmarkPreview.test.ts`
 - `tests/components/home/BrandBar.test.tsx` — bookmark icon button presence, label, navigation.
@@ -36,8 +37,12 @@
 - `src/components/quran/BookmarkSavedSnackbar.tsx` — accept resulting category set and snapshot for full-fidelity undo.
 - `src/components/search/SearchScreen.tsx` — host the same sheet; pass `onRequestBookmark` into `handleAyahAction`.
 - `src/actions/ayahActions.ts` — `bookmark` case calls `callbacks.onRequestBookmark(selection)` (no store mutation here); keeps `setLastRead`.
+- `tests/actions/ayahActions.test.ts` — update bookmark tests for callback-based bookmark requests.
+- `tests/stores/readingStore.test.ts` — update legacy bookmark API tests to include category.
+- `src/stores/__tests__/readingStore.activity.test.ts` — update bookmark setup to include category.
 - `src/constants/strings.ts` — add `bookmarks` namespace + four `savedSubtitle*` factories.
 - `src/components/quran/__tests__/BookmarkSavedSnackbar.test.tsx` — update for category-aware subtitles.
+- `src/components/quran/__tests__/MushafScreenLayout.bookmarkUndo.test.tsx` — focused integration coverage for exact undo restore.
 - `src/components/quran/__tests__/MushafBottomToolbar.test.tsx` — already exists; no schema change to the toolbar, so this test stays as is.
 - `src/components/search/__tests__/SearchScreen.actions.test.tsx` — update: bookmark action opens the sheet rather than toggling directly.
 
@@ -462,15 +467,27 @@ export const useReadingStore = create<ReadingState>()(
 Run: `npm test -- --testPathPattern="readingStore.bookmarks"`
 Expected: PASS.
 
-- [ ] **Step 5: Run the existing store tests to confirm no regression**
+- [ ] **Step 5: Update legacy store tests that still call the old bookmark API**
+
+Update `tests/stores/readingStore.test.ts` and `src/stores/__tests__/readingStore.activity.test.ts` so every `addBookmark`, `removeBookmark`, and `toggleBookmark` call includes an explicit category. Keep the legacy single-bucket intent by using `'reading'` in those tests unless the assertion specifically covers multi-category behavior.
+
+Examples:
+
+```ts
+useReadingStore.getState().addBookmark(2, 255, 'reading');
+useReadingStore.getState().removeBookmark(2, 255, 'reading');
+useReadingStore.getState().toggleBookmark(2, 255, 'reading');
+```
+
+- [ ] **Step 6: Run the existing store tests to confirm no regression**
 
 Run: `npm test -- --testPathPattern="readingStore"`
-Expected: PASS. The streak/activity tests don't touch bookmark API.
+Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/stores/readingStore.ts src/stores/__tests__/readingStore.bookmarks.test.ts
+git add src/stores/readingStore.ts src/stores/__tests__/readingStore.bookmarks.test.ts src/stores/__tests__/readingStore.activity.test.ts tests/stores/readingStore.test.ts
 git commit -m "feat(bookmarks): category-scoped store API with v1 migration"
 ```
 
@@ -1236,12 +1253,39 @@ export async function handleAyahAction(
 - [ ] **Step 2: Run typecheck**
 
 Run: `npx tsc --noEmit`
-Expected: remaining errors are in MushafReader/MushafScreenLayout/SearchScreen (existing direct `toggleBookmark(...)` / 2-arg calls). Fixed in later tasks.
+Expected: any failures should be limited to later wiring tasks and tests that still use the old store/action contracts.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Update the existing action tests for the callback contract**
+
+In `tests/actions/ayahActions.test.ts`, replace the old assertion that `handleAyahAction('bookmark', selection)` directly mutates `bookmarks`. The new behavior is:
+- it calls `setLastRead` for the selected ayah, preserving streak/last-read behavior;
+- it invokes `callbacks.onRequestBookmark(selection)` when provided;
+- it does not mutate `bookmarks` directly.
+
+Use assertions like:
+
+```ts
+const onRequestBookmark = jest.fn();
+await handleAyahAction('bookmark', mockSelection, { onRequestBookmark });
+
+expect(onRequestBookmark).toHaveBeenCalledWith(mockSelection);
+expect(useReadingStore.getState().bookmarks).toEqual([]);
+```
+
+- [ ] **Step 4: Run the action tests**
+
+Run: `npm test -- --testPathPattern="ayahActions"`
+Expected: PASS.
+
+- [ ] **Step 5: Run typecheck**
+
+Run: `npx tsc --noEmit`
+Expected: remaining errors are in MushafReader/MushafScreenLayout/SearchScreen where the new category-scoped API and bookmark sheet wiring are not complete yet. Fixed in later tasks.
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/actions/ayahActions.ts
+git add src/actions/ayahActions.ts tests/actions/ayahActions.test.ts
 git commit -m "feat(bookmarks): route bookmark action through onRequestBookmark callback"
 ```
 
@@ -1574,14 +1618,15 @@ jest.mock('../../home/PillTabs', () => {
   };
 });
 
-// Swipeable renders its right-action inline so tests can press the delete.
+// Swipeable renders either action side inline so tests can press the delete.
 jest.mock('react-native-gesture-handler', () => {
   const React = require('react');
   const { View, Pressable } = require('react-native');
   return {
-    Swipeable: ({ children, renderRightActions }: any) => (
+    Swipeable: ({ children, renderLeftActions, renderRightActions }: any) => (
       <View>
         {children}
+        {renderLeftActions ? renderLeftActions() : null}
         {renderRightActions ? renderRightActions() : null}
       </View>
     ),
@@ -1674,7 +1719,7 @@ Expected: FAIL — components missing.
 ```tsx
 // src/components/bookmarks/BookmarkRow.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
@@ -1722,7 +1767,7 @@ export function BookmarkRow({
   const ayahLabel = isArabic ? toArabicIndic(ayahNumber) : ayahNumber;
   const pageLabel = isArabic ? toArabicIndic(pageNumber) : pageNumber;
 
-  const renderRightActions = () => (
+  const renderDeleteAction = () => (
     <RectButton
       accessibilityLabel={`delete-${surahNumber}-${ayahNumber}`}
       onPress={onDelete}
@@ -1732,8 +1777,12 @@ export function BookmarkRow({
     </RectButton>
   );
 
+  const actionProps = I18nManager.isRTL
+    ? { renderLeftActions: renderDeleteAction, overshootLeft: false }
+    : { renderRightActions: renderDeleteAction, overshootRight: false };
+
   return (
-    <Swipeable renderRightActions={renderRightActions} overshootRight={false}>
+    <Swipeable {...actionProps}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`bookmark-row-${surahNumber}-${ayahNumber}`}
@@ -1840,35 +1889,43 @@ export function BookmarksScreen() {
   const removeBookmark = useReadingStore((s) => s.removeBookmark);
 
   const [activeTab, setActiveTab] = useState<BookmarkCategory>('reading');
-  const [hydrated, setHydrated] = useState<Record<string, { surahName: string; page: number }>>({});
+  const [hydrated, setHydrated] = useState<
+    Record<string, { nameArabic: string; nameEnglish: string; page: number }>
+  >({});
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const next: Record<string, { surahName: string; page: number }> = { ...hydrated };
+      const missing = bookmarks.filter((b) => !hydrated[`${b.surahNumber}:${b.ayahNumber}`]);
+      if (missing.length === 0) return;
+
+      const additions: Record<string, { nameArabic: string; nameEnglish: string; page: number }> = {};
       for (const b of bookmarks) {
         const key = `${b.surahNumber}:${b.ayahNumber}`;
-        if (next[key]) continue;
+        if (hydrated[key] || additions[key]) continue;
         try {
           const [{ page }, surah] = await Promise.all([
             getJuzAndPageForAyah(b.surahNumber, b.ayahNumber),
             getSurahByNumber(b.surahNumber),
           ]);
           if (cancelled) return;
-          next[key] = {
-            surahName: isArabic ? surah?.nameArabic ?? '' : surah?.nameEnglish ?? '',
+          additions[key] = {
+            nameArabic: surah?.nameArabic ?? '',
+            nameEnglish: surah?.nameEnglish ?? '',
             page,
           };
         } catch {
           /* non-critical */
         }
       }
-      if (!cancelled) setHydrated(next);
+      if (!cancelled && Object.keys(additions).length > 0) {
+        setHydrated((prev) => ({ ...prev, ...additions }));
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [bookmarks, isArabic]);
+  }, [bookmarks, hydrated]);
 
   const filtered: RowData[] = useMemo(() => {
     return bookmarks
@@ -1879,11 +1936,11 @@ export function BookmarksScreen() {
         const h = hydrated[key];
         return {
           ...b,
-          surahName: h?.surahName ?? String(b.surahNumber),
+          surahName: h ? (isArabic ? h.nameArabic : h.nameEnglish) : String(b.surahNumber),
           pageNumber: h?.page ?? 1,
         };
       });
-  }, [bookmarks, activeTab, hydrated]);
+  }, [bookmarks, activeTab, hydrated, isArabic]);
 
   const countReading = bookmarks.filter((b) => b.category === 'reading').length;
   const countRecitation = bookmarks.filter((b) => b.category === 'recitation').length;
@@ -2040,10 +2097,27 @@ git commit -m "feat(bookmarks): add BookmarksScreen with pill tabs and swipe del
 ## Task 11: Wire `MushafScreenLayout` to host the sheet and snackbar
 
 **Files:**
+- Test: `src/components/quran/__tests__/MushafScreenLayout.bookmarkUndo.test.tsx` (new)
 - Modify: `src/components/quran/MushafScreenLayout.tsx`
 - Modify: `src/components/quran/MushafReader.tsx`
 
-- [ ] **Step 1: Update `MushafScreenLayout.tsx` to host the sheet + snackbar**
+- [ ] **Step 1: Add focused undo-restore coverage**
+
+Create `src/components/quran/__tests__/MushafScreenLayout.bookmarkUndo.test.tsx`. Mock `MushafReader` so the test can trigger `onAyahAction('bookmark', selection)` without WebView/PagerView, mock `BookmarkCategorySheet` so it can emit specific `BookmarkCommit` payloads, and mock `BookmarkSavedSnackbar` with a pressable Undo button.
+
+Cover at least these exact restore cases:
+- Reading -> Recitation, then Undo restores only Reading.
+- Both -> Reading, then Undo restores Reading and Recitation.
+- Both -> Removed, then Undo restores Reading and Recitation.
+
+The assertions should inspect `useReadingStore.getState().bookmarks`, not just whether the snackbar rendered. This protects the real undo algorithm in `MushafScreenLayout`, not merely the sheet diff helper.
+
+- [ ] **Step 2: Run the undo test — confirm it fails before the layout is wired**
+
+Run: `npm test -- --testPathPattern="MushafScreenLayout.bookmarkUndo"`
+Expected: FAIL — `MushafScreenLayout` does not host the sheet/snackbar yet.
+
+- [ ] **Step 3: Update `MushafScreenLayout.tsx` to host the sheet + snackbar**
 
 Replace `src/components/quran/MushafScreenLayout.tsx` with:
 
@@ -2275,7 +2349,7 @@ function createStyles(colors: ReaderColors) {
 }
 ```
 
-- [ ] **Step 2: Slim `MushafReader.tsx` — remove inline bookmark mutation, snackbar, and add the new prop**
+- [ ] **Step 4: Slim `MushafReader.tsx` — remove inline bookmark mutation, snackbar, and add the new prop**
 
 Replace `src/components/quran/MushafReader.tsx` with:
 
@@ -2540,30 +2614,30 @@ function createStyles(colors: ReaderColors) {
 }
 ```
 
-- [ ] **Step 3: Run typecheck**
+- [ ] **Step 5: Run typecheck**
 
 Run: `npx tsc --noEmit`
-Expected: PASS for reader-related files; SearchScreen still has the 2-arg `handleAyahAction` call — fixed in Task 12.
+Expected: PASS for reader-related files. SearchScreen still needs behavioral rewiring in Task 12, but the third `handleAyahAction` argument is optional so TypeScript may not flag it.
 
-- [ ] **Step 4: Run the surah-resume integration test**
+- [ ] **Step 6: Run the undo and surah-resume integration tests**
 
-Run: `npm test -- --testPathPattern="surahResume"`
-Expected: PASS. The test mocks `MushafScreenLayout`, so internal restructure doesn't affect it.
+Run: `npm test -- --testPathPattern="MushafScreenLayout.bookmarkUndo|surahResume"`
+Expected: PASS. The surah-resume test mocks `MushafScreenLayout`, so internal restructure should not affect it.
 
-- [ ] **Step 5: Run the bottom-toolbar test**
+- [ ] **Step 7: Run the bottom-toolbar test**
 
 Run: `npm test -- --testPathPattern="MushafBottomToolbar"`
 Expected: PASS. The toolbar props are unchanged.
 
-- [ ] **Step 6: Run the MushafReader toolbar test**
+- [ ] **Step 8: Run the MushafReader toolbar test**
 
 Run: `npm test -- --testPathPattern="MushafReader.toolbar"`
 Expected: PASS. The existing test mocks `MushafBottomToolbar` and `BookmarkSavedSnackbar`, so it never touches the bookmark code path; removing the snackbar import from `MushafReader.tsx` leaves the `jest.mock('../BookmarkSavedSnackbar', ...)` line unused but harmless. If the test fails because the snackbar mock is referenced as "unused" (it won't — Jest accepts unused mocks), remove that mock line.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add src/components/quran/MushafScreenLayout.tsx src/components/quran/MushafReader.tsx
+git add src/components/quran/MushafScreenLayout.tsx src/components/quran/MushafReader.tsx src/components/quran/__tests__/MushafScreenLayout.bookmarkUndo.test.tsx
 git commit -m "feat(bookmarks): host category sheet + snackbar in MushafScreenLayout"
 ```
 
@@ -2613,12 +2687,14 @@ jest.mock('../../../stores/readingStore', () => ({
   useReadingStore: Object.assign(
     (selector: (s: unknown) => unknown) =>
       selector({
+        bookmarks: [],
         addBookmark: mockAddBookmark,
         removeBookmark: mockRemoveBookmark,
         getBookmarkCategories: mockGetBookmarkCategories,
       }),
     {
       getState: () => ({
+        bookmarks: [],
         addBookmark: mockAddBookmark,
         removeBookmark: mockRemoveBookmark,
         getBookmarkCategories: mockGetBookmarkCategories,
@@ -2846,7 +2922,7 @@ This is a native mobile app — UI verification must happen on the simulator (se
 6. Repeat with Recitation. Open the bookmark sheet for a third time — both chips checked.
 7. Press Undo on the snackbar after a save — bookmark state restores exactly.
 8. Open `/bookmarks`. Switch tabs; both rows visible. Tap a row — opens the mushaf at the correct page.
-9. Swipe a row trailing edge → Delete reveals → tap. Row removed from the active tab only; the other category retains the same ayah.
+9. Swipe a row from the physical trailing edge for the current language (Arabic RTL: physical left; English LTR: physical right) → Delete reveals → tap. Row removed from the active tab only; the other category retains the same ayah.
 10. Repeat steps 8-9 from the Search tab (find an ayah, tap the bookmark icon, complete the flow).
 
 Capture a screenshot at each major step:
