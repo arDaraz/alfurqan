@@ -38,6 +38,12 @@ interface ReadingState {
   addBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
   removeBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
   toggleBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
+  /**
+   * Returns a fresh array on every call. Safe to read via `useReadingStore.getState()`
+   * or inside `useMemo`. Do NOT subscribe via `useReadingStore((s) => s.getBookmarkCategories(...))`
+   * — the new array reference will trigger re-renders on every unrelated store update.
+   * Subscribe to `bookmarks` and call this getter inline if you need reactivity.
+   */
   getBookmarkCategories: (surah: number, ayah: number) => BookmarkCategory[];
 }
 
@@ -62,9 +68,10 @@ function nextStreak(previousDays: number, previousDate: string | null, today: st
 export function migrate(state: any, version: number): any {
   if (!state || typeof state !== 'object') return state;
   if (version < 1 && Array.isArray(state.bookmarks)) {
-    state.bookmarks = state.bookmarks.map((b: any) =>
+    const bookmarks = state.bookmarks.map((b: any) =>
       b && typeof b === 'object' && !b.category ? { ...b, category: 'reading' } : b
     );
+    return { ...state, bookmarks };
   }
   return state;
 }

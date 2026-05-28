@@ -105,4 +105,35 @@ describe('readingStore bookmarks', () => {
     expect(migrated.bookmarks).toHaveLength(2);
     expect(migrated.bookmarks.every((b) => b.category === 'reading')).toBe(true);
   });
+
+  it('migrate is a no-op for v1+ state', () => {
+    const { migrate } = require('../readingStore') as {
+      migrate: (state: any, version: number) => any;
+    };
+    const state = {
+      bookmarks: [{ surahNumber: 2, ayahNumber: 255, category: 'reading', createdAt: 1 }],
+    };
+    expect(migrate(state, 1)).toEqual(state);
+  });
+
+  it('migrate handles null/empty state without crashing', () => {
+    const { migrate } = require('../readingStore') as {
+      migrate: (state: any, version: number) => any;
+    };
+    expect(migrate(null, 0)).toBeNull();
+    expect(migrate({}, 0)).toEqual({});
+    expect(migrate({ bookmarks: null }, 0)).toEqual({ bookmarks: null });
+  });
+
+  it('migrate does not mutate its input', () => {
+    const { migrate } = require('../readingStore') as {
+      migrate: (state: any, version: number) => any;
+    };
+    const legacy = {
+      bookmarks: [{ surahNumber: 2, ayahNumber: 255, createdAt: 1 }],
+    };
+    const before = JSON.parse(JSON.stringify(legacy));
+    migrate(legacy, 0);
+    expect(legacy).toEqual(before);
+  });
 });
