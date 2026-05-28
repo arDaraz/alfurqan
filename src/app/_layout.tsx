@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { I18nManager } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../../global.css';
 import { useTheme, useResolvedThemeMode } from '../hooks/useTheme';
 import { useReadingStore } from '../stores/readingStore';
@@ -78,30 +79,32 @@ export default function RootLayout() {
   // Redirect first-time users to onboarding
   if (!hasCompletedOnboarding) {
     return (
-      <>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack screenOptions={stackScreenOptions}>
           <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="surah/[id]" />
           <Stack.Screen name="juz/[id]" />
           <Stack.Screen name="practice" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="bookmarks" />
         </Stack>
         <Redirect href="/onboarding" />
         <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
-      </>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={stackScreenOptions}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="surah/[id]" />
         <Stack.Screen name="juz/[id]" />
         <Stack.Screen name="practice" options={{ presentation: 'modal' }} />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="bookmarks" />
       </Stack>
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
-    </>
+    </GestureHandlerRootView>
   );
 }
