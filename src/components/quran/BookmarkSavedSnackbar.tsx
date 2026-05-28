@@ -7,6 +7,7 @@ import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
 import type { Theme } from '../../constants/theme';
+import type { BookmarkCategory } from '../../data/types';
 
 const VISIBLE_MS = 3500;
 
@@ -14,6 +15,7 @@ interface BookmarkSavedSnackbarProps {
   surahName: string;
   pageNumber: number;
   juzNumber: number;
+  resultingCategories: BookmarkCategory[];
   onUndo: () => void;
   onDismiss: () => void;
 }
@@ -22,6 +24,7 @@ export function BookmarkSavedSnackbar({
   surahName,
   pageNumber,
   juzNumber,
+  resultingCategories,
   onUndo,
   onDismiss,
 }: BookmarkSavedSnackbarProps) {
@@ -33,10 +36,24 @@ export function BookmarkSavedSnackbar({
   useEffect(() => {
     const timer = setTimeout(onDismiss, VISIBLE_MS);
     return () => clearTimeout(timer);
-  }, [onDismiss, surahName, pageNumber, juzNumber]);
+  }, [onDismiss, surahName, pageNumber, juzNumber, resultingCategories.join('|')]);
 
   const pageText = isArabic ? toArabicIndic(pageNumber) : pageNumber;
   const juzText = isArabic ? toArabicIndic(juzNumber) : juzNumber;
+
+  const hasReading = resultingCategories.includes('reading');
+  const hasRecitation = resultingCategories.includes('recitation');
+
+  let subtitle: string;
+  if (hasReading && hasRecitation) {
+    subtitle = strings.bookmark.savedSubtitleBoth(surahName, pageText, juzText);
+  } else if (hasReading) {
+    subtitle = strings.bookmark.savedSubtitleReading(surahName, pageText, juzText);
+  } else if (hasRecitation) {
+    subtitle = strings.bookmark.savedSubtitleRecitation(surahName, pageText, juzText);
+  } else {
+    subtitle = strings.bookmark.savedSubtitleRemoved(surahName, pageText, juzText);
+  }
 
   return (
     <Animated.View
@@ -59,7 +76,7 @@ export function BookmarkSavedSnackbar({
           {strings.bookmark.savedTitle}
         </Text>
         <Text style={styles.subtitle} numberOfLines={1}>
-          {strings.bookmark.savedSubtitle(surahName, pageText, juzText)}
+          {subtitle}
         </Text>
       </View>
 
@@ -82,7 +99,7 @@ function createStyles(theme: Theme) {
       position: 'absolute',
       left: theme.spacing.md,
       right: theme.spacing.md,
-      bottom: 70, // toolbar height (58) + marginBottom (4) + gap (8)
+      bottom: 70,
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: 10,
@@ -104,16 +121,13 @@ function createStyles(theme: Theme) {
       width: 52,
       height: 52,
       borderRadius: 12,
-      backgroundColor: theme.palette.gold[300] + '33', // ~20% gold tint
+      backgroundColor: theme.palette.gold[300] + '33',
       borderWidth: 1,
       borderColor: theme.palette.gold[300] + '88',
       alignItems: 'center',
       justifyContent: 'center',
     },
-    textColumn: {
-      flex: 1,
-      gap: 3,
-    },
+    textColumn: { flex: 1, gap: 3 },
     title: {
       fontFamily: theme.fonts.arabic,
       fontSize: 15,
@@ -129,17 +143,8 @@ function createStyles(theme: Theme) {
       textAlign: 'left',
       writingDirection: 'rtl',
     },
-    undoBtn: {
-      paddingVertical: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
-    },
-    undoBtnPressed: {
-      opacity: 0.55,
-    },
-    undoText: {
-      fontFamily: theme.fonts.arabic,
-      fontSize: 14,
-      color: theme.semantic.fgMuted,
-    },
+    undoBtn: { paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.xs },
+    undoBtnPressed: { opacity: 0.55 },
+    undoText: { fontFamily: theme.fonts.arabic, fontSize: 14, color: theme.semantic.fgMuted },
   });
 }

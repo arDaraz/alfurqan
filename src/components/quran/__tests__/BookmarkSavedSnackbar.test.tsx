@@ -31,66 +31,43 @@ jest.mock('react-native-reanimated', () => {
 });
 
 import React from 'react';
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import { BookmarkSavedSnackbar } from '../BookmarkSavedSnackbar';
 
 describe('BookmarkSavedSnackbar', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
+  const baseProps = {
+    surahName: 'البقرة',
+    pageNumber: 42,
+    juzNumber: 3,
+    onUndo: jest.fn(),
+    onDismiss: jest.fn(),
+  };
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('renders the saved title, surah/page/juz subtitle, and undo button', () => {
+  it('renders the reading-only subtitle', () => {
     const { getByText } = render(
-      <BookmarkSavedSnackbar
-        surahName="الفاتحة"
-        pageNumber={1}
-        juzNumber={1}
-        onUndo={jest.fn()}
-        onDismiss={jest.fn()}
-      />
+      <BookmarkSavedSnackbar {...baseProps} resultingCategories={['reading']} />
     );
-
-    expect(getByText('تم حفظ الصفحة')).toBeTruthy();
-    expect(getByText('الفاتحة · صفحة ١ · جزء ١')).toBeTruthy();
-    expect(getByText('تراجع')).toBeTruthy();
+    expect(getByText(/للقراءة$/)).toBeTruthy();
   });
 
-  it('invokes onUndo when "تراجع" is pressed', () => {
-    const onUndo = jest.fn();
-    const { getByLabelText } = render(
-      <BookmarkSavedSnackbar
-        surahName="الفاتحة"
-        pageNumber={1}
-        juzNumber={1}
-        onUndo={onUndo}
-        onDismiss={jest.fn()}
-      />
+  it('renders the recitation-only subtitle', () => {
+    const { getByText } = render(
+      <BookmarkSavedSnackbar {...baseProps} resultingCategories={['recitation']} />
     );
-
-    fireEvent.press(getByLabelText('تراجع'));
-    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(getByText(/للتلاوة$/)).toBeTruthy();
   });
 
-  it('auto-dismisses after the visible window elapses', () => {
-    const onDismiss = jest.fn();
-    render(
-      <BookmarkSavedSnackbar
-        surahName="الفاتحة"
-        pageNumber={1}
-        juzNumber={1}
-        onUndo={jest.fn()}
-        onDismiss={onDismiss}
-      />
+  it('renders the both-categories subtitle', () => {
+    const { getByText } = render(
+      <BookmarkSavedSnackbar {...baseProps} resultingCategories={['reading', 'recitation']} />
     );
+    expect(getByText(/للقراءة والتلاوة$/)).toBeTruthy();
+  });
 
-    expect(onDismiss).not.toHaveBeenCalled();
-    act(() => {
-      jest.advanceTimersByTime(3500);
-    });
-    expect(onDismiss).toHaveBeenCalledTimes(1);
+  it('renders the removed subtitle when categories is empty', () => {
+    const { getByText } = render(
+      <BookmarkSavedSnackbar {...baseProps} resultingCategories={[]} />
+    );
+    expect(getByText(/تم الحذف$/)).toBeTruthy();
   });
 });

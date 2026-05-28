@@ -260,6 +260,7 @@ export function MushafReader({ initialPage, onPageChange, onAyahAction }: Mushaf
           surahName={lastSaved.surahName}
           pageNumber={lastSaved.page}
           juzNumber={lastSaved.juz}
+          resultingCategories={[]}
           onUndo={handleUndoBookmark}
           onDismiss={handleDismissSnackbar}
         />
