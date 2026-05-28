@@ -11,7 +11,7 @@ jest.mock('react-native-reanimated', () => {
   const React = require('react');
   const { View } = require('react-native');
   const Animated = {
-    View: React.forwardRef((props: any, ref: any) => <View ref={ref} {...props} />),
+    View: (props: any) => <View {...props} />,
   };
   const passthrough = { duration: () => passthrough };
   return {
