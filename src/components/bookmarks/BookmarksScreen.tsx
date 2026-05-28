@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,16 +34,23 @@ export function BookmarksScreen() {
     Record<string, { nameArabic: string; nameEnglish: string; page: number }>
   >({});
 
+  const hydratedRef = useRef<typeof hydrated>(hydrated);
+  useEffect(() => {
+    hydratedRef.current = hydrated;
+  }, [hydrated]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const missing = bookmarks.filter((b) => !hydrated[`${b.surahNumber}:${b.ayahNumber}`]);
+      const missing = bookmarks.filter(
+        (b) => !hydratedRef.current[`${b.surahNumber}:${b.ayahNumber}`]
+      );
       if (missing.length === 0) return;
 
       const additions: Record<string, { nameArabic: string; nameEnglish: string; page: number }> = {};
       for (const b of bookmarks) {
         const key = `${b.surahNumber}:${b.ayahNumber}`;
-        if (hydrated[key] || additions[key]) continue;
+        if (hydratedRef.current[key] || additions[key]) continue;
         try {
           const [{ page }, surah] = await Promise.all([
             getJuzAndPageForAyah(b.surahNumber, b.ayahNumber),
@@ -66,7 +73,7 @@ export function BookmarksScreen() {
     return () => {
       cancelled = true;
     };
-  }, [bookmarks, hydrated]);
+  }, [bookmarks]);
 
   const filtered: RowData[] = useMemo(() => {
     return bookmarks
@@ -85,18 +92,19 @@ export function BookmarksScreen() {
 
   const countReading = bookmarks.filter((b) => b.category === 'reading').length;
   const countRecitation = bookmarks.filter((b) => b.category === 'recitation').length;
-  const fmtCount = (n: number) => (isArabic ? toArabicIndic(n) : String(n));
 
   const tabs = useMemo(
     () =>
       [
-        { id: 'reading' as const, label: `${strings.bookmarks.tabReading} ${fmtCount(countReading)}` },
+        {
+          id: 'reading' as const,
+          label: `${strings.bookmarks.tabReading} ${isArabic ? toArabicIndic(countReading) : String(countReading)}`,
+        },
         {
           id: 'recitation' as const,
-          label: `${strings.bookmarks.tabRecitation} ${fmtCount(countRecitation)}`,
+          label: `${strings.bookmarks.tabRecitation} ${isArabic ? toArabicIndic(countRecitation) : String(countRecitation)}`,
         },
       ] as const,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [strings, countReading, countRecitation, isArabic]
   );
 
