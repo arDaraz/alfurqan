@@ -85,31 +85,34 @@ describe('handleAyahAction', () => {
   });
 
   describe('bookmark action', () => {
-    it('calls toggleBookmark on readingStore', async () => {
-      await handleAyahAction('bookmark', mockSelection);
-
-      // Verify bookmark was toggled by checking store state
-      const state = useReadingStore.getState();
-      expect(state.bookmarks).toHaveLength(1);
-      expect(state.bookmarks[0].surahNumber).toBe(1);
-      expect(state.bookmarks[0].ayahNumber).toBe(1);
+    it('invokes onRequestBookmark with the selection', async () => {
+      const onRequestBookmark = jest.fn();
+      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark });
+      expect(onRequestBookmark).toHaveBeenCalledTimes(1);
+      expect(onRequestBookmark).toHaveBeenCalledWith(mockSelection);
     });
 
-    it('marks the selected ayah as the exact reading cursor', async () => {
-      await handleAyahAction('bookmark', {
-        startSurah: 3,
-        startAyah: 10,
-        endSurah: 3,
-        endAyah: 10,
-      });
+    it('updates last-read position via setLastRead even on bookmark', async () => {
+      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark: jest.fn() });
+      const state = useReadingStore.getState();
+      expect(state.lastReadSurah).toBe(mockSelection.startSurah);
+      expect(state.lastReadAyah).toBe(mockSelection.startAyah);
+      expect(state.lastReadJuz).toBe(3);
+      expect(state.lastReadPage).toBe(51);
+    });
 
-      expect(getJuzAndPageForAyah).toHaveBeenCalledWith(3, 10);
-      expect(useReadingStore.getState()).toMatchObject({
-        lastReadSurah: 3,
-        lastReadAyah: 10,
-        lastReadJuz: 3,
-        lastReadPage: 51,
-      });
+    it('does not mutate bookmarks directly', async () => {
+      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark: jest.fn() });
+      expect(useReadingStore.getState().bookmarks).toEqual([]);
+    });
+
+    it('logs a warning when called without onRequestBookmark', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      await handleAyahAction('bookmark', mockSelection);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('handleAyahAction'),
+      );
+      warnSpy.mockRestore();
     });
   });
 

@@ -5,9 +5,19 @@ import { useReadingStore } from '../stores/readingStore';
 import { recitationEngine } from '../services/recitationEngine';
 import type { AyahActionType, AyahSelection } from '../data/types';
 
+export interface AyahActionCallbacks {
+  /**
+   * Invoked when the user requests a bookmark. The host should open the
+   * category-picker sheet. If absent, the bookmark request is a no-op (a
+   * warning is logged).
+   */
+  onRequestBookmark?: (selection: AyahSelection) => void;
+}
+
 export async function handleAyahAction(
   action: AyahActionType,
-  selection: AyahSelection
+  selection: AyahSelection,
+  callbacks?: AyahActionCallbacks
 ): Promise<void> {
   const { startSurah, startAyah, endSurah, endAyah } = selection;
 
@@ -24,9 +34,12 @@ export async function handleAyahAction(
     }
     case 'bookmark': {
       const { juz, page } = await getJuzAndPageForAyah(startSurah, startAyah);
-      const store = useReadingStore.getState();
-      store.toggleBookmark(startSurah, startAyah, 'reading');
-      store.setLastRead(startSurah, startAyah, juz, page);
+      useReadingStore.getState().setLastRead(startSurah, startAyah, juz, page);
+      if (callbacks?.onRequestBookmark) {
+        callbacks.onRequestBookmark(selection);
+      } else {
+        console.warn('handleAyahAction: bookmark request without onRequestBookmark callback');
+      }
       break;
     }
     case 'play': {
