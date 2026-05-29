@@ -49,3 +49,6 @@ app-example
 
 # Claude Code local tooling
 .claude/worktrees/
+
+# mobile-verify simulator proofs
+.claude/mobile-verify/
