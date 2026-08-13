@@ -745,8 +745,12 @@ function safeTruncate(text: string, limit: number): string {
   return `${sliced}…`;
 }
 
-export async function getAyahPreview(surahNumber: number, ayahNumber: number): Promise<string> {
-  const key = `${surahNumber}:${ayahNumber}`;
+export async function getAyahPreview(
+  surahNumber: number,
+  ayahNumber: number,
+  charLimit: number = PREVIEW_CHAR_LIMIT
+): Promise<string> {
+  const key = `${surahNumber}:${ayahNumber}:${charLimit}`;
   const cached = ayahPreviewCache.get(key);
   if (cached !== undefined) return cached;
 
@@ -756,7 +760,7 @@ export async function getAyahPreview(surahNumber: number, ayahNumber: number): P
     [surahNumber, ayahNumber]
   );
   const raw = rows[0]?.text_uthmani ?? '';
-  const preview = safeTruncate(raw, PREVIEW_CHAR_LIMIT);
+  const preview = safeTruncate(raw, charLimit);
   ayahPreviewCache.set(key, preview);
   return preview;
 }

@@ -1,0 +1,80 @@
+<h2>Where exactly is the bookmark button next to Search?</h2>
+<p class="subtitle">Both options put it adjacent to the Search tab. Pick the one you meant.</p>
+
+<style>
+  .tabbar {
+    background: #fffaf2;
+    border: 1px solid #e6dccb;
+    border-radius: 12px;
+    padding: 10px 8px 18px;
+    margin-top: 8px;
+    display: grid;
+    align-items: center;
+    position: relative;
+    direction: rtl;
+  }
+  .tabbar.five { grid-template-columns: 1fr 1fr 72px 1fr 1fr; }
+  .tabbar.six  { grid-template-columns: 1fr 1fr 1fr 72px 1fr 1fr; }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-family: ui-sans-serif, system-ui;
+    font-size: 10px; letter-spacing: 1px; font-weight: 700;
+    color: #8a7e6a;
+  }
+  .tab.active { color: #1f6b5e; }
+  .tab.new    { color: #b88a2c; }
+  .tab .ico {
+    width: 22px; height: 22px; border-radius: 4px;
+    border: 1.75px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .fab-slot { display: flex; justify-content: center; }
+  .fab {
+    width: 54px; height: 54px; border-radius: 27px;
+    background: #1f6b5e; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: -22px; border: 3px solid #fffaf2;
+    box-shadow: 0 8px 20px -6px rgba(31,107,94,.45);
+    font-size: 18px;
+  }
+  .legend { font-family: ui-sans-serif, system-ui; font-size: 12px; color: #6b5f4d; margin-top: 4px; }
+  .note { font-family: ui-sans-serif, system-ui; font-size: 11px; color: #8a7e6a; margin-top: 6px; }
+</style>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Replace a tab (5 slots, unchanged)</h3>
+      <p class="legend">Bookmarks takes Review's slot, sitting right of Search. Tab bar count stays at 4 + FAB.</p>
+      <div class="tabbar five">
+        <div class="tab"><div class="ico">⌂</div>HOME</div>
+        <div class="tab active"><div class="ico">⌕</div>SEARCH</div>
+        <div class="fab-slot"><div class="fab">●</div></div>
+        <div class="tab new"><div class="ico">♥</div>BOOKMARKS</div>
+        <div class="tab"><div class="ico">☺</div>PROFILE</div>
+      </div>
+      <p class="note">Replaces Review tab. Bookmarks ends up symmetrically opposite Search (RTL: right of FAB).</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Add a 6th slot (Search and Bookmarks adjacent)</h3>
+      <p class="legend">Squeeze a Bookmarks tab in directly beside Search on the same side of the FAB.</p>
+      <div class="tabbar six">
+        <div class="tab"><div class="ico">⌂</div>HOME</div>
+        <div class="tab active"><div class="ico">⌕</div>SEARCH</div>
+        <div class="tab new"><div class="ico">♥</div>BOOKMARKS</div>
+        <div class="fab-slot"><div class="fab">●</div></div>
+        <div class="tab"><div class="ico">○</div>REVIEW</div>
+        <div class="tab"><div class="ico">☺</div>PROFILE</div>
+      </div>
+      <p class="note">Keeps Review &amp; Profile. Tabs become narrower; labels still fit but tighter.</p>
+    </div>
+  </div>
+
+</div>

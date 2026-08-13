@@ -10,7 +10,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="search" />
-      <Tabs.Screen name="review" />
+      <Tabs.Screen name="bookmarks" />
       <Tabs.Screen name="settings" />
     </Tabs>
   );

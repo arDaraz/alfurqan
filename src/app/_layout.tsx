@@ -86,7 +86,6 @@ export default function RootLayout() {
           <Stack.Screen name="surah/[id]" />
           <Stack.Screen name="juz/[id]" />
           <Stack.Screen name="practice" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="bookmarks" />
         </Stack>
         <Redirect href="/onboarding" />
         <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
@@ -102,7 +101,6 @@ export default function RootLayout() {
         <Stack.Screen name="juz/[id]" />
         <Stack.Screen name="practice" options={{ presentation: 'modal' }} />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-        <Stack.Screen name="bookmarks" />
       </Stack>
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
     </GestureHandlerRootView>

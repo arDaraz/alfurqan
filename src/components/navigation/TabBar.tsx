@@ -62,7 +62,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         {renderTab('index', strings.tabHome, IconHome)}
         {renderTab('search', strings.tabSearch, IconSearch)}
         <View style={styles.fabSlot} />
-        {renderTab('review', strings.tabReview, IconReview)}
+        {renderTab('bookmarks', strings.tabBookmarks, IconBookmark)}
         {renderTab('settings', strings.tabProfile, IconProfile)}
       </View>
       <View style={styles.fabFloat} pointerEvents="box-none">
@@ -110,11 +110,15 @@ function IconSearch({ color, size }: { color: string; size: number }) {
   );
 }
 
-function IconReview({ color, size }: { color: string; size: number }) {
+function IconBookmark({ color, size }: { color: string; size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 8v4l3 2" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
-      <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={1.75} />
+      <Path
+        d="M6 4h12v17l-6-4-6 4z"
+        stroke={color}
+        strokeWidth={1.75}
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }

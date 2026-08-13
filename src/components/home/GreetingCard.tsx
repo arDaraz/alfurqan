@@ -12,7 +12,6 @@ import { useStrings } from "../../constants/strings";
 import { useTheme } from "../../hooks/useTheme";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { toArabicIndic } from "../../utils/arabic";
-import { formatRelativeTime } from "../../utils/formatRelativeTime";
 
 type ContinueProps = {
   variant: "continue";
@@ -20,7 +19,6 @@ type ContinueProps = {
   ayahNumber: number;
   juzNumber: number;
   pageNumber: number;
-  lastReadAt: number;
   onResume: () => void;
 };
 
@@ -31,10 +29,6 @@ type ColdStartProps = {
 
 type Props = ContinueProps | ColdStartProps;
 
-/**
- * Greeting / "continue reading" card. Gradient teal with a soft gold radial
- * highlight, featuring the user's last position and a resume CTA.
- */
 export function GreetingCard(props: Props) {
   const theme = useTheme();
   const strings = useStrings();
@@ -57,44 +51,18 @@ export function GreetingCard(props: Props) {
         <CardGlow theme={theme} styles={styles} />
         <Text style={styles.label}>{strings.greetingContinueLabel}</Text>
         <Text style={styles.title}>{strings.greetingBeginPrompt}</Text>
-        <View style={styles.cta}>
-          <Pressable
+        <View style={styles.ctaRow}>
+          <ResumeButton
+            theme={theme}
+            styles={styles}
+            isArabic={isArabic}
+            label={strings.greetingStart}
             onPress={props.onStart}
-            accessibilityRole="button"
-            accessibilityLabel={strings.greetingStart}
-          >
-            {({ pressed }) => (
-              <View style={[styles.btn, pressed && styles.btnPressed]}>
-                <Svg
-                  width={12}
-                  height={12}
-                  viewBox="0 0 24 24"
-                  fill={theme.semantic.fgOnGold}
-                >
-                  <Path d={isArabic ? "M16 5v14L5 12z" : "M8 5v14l11-7z"} />
-                </Svg>
-                <Text style={styles.btnText}>{strings.greetingStart}</Text>
-              </View>
-            )}
-          </Pressable>
+          />
         </View>
       </LinearGradient>
     );
   }
-
-  const title = `Surah ${props.surahName} · Ayah ${props.ayahNumber}`;
-  const subtitle = isArabic
-    ? strings.greetingJuzPage(
-        toArabicIndic(props.juzNumber),
-        toArabicIndic(props.pageNumber),
-      )
-    : strings.greetingJuzPage(props.juzNumber, props.pageNumber);
-  const relative = formatRelativeTime(
-    Date.now(),
-    props.lastReadAt,
-    isArabic ? "ar" : "en",
-  );
-  const timestamp = strings.greetingLastReadAgo(relative);
 
   return (
     <LinearGradient
@@ -119,7 +87,9 @@ export function GreetingCard(props: Props) {
           >{`${toArabicIndic(props.ayahNumber)}`}</Text>
         </Text>
       ) : (
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>
+          {strings.greetingResumeTitle(props.surahName, props.ayahNumber)}
+        </Text>
       )}
       {isArabic ? (
         <Text style={styles.subtitle}>
@@ -133,57 +103,58 @@ export function GreetingCard(props: Props) {
           </Text>
         </Text>
       ) : (
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={styles.subtitle}>
+          {strings.greetingJuzPage(props.juzNumber, props.pageNumber)}
+        </Text>
       )}
-      <View style={styles.cta}>
-        <Pressable
+      <View style={styles.divider} />
+      <View style={[styles.ctaRow, styles.ctaRowAfterDivider]}>
+        <ResumeButton
+          theme={theme}
+          styles={styles}
+          isArabic={isArabic}
+          label={strings.greetingResume}
           onPress={props.onResume}
-          accessibilityRole="button"
-          accessibilityLabel={strings.greetingResume}
-        >
-          {({ pressed }) => (
-            <View style={[styles.btn, pressed && styles.btnPressed]}>
-              <Svg
-                width={12}
-                height={12}
-                viewBox="0 0 24 24"
-                fill={theme.semantic.fgOnGold}
-              >
-                <Path d={isArabic ? "M16 5v14L5 12z" : "M8 5v14l11-7z"} />
-              </Svg>
-              <Text style={styles.btnText}>{strings.greetingResume}</Text>
-            </View>
-          )}
-        </Pressable>
-        {isArabic ? (
-          <Text style={styles.timestamp}>
-            {renderArabicTimestamp(timestamp, styles.timestampDigit)}
-          </Text>
-        ) : (
-          <Text style={styles.timestamp}>{timestamp}</Text>
-        )}
+        />
       </View>
     </LinearGradient>
   );
 }
 
-function renderArabicTimestamp(text: string, digitStyle: object) {
-  return text.split(/([٠-٩0-9]+)/g).map((part, index) => {
-    if (!part) return null;
-    if (/^[٠-٩0-9]+$/.test(part)) {
-      return (
-        <Text
-          key={`${part}-${index}`}
-          testID={`greeting-time-digit-${index}`}
-          style={digitStyle}
-        >
-          {part}
-        </Text>
-      );
-    }
-
-    return part;
-  });
+function ResumeButton({
+  theme,
+  styles,
+  isArabic,
+  label,
+  onPress,
+}: {
+  theme: ReturnType<typeof useTheme>;
+  styles: ReturnType<typeof createStyles>;
+  isArabic: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      {({ pressed }) => (
+        <View style={[styles.btn, pressed && styles.btnPressed]}>
+          <Svg
+            width={12}
+            height={12}
+            viewBox="0 0 24 24"
+            fill={theme.semantic.fgOnGold}
+          >
+            <Path d={isArabic ? "M16 5v14L5 12z" : "M8 5v14l11-7z"} />
+          </Svg>
+          <Text style={styles.btnText}>{label}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
 }
 
 function CardGlow({
@@ -227,15 +198,15 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       marginHorizontal: theme.gutter.screen - 6,
       marginTop: theme.spacing.sm,
       marginBottom: theme.spacing.md,
-      padding: theme.spacing.md + 2,
-      borderRadius: theme.radii.xl - 6,
+      padding: theme.spacing.lg,
+      borderRadius: theme.radii.lg,
       overflow: "hidden",
       ...theme.elevation.shadow2,
     },
     glow: {
       position: "absolute",
       top: -30,
-      left: -30,
+      ...(isArabic ? { right: -30 } : { left: -30 }),
     },
     label: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
@@ -243,20 +214,21 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       lineHeight: isArabic ? 30 : undefined,
       letterSpacing: isArabic ? 0 : 2.2,
       fontWeight: isArabic ? "normal" : "700",
-      color: theme.semantic.accentSoft,
+      color: theme.palette.paper[50],
+      opacity: 0.55,
       textTransform: isArabic ? "none" : "uppercase",
-      textAlign: isArabic ? "left" : "left",
+      textAlign: "left",
       writingDirection: isArabic ? "rtl" : "ltr",
     },
     title: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: isArabic ? 24 : 22,
       color: theme.palette.paper[50],
-      marginTop: isArabic ? 8 : 6,
+      marginTop: theme.spacing.md,
       marginBottom: 2,
-      textAlign: isArabic ? "left" : "left",
+      textAlign: "left",
       writingDirection: isArabic ? "rtl" : "ltr",
-      lineHeight: isArabic ? 40 : 34,
+      lineHeight: isArabic ? 40 : 30,
       fontWeight: isArabic ? "normal" : "700",
     },
     titleGlyph: {
@@ -271,7 +243,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       color: theme.palette.paper[50],
       opacity: 0.78,
       letterSpacing: isArabic ? 0 : 0.4,
-      textAlign: isArabic ? "left" : "left",
+      textAlign: "left",
       writingDirection: isArabic ? "rtl" : "ltr",
       lineHeight: isArabic ? 40 : undefined,
     },
@@ -282,25 +254,19 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       color: theme.palette.paper[50],
       opacity: 0.78,
     },
-    timestamp: {
-      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
-      fontSize: isArabic ? 20 : 11,
-      color: theme.palette.paper[50],
-      opacity: 0.68,
-      flexShrink: 1,
-      textAlign: "left",
-      writingDirection: isArabic ? "rtl" : "ltr",
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.semantic.accentSoft,
+      opacity: 0.3,
+      marginVertical: theme.spacing.md,
     },
-    timestampDigit: {
-      fontFamily: theme.fonts.arabicSerif,
-      fontSize: 20,
-      color: theme.palette.paper[50],
-    },
-    cta: {
+    ctaRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      marginTop: theme.spacing.md - 2,
+      marginTop: theme.spacing.lg,
+    },
+    ctaRowAfterDivider: {
+      marginTop: 0,
     },
     btn: {
       direction: isArabic ? "rtl" : "ltr",
@@ -310,7 +276,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       backgroundColor: theme.semantic.accent,
       paddingHorizontal: 15,
       paddingVertical: 5,
-      borderRadius: theme.radii.sm + 4,
+      borderRadius: theme.radii.md,
     },
     btnPressed: {
       backgroundColor: theme.palette.gold[700],

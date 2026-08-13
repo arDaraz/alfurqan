@@ -54,10 +54,9 @@ describe('BookmarkCategorySheet', () => {
     expect(recitation.props.accessibilityState).toMatchObject({ checked: false });
   });
 
-  it('commits a diff with added=[recitation] when user checks recitation and saves', () => {
-    const { onCommit, getByTestId, getByText } = renderSheet({ initialCategories: ['reading'] });
+  it('commits added=[recitation] immediately when the recitation chip is tapped', () => {
+    const { onCommit, getByTestId } = renderSheet({ initialCategories: ['reading'] });
     fireEvent.press(getByTestId('chip-recitation'));
-    fireEvent.press(getByText('حفظ'));
     expect(onCommit).toHaveBeenCalledWith({
       previous: ['reading'],
       next: ['reading', 'recitation'],
@@ -66,7 +65,29 @@ describe('BookmarkCategorySheet', () => {
     });
   });
 
-  it('commits an empty next when user unchecks everything via remove-all', () => {
+  it('commits removed=[reading] when an already-checked chip is tapped (toggle off)', () => {
+    const { onCommit, getByTestId } = renderSheet({ initialCategories: ['reading'] });
+    fireEvent.press(getByTestId('chip-reading'));
+    expect(onCommit).toHaveBeenCalledWith({
+      previous: ['reading'],
+      next: [],
+      added: [],
+      removed: ['reading'],
+    });
+  });
+
+  it('commits added=[reading] when chip tapped on a never-bookmarked ayah', () => {
+    const { onCommit, getByTestId } = renderSheet({ initialCategories: [] });
+    fireEvent.press(getByTestId('chip-reading'));
+    expect(onCommit).toHaveBeenCalledWith({
+      previous: [],
+      next: ['reading'],
+      added: ['reading'],
+      removed: [],
+    });
+  });
+
+  it('commits an empty next when user taps remove-all', () => {
     const { onCommit, getByText } = renderSheet({ initialCategories: ['reading', 'recitation'] });
     fireEvent.press(getByText('حذف الكل'));
     expect(onCommit).toHaveBeenCalledWith({

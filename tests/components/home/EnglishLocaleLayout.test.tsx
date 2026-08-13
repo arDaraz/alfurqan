@@ -81,7 +81,6 @@ describe('Home English locale layout', () => {
         ayahNumber={255}
         juzNumber={3}
         pageNumber={42}
-        lastReadAt={Date.now()}
         onResume={jest.fn()}
       />
     );
@@ -90,6 +89,7 @@ describe('Home English locale layout', () => {
     expect(queryByText('Continue · Continue')).toBeNull();
     expect(getByText('Surah Al-Baqarah · Ayah 255')).toBeTruthy();
     expect(queryByText(/day streak/)).toBeNull();
+    expect(queryByText(/Last read/)).toBeNull();
     expect(queryByText(/سورة/)).toBeNull();
   });
 
@@ -198,7 +198,6 @@ describe('Home Arabic locale layout', () => {
         ayahNumber={255}
         juzNumber={3}
         pageNumber={42}
-        lastReadAt={Date.now()}
         onResume={jest.fn()}
       />
     );
@@ -222,13 +221,13 @@ describe('Home Arabic locale layout', () => {
         ayahNumber={3}
         juzNumber={3}
         pageNumber={51}
-        lastReadAt={Date.now()}
         onResume={jest.fn()}
       />
     );
 
     const title = getByText('سورة آل عمران · الآية ٣');
     expect(queryByText(/﴿٣﴾/)).toBeNull();
+    expect(queryByText(/آخر قراءة/)).toBeNull();
     expect(StyleSheet.flatten(getByText('تابع').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
       fontSize: 20,
@@ -245,10 +244,6 @@ describe('Home Arabic locale layout', () => {
       fontFamily: 'KFGQPC-Uthmani',
       fontSize: 20,
     });
-    expect(StyleSheet.flatten(getByText('آخر قراءة الآن').props.style)).toMatchObject({
-      fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 20,
-    });
     expect(StyleSheet.flatten(getByText('استأنف').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
       fontSize: 20,
@@ -260,26 +255,6 @@ describe('Home Arabic locale layout', () => {
     expect(StyleSheet.flatten(getByTestId('greeting-page-glyph').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
       fontSize: 30,
-    });
-  });
-
-  it('renders last-read time digits without Quranic glyph styling', () => {
-    const { getByTestId, getByText } = render(
-      <GreetingCard
-        variant="continue"
-        surahName="آل عمران"
-        ayahNumber={3}
-        juzNumber={3}
-        pageNumber={51}
-        lastReadAt={Date.now() - 18 * 60 * 1000}
-        onResume={jest.fn()}
-      />
-    );
-
-    expect(getByText('آخر قراءة منذ ١٨ د')).toBeTruthy();
-    expect(StyleSheet.flatten(getByTestId('greeting-time-digit-1').props.style)).toMatchObject({
-      fontFamily: 'Amiri',
-      fontSize: 20,
     });
   });
 

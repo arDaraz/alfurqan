@@ -62,18 +62,20 @@ Persistence stays on MMKV via `zustand/persist`. Bump `version` to `1` and add a
 
 ### Wiring
 
-- `handleAyahAction` in `ayahActions.ts` grows an optional `callbacks` parameter: `{ onRequestBookmark?: (selection) => void }`. The `bookmark` case invokes `onRequestBookmark(selection)` instead of mutating the store. `MushafReader` (and any future host) passes a callback that opens the sheet. The `setLastRead` call for streak tracking stays — bookmarking still counts as reading activity.
+- `handleAyahAction` in `ayahActions.ts` grows an optional `callbacks` parameter: `{ onRequestBookmark?: (selection) => void }`. The `bookmark` case invokes `onRequestBookmark(selection)` instead of mutating the store. Hosts that expose bookmark actions must pass a callback that opens the sheet. The `setLastRead` call for streak tracking stays — bookmarking still counts as reading activity.
+- `MushafScreenLayout` passes `onRequestBookmark` to `handleAyahAction`, and `MushafReader` hosts the sheet for popup-triggered bookmark actions.
 - `MushafBottomToolbar` page-level bookmark routes through the same sheet, scoped to `pageTopAyah`.
+- `SearchScreen` also hosts the same `BookmarkCategorySheet` for result-row bookmark actions. Do not leave Search calling `handleAyahAction('bookmark', selection)` without the callback; otherwise tapping the bookmark icon becomes a no-op under the new contract.
 
 ### Snackbar update
 
-`BookmarkSavedSnackbar` accepts the resulting category set and renders one of three subtitles:
+`BookmarkSavedSnackbar` accepts the resulting category set and renders one of four subtitles:
 - "حُفِظ للقراءة" / "Saved for Reading"
 - "حُفِظ للتلاوة" / "Saved for Recitation"
 - "حُفِظ للقراءة والتلاوة" / "Saved for Reading and Recitation"
 - "تم الحذف" / "Removed" — when commit resulted in zero categories.
 
-Undo restores the snapshot exactly.
+Undo restores the snapshot exactly, including edit cases such as Reading -> Recitation, Both -> Reading, and Both -> Removed.
 
 ## Bookmarks screen
 
@@ -110,6 +112,10 @@ Undo restores the snapshot exactly.
 - Swipe trailing edge: reveals red "حذف" button. Tap = `removeBookmark(surah, ayah, currentTabCategory)`. Uses `react-native-gesture-handler`'s `Swipeable`. Under `forceRTL(true)`, the "trailing" edge resolves to the physical left automatically.
 - Sort: newest first by `createdAt` desc.
 
+### Gesture setup
+
+Wrap the root app tree in `GestureHandlerRootView` in `src/app/_layout.tsx` so `Swipeable` works reliably on native. Keep the existing `Stack`, onboarding redirects, and `StatusBar` behavior inside that root wrapper.
+
 ### Ayah preview
 
 New `getAyahPreview(surah, ayah): Promise<string>` in `quranRepository.ts`. Returns the first ~80 chars of the ayah's Uthmani text. Cached in a module-level `Map<string, string>` keyed by `${surah}:${ayah}` to avoid repeat DB hits.
@@ -123,10 +129,11 @@ New `getAyahPreview(surah, ayah): Promise<string>` in `quranRepository.ts`. Retu
 - Gold ribbon icon (`theme.palette.gold[400]`) sized 18×22.
 - `accessibilityLabel`: `strings.bookmarks.openLabel`.
 - `onPress`: `router.push('/bookmarks')`.
+- Layout: update the outer row to span the available width and separate the brand cluster from the action slot (for example, `justifyContent: 'space-between'` with a trailing action container). The icon must not sit immediately beside the wordmark.
 
 ### RTL
 
-`BrandBar` already lays out with `flexDirection: 'row'`; the trailing edge mirrors automatically. Icon ends up top-right in Arabic, top-left in English.
+`BrandBar` lays out with language-aware `direction` plus `flexDirection: 'row'`; with the separated trailing action container, the icon ends up top-right in Arabic and top-left in English.
 
 ### Surahs tab
 
@@ -175,8 +182,9 @@ The existing `bookmark.savedSubtitle(surahName, page, juz)` factory is replaced 
 |---|---|
 | `src/stores/__tests__/readingStore.bookmarks.test.ts` (new) | add/remove/toggle with category; multi-category on same ayah; migration of legacy `Bookmark` shape to `category: 'reading'` |
 | `src/data/__tests__/quranRepository.bookmarkPreview.test.ts` (new) | `getAyahPreview` returns text truncated to ~80 chars |
-| `src/components/quran/__tests__/BookmarkCategorySheet.test.tsx` (new) | renders pre-checked state from current categories; commits diff; "remove all" path; dismiss without save = no-op |
+| `src/components/quran/__tests__/BookmarkCategorySheet.test.tsx` (new) | renders pre-checked state from current categories; commits diff; undo restores exact snapshot for Reading -> Recitation, Both -> Reading, and Both -> Removed; "remove all" path; dismiss without save = no-op |
 | `src/components/bookmarks/__tests__/BookmarksScreen.test.tsx` (new) | tab switching; empty state per tab; row tap navigates to `/surah/[id]?page=...`; swipe-delete removes only the current-tab category |
+| `src/components/search/__tests__/SearchScreen.actions.test.tsx` (existing) | update: bookmark action opens the category sheet and commits through the same category diff flow |
 | `src/components/quran/__tests__/MushafBottomToolbar.test.tsx` (existing) | update: tap dispatches "open sheet" intent rather than toggling directly |
 | `src/components/home/__tests__/BrandBar.test.tsx` (existing or new) | bookmark icon renders; correct accessibility label; navigates to `/bookmarks` |
 
@@ -193,14 +201,17 @@ The existing `bookmark.savedSubtitle(surahName, page, juz)` factory is replaced 
 - `src/data/__tests__/quranRepository.bookmarkPreview.test.ts`
 
 **Modified:**
+- `src/app/_layout.tsx` — wrap the app tree in `GestureHandlerRootView` for swipe rows
 - `src/data/types.ts` — add `BookmarkCategory`, extend `Bookmark`
 - `src/stores/readingStore.ts` — category-scoped API, migration v1
 - `src/data/quranRepository.ts` — add `getAyahPreview`
 - `src/components/home/BrandBar.tsx` — trailing icon button
 - `src/components/quran/AyahPopup.tsx` — bookmark action opens sheet
 - `src/components/quran/MushafReader.tsx` — host the sheet, pass active categories through
+- `src/components/quran/MushafScreenLayout.tsx` — pass the bookmark callback to `handleAyahAction`
 - `src/components/quran/MushafBottomToolbar.tsx` — bookmark press opens sheet
 - `src/components/quran/BookmarkSavedSnackbar.tsx` — category-aware subtitle, multi-category undo snapshot
+- `src/components/search/SearchScreen.tsx` — host the same bookmark category sheet for search-result bookmark actions
 - `src/actions/ayahActions.ts` — `bookmark` case returns "open sheet" intent; keeps `setLastRead`
 - `src/constants/strings.ts` — `bookmarks` namespace in both locales
 

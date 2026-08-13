@@ -6,6 +6,7 @@ import { useSettingsStore } from '../../stores/settingsStore';
 export interface PillTabItem<T extends string> {
   id: T;
   label: string;
+  count?: string;
 }
 
 interface Props<T extends string> {
@@ -16,7 +17,8 @@ interface Props<T extends string> {
 
 /**
  * Sunken pill-tabs control — segmented selector inside a `bgSunken` track.
- * Active pill takes `--primary` with a soft `shadow-1`.
+ * Active pill takes `--primary` with a soft `shadow-1`. Optional `count` per tab
+ * renders a small inline chip after the label.
  */
 export function PillTabs<T extends string>({ tabs, active, onChange }: Props<T>) {
   const theme = useTheme();
@@ -36,6 +38,13 @@ export function PillTabs<T extends string>({ tabs, active, onChange }: Props<T>)
             style={[styles.tab, isActive && styles.tabActive]}
           >
             <Text style={[styles.label, isActive && styles.labelActive]}>{t.label}</Text>
+            {t.count !== undefined && (
+              <View style={[styles.countChip, isActive && styles.countChipActive]}>
+                <Text style={[styles.countText, isActive && styles.countTextActive]}>
+                  {t.count}
+                </Text>
+              </View>
+            )}
           </Pressable>
         );
       })}
@@ -55,11 +64,13 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     tab: {
       flex: 1,
+      flexDirection: 'row',
       paddingVertical: 10,
       paddingHorizontal: 10,
       borderRadius: theme.radii.xl - 4,
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 8,
     },
     tabActive: {
       backgroundColor: theme.semantic.primary,
@@ -72,6 +83,26 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       fontWeight: isArabic ? 'normal' : '600',
     },
     labelActive: {
+      color: theme.semantic.fgOnPrimary,
+    },
+    countChip: {
+      minWidth: 22,
+      paddingHorizontal: 7,
+      paddingVertical: 1,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.semantic.bgRaised,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countChipActive: {
+      backgroundColor: theme.semantic.fgOnPrimary + '33',
+    },
+    countText: {
+      fontFamily: theme.fonts.arabic,
+      fontSize: 12,
+      color: theme.semantic.fgMuted,
+    },
+    countTextActive: {
       color: theme.semantic.fgOnPrimary,
     },
   });

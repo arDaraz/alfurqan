@@ -138,7 +138,6 @@ export function HomeView({ hideGreeting = false }: Props) {
             ayahNumber={lastReadAyah}
             juzNumber={lastReadJuz}
             pageNumber={lastReadPage}
-            lastReadAt={lastReadAt}
             onResume={handleResume}
           />
         ) : (

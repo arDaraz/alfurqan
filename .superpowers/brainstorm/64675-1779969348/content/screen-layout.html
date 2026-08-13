@@ -1,0 +1,79 @@
+<h2>How are categories shown on the Bookmarks screen?</h2>
+<p class="subtitle">Two categories, possibly many bookmarks each. Pick the navigation pattern.</p>
+
+<style>
+  .phone { background:#fffaf2; border:1px solid #e6dccb; border-radius:18px;
+    padding:14px; direction:rtl; font-family:ui-sans-serif,system-ui; color:#2a2519;
+    box-shadow:0 4px 16px -8px rgba(0,0,0,.18); min-height:420px; }
+  .nav { display:flex; align-items:center; gap:8px; padding:2px 2px 12px; font-size:13px; color:#6b5f4d; }
+  .nav .back { width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+  .nav h1 { margin:0; font-size:15px; font-weight:700; color:#2a2519; }
+  .pills { display:flex; gap:8px; padding:0 2px 10px; }
+  .pill { background:#f0e7d3; border-radius:999px; padding:6px 14px; font-size:11px; font-weight:700; color:#6b5f4d; }
+  .pill.active { background:#1f6b5e; color:#fff; }
+  .section-title { font-size:11px; font-weight:700; color:#8a7e6a; letter-spacing:1px; padding:10px 4px 6px; }
+  .count { color:#b88a2c; }
+  .row { background:#fff5e3; border:1px solid #f0e7d3; border-radius:10px;
+    padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+  .row .ribbon { width:14px; height:18px; border:2px solid #b88a2c; border-bottom:none; position:relative; }
+  .row .ribbon::after { content:''; position:absolute; bottom:-2px; left:-2px; right:-2px;
+    border-style:solid; border-width:0 9px 6px 9px;
+    border-color:transparent #b88a2c transparent #b88a2c; transform:rotate(180deg); }
+  .name { flex:1; font-size:14px; font-weight:600; }
+  .meta { font-size:12px; color:#6b5f4d; }
+  .ar-num { font-size:14px; color:#1f6b5e; min-width:24px; text-align:center; }
+  .tabhead { display:flex; gap:0; border-bottom:1px solid #e6dccb; margin-bottom:6px; }
+  .tab { flex:1; text-align:center; padding:10px 4px; font-size:12px; font-weight:700; color:#8a7e6a; }
+  .tab.active { color:#1f6b5e; border-bottom:2px solid #1f6b5e; }
+  .chip { display:inline-block; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700;
+    background:#f0e7d3; color:#6b5f4d; }
+  .chip.recite { background:#1f6b5e22; color:#1f6b5e; }
+  .chip.read   { background:#b88a2c22; color:#b88a2c; }
+</style>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">A — Tabs (Reading | Recitation)</div>
+    <div class="mockup-body">
+      <div class="phone">
+        <div class="nav"><span class="back">›</span><h1>الإشارات المرجعية</h1></div>
+        <div class="tabhead">
+          <div class="tab active">القراءة <span class="count">٤</span></div>
+          <div class="tab">التلاوة <span class="count">٢</span></div>
+        </div>
+        <div class="row"><span class="ribbon"></span><div class="name">البقرة · آية ٢٥٥</div><div class="meta">صفحة ٤٢</div></div>
+        <div class="row"><span class="ribbon"></span><div class="name">يس · آية ١</div><div class="meta">صفحة ٤٤٠</div></div>
+        <div class="row"><span class="ribbon"></span><div class="name">الكهف · آية ١</div><div class="meta">صفحة ٢٩٣</div></div>
+        <div class="row"><span class="ribbon"></span><div class="name">الفاتحة · آية ١</div><div class="meta">صفحة ١</div></div>
+      </div>
+      <p style="font-size:12px;color:#6b5f4d;margin-top:10px;">One list visible at a time. Cleanest signal — taps to switch. Familiar pattern (matches Home's Surah/Juz pills).</p>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Sectioned single scroll</div>
+    <div class="mockup-body">
+      <div class="phone">
+        <div class="nav"><span class="back">›</span><h1>الإشارات المرجعية</h1></div>
+        <div class="section-title">القراءة <span class="count">٤</span></div>
+        <div class="row"><span class="ribbon"></span><div class="name">البقرة · آية ٢٥٥</div><div class="meta">صفحة ٤٢</div></div>
+        <div class="row"><span class="ribbon"></span><div class="name">يس · آية ١</div><div class="meta">صفحة ٤٤٠</div></div>
+        <div class="section-title">التلاوة <span class="count">٢</span></div>
+        <div class="row"><span class="ribbon"></span><div class="name">الفاتحة · آية ١</div><div class="meta">صفحة ١</div></div>
+        <div class="row"><span class="ribbon"></span><div class="name">الناس · آية ١</div><div class="meta">صفحة ٦٠٤</div></div>
+      </div>
+      <p style="font-size:12px;color:#6b5f4d;margin-top:10px;">Both groups visible at once. Easier to see totals; longer scroll if many bookmarks.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="options" style="margin-top:18px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div><div class="content"><h3>Tabs</h3><p>Switch between Reading and Recitation. One list at a time.</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div><div class="content"><h3>Sections</h3><p>One scroll, both groups with sticky headers.</p></div>
+  </div>
+</div>

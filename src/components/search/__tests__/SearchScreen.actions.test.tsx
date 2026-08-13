@@ -242,13 +242,12 @@ describe('SearchScreen action wiring', () => {
     expect(await findByText('حفظ الإشارة المرجعية')).toBeTruthy();
   });
 
-  it('commits the chosen category to the store when save is pressed', async () => {
-    const { findByLabelText, findByText, findByTestId } = render(
+  it('commits the chosen category to the store as soon as the chip is tapped', async () => {
+    const { findByLabelText, findByTestId } = render(
       <SearchScreen initialQuery="الفرقان" />,
     );
     fireEvent.press(await findByLabelText(/حفظ الآية|Bookmark verse/i));
     fireEvent.press(await findByTestId('chip-reading'));
-    fireEvent.press(await findByText('حفظ'));
 
     await waitFor(() => {
       expect(mockAddBookmark).toHaveBeenCalledWith(2, 53, 'reading');

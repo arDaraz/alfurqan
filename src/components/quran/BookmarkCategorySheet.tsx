@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown, FadeIn, FadeOut } from 'react-native-reanimated';
 import { useTheme } from '../../hooks/useTheme';
@@ -38,31 +38,25 @@ export function BookmarkCategorySheet({
   const styles = createStyles(theme, isArabic);
 
   const previous = useMemo(() => sortCats(initialCategories), [initialCategories]);
-  const [selected, setSelected] = useState<Set<BookmarkCategory>>(new Set(previous));
-
-  const handleToggle = (c: BookmarkCategory) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(c)) next.delete(c);
-      else next.add(c);
-      return next;
-    });
-  };
+  const previousSet = useMemo(() => new Set(previous), [previous]);
 
   const buildCommit = (next: BookmarkCategory[]): BookmarkCommit => {
-    const prevSet = new Set(previous);
     const nextSet = new Set(next);
     return {
       previous,
       next,
-      added: next.filter((c) => !prevSet.has(c)),
+      added: next.filter((c) => !previousSet.has(c)),
       removed: previous.filter((c) => !nextSet.has(c)),
     };
   };
 
-  const handleSave = () => {
-    const next = sortCats(Array.from(selected));
-    onCommit(buildCommit(next));
+  // Tap chip → toggle this category against the previous state and commit immediately.
+  // The parent dismisses the sheet on commit, so one tap = save & close.
+  const handleChipTap = (c: BookmarkCategory) => {
+    const next = new Set(previousSet);
+    if (next.has(c)) next.delete(c);
+    else next.add(c);
+    onCommit(buildCommit(sortCats(Array.from(next))));
   };
 
   const handleRemoveAll = () => {
@@ -100,17 +94,17 @@ export function BookmarkCategorySheet({
 
         <View style={styles.chipRow}>
           {CATEGORIES.map((c) => {
-            const isOn = selected.has(c);
+            const isOn = previousSet.has(c);
             const label =
               c === 'reading' ? strings.bookmarks.categoryReading : strings.bookmarks.categoryRecitation;
             return (
               <Pressable
                 key={c}
-                accessibilityRole="checkbox"
+                accessibilityRole="button"
                 accessibilityLabel={label}
                 accessibilityState={{ checked: isOn }}
                 testID={`chip-${c}`}
-                onPress={() => handleToggle(c)}
+                onPress={() => handleChipTap(c)}
                 style={[styles.chip, isOn && styles.chipOn]}
               >
                 <Text style={[styles.chipLabel, isOn && styles.chipLabelOn]}>{label}</Text>
@@ -119,8 +113,8 @@ export function BookmarkCategorySheet({
           })}
         </View>
 
-        <View style={styles.actions}>
-          {showRemoveAll && (
+        {showRemoveAll && (
+          <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
               onPress={handleRemoveAll}
@@ -128,15 +122,8 @@ export function BookmarkCategorySheet({
             >
               <Text style={styles.removeText}>{strings.bookmarks.sheetRemoveAll}</Text>
             </Pressable>
-          )}
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleSave}
-            style={({ pressed }) => [styles.saveBtn, pressed && styles.saveBtnPressed]}
-          >
-            <Text style={styles.saveText}>{strings.bookmarks.sheetSave}</Text>
-          </Pressable>
-        </View>
+          </View>
+        )}
       </Animated.View>
     </View>
   );
@@ -177,7 +164,7 @@ function createStyles(theme: Theme, isArabic: boolean) {
       fontFamily: theme.fonts.arabicSemiBold,
       fontSize: 16,
       color: theme.semantic.fg,
-      textAlign: isArabic ? 'left' : 'left',
+      textAlign: 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     subtitle: {
@@ -194,7 +181,7 @@ function createStyles(theme: Theme, isArabic: boolean) {
     },
     chip: {
       flex: 1,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderRadius: theme.radii.pill,
       borderWidth: 1,
       borderColor: theme.semantic.border,
@@ -206,16 +193,15 @@ function createStyles(theme: Theme, isArabic: boolean) {
       borderColor: theme.semantic.primary,
     },
     chipLabel: {
-      fontFamily: theme.fonts.arabic,
+      fontFamily: theme.fonts.arabicSemiBold,
       fontSize: 14,
       color: theme.semantic.fg,
     },
     chipLabelOn: { color: theme.semantic.fgOnPrimary },
     actions: {
       flexDirection: 'row',
-      gap: theme.spacing.sm,
       alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
       paddingTop: theme.spacing.xs,
     },
     removeBtn: { paddingVertical: 10, paddingHorizontal: 12 },
@@ -224,19 +210,6 @@ function createStyles(theme: Theme, isArabic: boolean) {
       fontFamily: theme.fonts.arabic,
       fontSize: 14,
       color: theme.semantic.danger,
-    },
-    saveBtn: {
-      paddingVertical: 10,
-      paddingHorizontal: 22,
-      borderRadius: theme.radii.pill,
-      backgroundColor: theme.semantic.primary,
-    },
-    saveBtnPressed: { backgroundColor: theme.semantic.primaryPressed },
-    saveText: {
-      fontFamily: theme.fonts.arabic,
-      fontSize: 14,
-      color: theme.semantic.fgOnPrimary,
-      fontWeight: '600',
     },
   });
 }

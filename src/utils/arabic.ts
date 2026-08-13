@@ -32,3 +32,19 @@ export function uthmaniToPlainArabic(text: string): string {
     .replace(/\s+/g, ' ')                    // collapse whitespace
     .trim();
 }
+
+/**
+ * Fold Arabic text for search comparison. Apply to both query and target so
+ * `String.includes` matches across Uthmani vs. user-typed text.
+ */
+export function normalizeForSearch(text: string): string {
+  return text
+    .replace(/[\u064b-\u0670]/g, '')                        // diacritics + superscript alif
+    .replace(/[\u06d6-\u06ed]/g, '')                        // Quranic small high/low marks
+    .replace(/\u0671/g, '\u0627')                            // alif-wasla \u2192 alif
+    .replace(/\u0640/g, '')                                  // tatweel
+    .replace(/\u0649/g, '\u064a')                            // alif-maqsura \u2192 ya
+    .replace(/\u0629/g, '\u0647')                            // ta-marbuta \u2192 ha
+    .replace(/\s+/g, ' ')
+    .trim();
+}

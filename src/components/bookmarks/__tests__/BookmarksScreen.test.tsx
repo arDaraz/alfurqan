@@ -4,6 +4,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: (...args: any[]) => mockPush(...args), back: jest.fn() }),
+  useLocalSearchParams: () => ({}),
 }));
 
 jest.mock('react-native-mmkv', () => ({
@@ -107,31 +108,31 @@ describe('BookmarksScreen', () => {
 
   it('shows empty state when no bookmarks exist for the active tab', async () => {
     const { getByText } = render(<BookmarksScreen />);
-    expect(getByText('لم تحفظ آيات للقراءة بعد')).toBeTruthy();
+    expect(getByText('لم تحفظ آيات للحفظ بعد')).toBeTruthy();
   });
 
-  it('renders bookmarks for the reading tab and ignores recitation entries', async () => {
+  it('renders bookmarks for the recitation tab by default and ignores reading entries', async () => {
     seedBookmarks([
       { s: 2, a: 255, c: 'reading' },
       { s: 36, a: 1, c: 'recitation' },
     ]);
     const { findByText, queryByText } = render(<BookmarksScreen />);
-    expect(await findByText(/سورة-2/)).toBeTruthy();
-    expect(queryByText(/سورة-36/)).toBeNull();
+    expect(await findByText(/سورة-36/)).toBeTruthy();
+    expect(queryByText(/سورة-2/)).toBeNull();
   });
 
-  it('switches to the recitation tab and renders its entries', async () => {
+  it('switches to the reading tab and renders its entries', async () => {
     seedBookmarks([
       { s: 2, a: 255, c: 'reading' },
       { s: 36, a: 1, c: 'recitation' },
     ]);
     const { getByLabelText, findByText } = render(<BookmarksScreen />);
-    fireEvent.press(getByLabelText('tab-recitation'));
-    expect(await findByText(/سورة-36/)).toBeTruthy();
+    fireEvent.press(getByLabelText('tab-reading'));
+    expect(await findByText(/سورة-2/)).toBeTruthy();
   });
 
   it('navigates to /surah/[id]?page=N when a row is pressed', async () => {
-    seedBookmarks([{ s: 2, a: 255, c: 'reading' }]);
+    seedBookmarks([{ s: 2, a: 255, c: 'recitation' }]);
     const { findByLabelText } = render(<BookmarksScreen />);
     const row = await findByLabelText('bookmark-row-2-255');
     fireEvent.press(row);
@@ -153,7 +154,7 @@ describe('BookmarksScreen', () => {
     await waitFor(() => {
       const bms = useReadingStore.getState().bookmarks;
       expect(bms).toHaveLength(1);
-      expect(bms[0].category).toBe('recitation');
+      expect(bms[0].category).toBe('reading');
     });
   });
 });
