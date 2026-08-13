@@ -8,11 +8,21 @@
     "scheme": "alfurqan",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.alfurqan.app",
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.ahmeddaraz.alfurqan",
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
       "package": "com.alfurqan.app",
+      "permissions": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "WAKE_LOCK"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F2",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,7 +47,15 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-image",
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

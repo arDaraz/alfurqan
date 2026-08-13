@@ -17,6 +17,10 @@ describe('readingStore', () => {
       lastReadSurah: null,
       lastReadAyah: null,
       lastReadPage: null,
+      lastReadJuz: null,
+      lastReadAt: null,
+      streakDays: 0,
+      streakLastReadDate: null,
       hasCompletedOnboarding: false,
       bookmarks: [],
     });
@@ -26,14 +30,23 @@ describe('readingStore', () => {
     const state = useReadingStore.getState();
     expect(state.lastReadSurah).toBeNull();
     expect(state.lastReadAyah).toBeNull();
+    expect(state.lastReadJuz).toBeNull();
+    expect(state.lastReadPage).toBeNull();
+    expect(state.lastReadAt).toBeNull();
+    expect(state.streakDays).toBe(0);
+    expect(state.streakLastReadDate).toBeNull();
     expect(state.hasCompletedOnboarding).toBe(false);
   });
 
-  it('setLastRead persists surah and ayah', () => {
-    useReadingStore.getState().setLastRead(2, 5);
+  it('setLastRead persists full reading position', () => {
+    const now = new Date('2026-04-29T12:00:00');
+    useReadingStore.getState().setLastRead(2, 5, 1, 4, now);
     const state = useReadingStore.getState();
     expect(state.lastReadSurah).toBe(2);
     expect(state.lastReadAyah).toBe(5);
+    expect(state.lastReadJuz).toBe(1);
+    expect(state.lastReadPage).toBe(4);
+    expect(state.lastReadAt).toBe(now.getTime());
   });
 
   it('completeOnboarding sets hasCompletedOnboarding to true', () => {
@@ -42,11 +55,13 @@ describe('readingStore', () => {
   });
 
   it('setLastRead updates existing values', () => {
-    useReadingStore.getState().setLastRead(1, 1);
-    useReadingStore.getState().setLastRead(3, 10);
+    useReadingStore.getState().setLastRead(1, 1, 1, 1);
+    useReadingStore.getState().setLastRead(3, 10, 3, 50);
     const state = useReadingStore.getState();
     expect(state.lastReadSurah).toBe(3);
     expect(state.lastReadAyah).toBe(10);
+    expect(state.lastReadJuz).toBe(3);
+    expect(state.lastReadPage).toBe(50);
   });
 
   describe('bookmarks', () => {
@@ -56,7 +71,7 @@ describe('readingStore', () => {
     });
 
     it('addBookmark adds a bookmark to the array', () => {
-      useReadingStore.getState().addBookmark(2, 255);
+      useReadingStore.getState().addBookmark(2, 255, 'reading');
       const state = useReadingStore.getState();
       expect(state.bookmarks).toHaveLength(1);
       expect(state.bookmarks[0].surahNumber).toBe(2);
@@ -65,30 +80,30 @@ describe('readingStore', () => {
     });
 
     it('addBookmark is idempotent (no duplicates)', () => {
-      useReadingStore.getState().addBookmark(2, 255);
-      useReadingStore.getState().addBookmark(2, 255);
+      useReadingStore.getState().addBookmark(2, 255, 'reading');
+      useReadingStore.getState().addBookmark(2, 255, 'reading');
       const state = useReadingStore.getState();
       expect(state.bookmarks).toHaveLength(1);
     });
 
     it('removeBookmark removes a bookmark by surah+ayah', () => {
-      useReadingStore.getState().addBookmark(2, 255);
-      useReadingStore.getState().addBookmark(3, 1);
-      useReadingStore.getState().removeBookmark(2, 255);
+      useReadingStore.getState().addBookmark(2, 255, 'reading');
+      useReadingStore.getState().addBookmark(3, 1, 'reading');
+      useReadingStore.getState().removeBookmark(2, 255, 'reading');
       const state = useReadingStore.getState();
       expect(state.bookmarks).toHaveLength(1);
       expect(state.bookmarks[0].surahNumber).toBe(3);
     });
 
     it('removeBookmark on non-existent is no-op', () => {
-      useReadingStore.getState().addBookmark(2, 255);
-      useReadingStore.getState().removeBookmark(99, 1);
+      useReadingStore.getState().addBookmark(2, 255, 'reading');
+      useReadingStore.getState().removeBookmark(99, 1, 'reading');
       const state = useReadingStore.getState();
       expect(state.bookmarks).toHaveLength(1);
     });
 
     it('toggleBookmark adds when not present', () => {
-      useReadingStore.getState().toggleBookmark(2, 255);
+      useReadingStore.getState().toggleBookmark(2, 255, 'reading');
       const state = useReadingStore.getState();
       expect(state.bookmarks).toHaveLength(1);
       expect(state.bookmarks[0].surahNumber).toBe(2);
@@ -96,8 +111,8 @@ describe('readingStore', () => {
     });
 
     it('toggleBookmark removes when present', () => {
-      useReadingStore.getState().addBookmark(2, 255);
-      useReadingStore.getState().toggleBookmark(2, 255);
+      useReadingStore.getState().addBookmark(2, 255, 'reading');
+      useReadingStore.getState().toggleBookmark(2, 255, 'reading');
       const state = useReadingStore.getState();
       expect(state.bookmarks).toHaveLength(0);
     });

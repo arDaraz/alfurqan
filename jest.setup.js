@@ -5,3 +5,22 @@ if (typeof globalThis.__ExpoImportMetaRegistry === 'undefined') {
     get: () => ({}),
   };
 }
+
+const mockAudioPlayer = {
+  isLoaded: true,
+  duration: 0,
+  play: jest.fn(),
+  pause: jest.fn(),
+  replace: jest.fn(),
+  seekTo: jest.fn().mockResolvedValue(undefined),
+  setActiveForLockScreen: jest.fn(),
+  clearLockScreenControls: jest.fn(),
+  setPlaybackRate: jest.fn(),
+  addListener: jest.fn(() => ({ remove: jest.fn() })),
+};
+
+jest.mock('expo-audio', () => ({
+  createAudioPlayer: jest.fn(() => mockAudioPlayer),
+  setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
+  setIsAudioActiveAsync: jest.fn().mockResolvedValue(undefined),
+}));

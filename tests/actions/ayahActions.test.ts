@@ -16,12 +16,25 @@ jest.mock('expo-clipboard', () => ({
 // Mock quranRepository
 jest.mock('../../src/data/quranRepository', () => ({
   getAyahTextRange: jest.fn().mockResolvedValue('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
+  getJuzAndPageForAyah: jest.fn().mockResolvedValue({ juz: 3, page: 51 }),
+  getSurahLastAyah: jest.fn().mockResolvedValue(7),
+}));
+
+jest.mock('../../src/services/recitationEngine', () => ({
+  recitationEngine: {
+    start: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
 import { handleAyahAction } from '../../src/actions/ayahActions';
-import { getAyahTextRange } from '../../src/data/quranRepository';
+import {
+  getAyahTextRange,
+  getJuzAndPageForAyah,
+  getSurahLastAyah,
+} from '../../src/data/quranRepository';
+import { recitationEngine } from '../../src/services/recitationEngine';
 import { useReadingStore } from '../../src/stores/readingStore';
 import type { AyahSelection } from '../../src/data/types';
 
@@ -35,7 +48,16 @@ const mockSelection: AyahSelection = {
 describe('handleAyahAction', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useReadingStore.setState({ bookmarks: [] });
+    useReadingStore.setState({
+      bookmarks: [],
+      lastReadSurah: null,
+      lastReadAyah: null,
+      lastReadJuz: null,
+      lastReadPage: null,
+      lastReadAt: null,
+      streakDays: 0,
+      streakLastReadDate: null,
+    });
   });
 
   describe('copy action', () => {
@@ -63,25 +85,54 @@ describe('handleAyahAction', () => {
   });
 
   describe('bookmark action', () => {
-    it('calls toggleBookmark on readingStore', async () => {
-      await handleAyahAction('bookmark', mockSelection);
+    it('invokes onRequestBookmark with the selection', async () => {
+      const onRequestBookmark = jest.fn();
+      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark });
+      expect(onRequestBookmark).toHaveBeenCalledTimes(1);
+      expect(onRequestBookmark).toHaveBeenCalledWith(mockSelection);
+    });
 
-      // Verify bookmark was toggled by checking store state
+    it('updates last-read position via setLastRead even on bookmark', async () => {
+      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark: jest.fn() });
       const state = useReadingStore.getState();
-      expect(state.bookmarks).toHaveLength(1);
-      expect(state.bookmarks[0].surahNumber).toBe(1);
-      expect(state.bookmarks[0].ayahNumber).toBe(1);
+      expect(state.lastReadSurah).toBe(mockSelection.startSurah);
+      expect(state.lastReadAyah).toBe(mockSelection.startAyah);
+      expect(state.lastReadJuz).toBe(3);
+      expect(state.lastReadPage).toBe(51);
+    });
+
+    it('does not mutate bookmarks directly; defers to the callback', async () => {
+      const onRequestBookmark = jest.fn();
+      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark });
+      expect(useReadingStore.getState().bookmarks).toEqual([]);
+      expect(onRequestBookmark).toHaveBeenCalledTimes(1);
+    });
+
+    it('still updates last-read and logs a warning when called without onRequestBookmark', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      await handleAyahAction('bookmark', mockSelection);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('onRequestBookmark'),
+      );
+      const state = useReadingStore.getState();
+      expect(state.lastReadSurah).toBe(mockSelection.startSurah);
+      expect(state.lastReadAyah).toBe(mockSelection.startAyah);
+      warnSpy.mockRestore();
     });
   });
 
   describe('placeholder actions', () => {
-    it('play action logs to console', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('play action starts recitation from selected ayah to end of surah', async () => {
       await handleAyahAction('play', mockSelection);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[AyahAction] play')
-      );
-      consoleSpy.mockRestore();
+      expect(getSurahLastAyah).toHaveBeenCalledWith(1);
+      expect(recitationEngine.start).toHaveBeenCalledWith({
+        surah: 1,
+        startAyah: 1,
+        stopAyah: 7,
+        trigger: 'popup',
+        selectedEndSurah: 1,
+        selectedEndAyah: 3,
+      });
     });
 
     it('tafsir action logs to console', async () => {

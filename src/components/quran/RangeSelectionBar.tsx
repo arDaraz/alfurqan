@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 
 interface RangeSelectionBarProps {
@@ -14,13 +14,9 @@ interface RangeSelectionBarProps {
 }
 
 /**
- * Fixed bottom bar for ayah range selection.
- * Slides up when an ayah is selected, shows range summary and action buttons.
- *
- * States:
- * - one-selected: Shows "Ayah X selected - tap another ayah to set range end"
- * - range-complete: Shows "Ayahs X-Y selected" with Clear Selection and Start Practice buttons
- * - hidden: When no selection exists (renders null)
+ * Slide-up bar that appears once an ayah selection exists. While the user
+ * is choosing a range it shows a hint; once the range is complete it offers
+ * Clear / Start Practice CTAs.
  */
 export function RangeSelectionBar({
   startAyah,
@@ -31,8 +27,9 @@ export function RangeSelectionBar({
 }: RangeSelectionBarProps) {
   const insets = useSafeAreaInsets();
   const strings = useStrings();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
-  // Not visible when no selection
   if (startAyah === null) {
     return null;
   }
@@ -47,17 +44,12 @@ export function RangeSelectionBar({
       ]}
     >
       {!isRangeComplete ? (
-        // State 1: one-selected
-        <Text style={styles.selectionText}>
-          {strings.ayahSelected(startAyah)}
-        </Text>
+        <Text style={styles.selectionText}>{strings.ayahSelected(startAyah)}</Text>
       ) : (
-        // State 2: range-complete
-        <View style={styles.rangeCompleteRow}>
+        <View style={styles.completeRow}>
           <Text style={styles.selectionText}>
             {strings.ayahsSelected(startAyah!, endAyah!)}
           </Text>
-
           <View style={styles.buttonsRow}>
             <Pressable
               onPress={onClearSelection}
@@ -67,17 +59,16 @@ export function RangeSelectionBar({
             >
               <Text style={styles.clearButtonText}>{strings.clearSelection}</Text>
             </Pressable>
-
             <Pressable
               onPress={onStartPractice}
               style={({ pressed }) => [
-                styles.startPracticeButton,
-                pressed && styles.startPracticeButtonPressed,
+                styles.startBtn,
+                pressed && styles.startBtnPressed,
               ]}
               accessibilityLabel="Start Practice"
               accessibilityRole="button"
             >
-              <Text style={styles.startPracticeText}>{strings.startPractice}</Text>
+              <Text style={styles.startBtnText}>{strings.startPractice}</Text>
             </Pressable>
           </View>
         </View>
@@ -86,58 +77,59 @@ export function RangeSelectionBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E2DA',
-    paddingHorizontal: theme.spacing.md, // 16px
-    paddingTop: theme.spacing.md, // 16px
-    elevation: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    minHeight: 64,
-  },
-  selectionText: {
-    fontSize: theme.typography.body.size, // 18px
-    color: theme.colors.text, // #1A1A2E
-    textAlign: 'center',
-    flex: 1,
-  },
-  rangeCompleteRow: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 12,
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md, // 16px
-  },
-  clearButtonText: {
-    fontSize: theme.typography.body.size, // 18px
-    color: theme.colors.textSecondary, // #6B7280
-  },
-  startPracticeButton: {
-    backgroundColor: '#0D7377', // Teal
-    height: 44,
-    paddingHorizontal: theme.spacing.md, // 16px
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  startPracticeButtonPressed: {
-    backgroundColor: '#0B6163',
-  },
-  startPracticeText: {
-    fontSize: theme.typography.body.size, // 18px
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: theme.semantic.bgRaised,
+      borderTopColor: theme.semantic.border,
+      borderTopWidth: 1,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+      minHeight: 64,
+      ...theme.elevation.shadow3,
+    },
+    selectionText: {
+      fontFamily: theme.fonts.arabic,
+      fontSize: 16,
+      color: theme.semantic.fg,
+      textAlign: 'center',
+      flex: 1,
+    },
+    completeRow: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 12,
+    },
+    buttonsRow: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    clearButtonText: {
+      fontFamily: theme.fonts.arabic,
+      fontSize: 16,
+      color: theme.semantic.fgMuted,
+    },
+    startBtn: {
+      backgroundColor: theme.semantic.primary,
+      height: 44,
+      paddingHorizontal: theme.spacing.lg,
+      borderRadius: theme.radii.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    startBtnPressed: {
+      backgroundColor: theme.semantic.primaryPressed,
+    },
+    startBtnText: {
+      fontFamily: theme.fonts.arabic,
+      fontSize: 15,
+      color: theme.semantic.fgOnPrimary,
+      fontWeight: '600',
+    },
+  });
+}

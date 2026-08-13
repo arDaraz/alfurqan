@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-01T00:00:00.000Z",
+  "title": "Design System: Mushaf Al Furqan",
+  "extensions": {
+    "colorMeta": {
+      "madani-paper-cream": {
+        "role": "neutral",
+        "displayName": "Madani Paper Cream",
+        "canonical": "oklch(94% 0.025 80)",
+        "tonalRamp": ["#FCFAF4", "#FBF6EA", "#F5EEDB", "#EFE5C7", "#EBE2C9", "#D8CBA6", "#BBA875", "#8E7E55"]
+      },
+      "paper-light": {
+        "role": "neutral",
+        "displayName": "Paper Light",
+        "canonical": "oklch(96% 0.022 82)",
+        "tonalRamp": ["#FEFCF8", "#FBF6EA", "#F5EEDB", "#EBE2C9", "#D8CBA6", "#BBA875", "#8E7E55", "#5C5036"]
+      },
+      "paper-deep": {
+        "role": "neutral",
+        "displayName": "Paper Deep",
+        "canonical": "oklch(90% 0.028 82)",
+        "tonalRamp": ["#FBF6EA", "#F5EEDB", "#EBE2C9", "#D8CBA6", "#C0AE7F", "#A89465", "#7A6A47", "#52472F"]
+      },
+      "mushaf-ink": {
+        "role": "neutral",
+        "displayName": "Mushaf Ink",
+        "canonical": "oklch(20% 0.025 175)",
+        "tonalRamp": ["#0E2724", "#1F3D3A", "#324F4B", "#4A635F", "#6E837F", "#8A9F9B", "#B6C8C5", "#E2EBE8"]
+      },
+      "sajjada-teal": {
+        "role": "primary",
+        "displayName": "Sajjada Teal",
+        "canonical": "oklch(40% 0.07 180)",
+        "tonalRamp": ["#02201C", "#063831", "#094A42", "#0B5D53", "#317A6F", "#6FA396", "#A8C9C0", "#E9F1EE"]
+      },
+      "sarlawh-gold": {
+        "role": "secondary",
+        "displayName": "Sarlawh Gold",
+        "canonical": "oklch(68% 0.11 80)",
+        "tonalRamp": ["#3F3013", "#5C4519", "#8A6A26", "#B8923F", "#C8A35B", "#E2C480", "#EED8A6", "#F7EBCA"]
+      },
+      "tasbih-sage": {
+        "role": "tertiary",
+        "displayName": "Tasbīh Sage",
+        "canonical": "oklch(60% 0.05 145)",
+        "tonalRamp": ["#1F2C22", "#2D4030", "#436447", "#5F8567", "#88A88E", "#B3C9B6", "#DCE7D9", "#EEF3EC"]
+      },
+      "tajwid-rose": {
+        "role": "tertiary",
+        "displayName": "Tajwīd Rose",
+        "canonical": "oklch(50% 0.13 25)",
+        "tonalRamp": ["#3A1818", "#552323", "#7A3434", "#A14444", "#C36C6C", "#DA9999", "#F3DFD9", "#FAEEEA"]
+      },
+      "night-bg": {
+        "role": "neutral",
+        "displayName": "Night Reading Surface",
+        "canonical": "oklch(18% 0.02 175)",
+        "tonalRamp": ["#02100E", "#061412", "#0A1C1A", "#0F2420", "#1A332F", "#2C4641", "#456862", "#7A9893"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Marketing-tier hero only. Almost never used in product chrome." },
+      "heading": { "displayName": "Heading", "purpose": "Settings section labels, screen-level headings." },
+      "title": { "displayName": "Title", "purpose": "Surah/Juz primary names in Latin context, GreetingCard title." },
+      "body": { "displayName": "Body", "purpose": "Default UI body. Settings values, list metadata, surah meanings." },
+      "label": { "displayName": "Label (UPPERCASE)", "purpose": "Section overlines (CONTINUE READING), button text, KhatamStar inner numerals. 0.18em tracking is the spec." },
+      "caption": { "displayName": "Caption", "purpose": "Tab-bar labels, ayatLabel, timestamps." },
+      "mushaf": { "displayName": "Mushaf Script", "purpose": "Quranic scripture only. Never used outside the mushaf renderer." },
+      "arabic-ui": { "displayName": "Arabic UI", "purpose": "Arabic-locale UI strings. Never share a Text element with numerals." },
+      "editorial": { "displayName": "Editorial Serif", "purpose": "Used in exactly one place: the splash subtitle. Adding a second use is a violation." }
+    },
+    "shadows": [
+      { "name": "shadow1", "value": "0 1px 2px rgba(14, 39, 36, 0.06)", "purpose": "The lightest lift. Active pill on PillTabs, settings cards. Almost imperceptible at rest." },
+      { "name": "shadow2", "value": "0 4px 10px rgba(14, 39, 36, 0.08)", "purpose": "GreetingCard, Settings profile card, Practice verse box. General-purpose card lift." },
+      { "name": "shadow3", "value": "0 10px 24px rgba(14, 39, 36, 0.12)", "purpose": "Reserved for transient overlays (toasts, snackbars). Rare." },
+      { "name": "shadowFloat", "value": "0 16px 40px rgba(14, 39, 36, 0.22)", "purpose": "A single use: the Practice mic FAB above the bottom-tab bar. The one ceremonial lift in the entire app." }
+    ],
+    "motion": [
+      { "name": "duration-fast", "value": "140ms", "purpose": "Pressed/hover state changes. Below the threshold of perception." },
+      { "name": "duration-base", "value": "220ms", "purpose": "Default UI transition. Tab switches, modal entrances, settings toggles." },
+      { "name": "duration-slow", "value": "360ms", "purpose": "Hero motion: surah row open, splash settle, ornament divider reveal." },
+      { "name": "duration-ambient", "value": "1200ms", "purpose": "Ambient micro-motion: the splash rosette breath cycle, the listening dot pulse." },
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for state transitions." },
+      { "name": "ease-entrance", "value": "cubic-bezier(0.2, 0.9, 0.3, 1)", "purpose": "Elements entering the screen. Slight ease-out-back for a settled feel without bounce." },
+      { "name": "ease-exit", "value": "cubic-bezier(0.4, 0, 1, 1)", "purpose": "Elements leaving the screen. Quicker than entrance to feel decisive." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "0px", "purpose": "Default. The app targets phones; layout assumes a single column at all sizes." },
+      { "name": "tablet", "value": "768px", "purpose": "Optional larger reading surface. Mushaf renderer can scale; chrome retains phone proportions." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default primary action. Sajjada Teal carries identity; pressed state deepens.",
+      "html": "<button class=\"ds-btn-primary\">Continue Reading</button>",
+      "css": ".ds-btn-primary { background: #0B5D53; color: #FBF6EA; padding: 10px 20px; border: none; border-radius: 14px; font-family: Manrope, system-ui, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; transition: background 220ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #094A42; } .ds-btn-primary:focus-visible { outline: 2px solid #0B5D5333; outline-offset: 3px; } .ds-btn-primary:active { background: #063831; }"
+    },
+    {
+      "name": "Accent Button (Sarlawh Gold)",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "The single gold CTA. Reserved for the GreetingCard Resume / Start. Never use for generic primary actions.",
+      "html": "<button class=\"ds-btn-accent\"><svg viewBox=\"0 0 24 24\" width=\"12\" height=\"12\" fill=\"#0E2724\" aria-hidden=\"true\"><path d=\"M8 5v14l11-7z\"/></svg><span>Resume</span></button>",
+      "css": ".ds-btn-accent { display: inline-flex; align-items: center; gap: 6px; background: #B8923F; color: #0E2724; padding: 5px 15px; border: none; border-radius: 12px; font-family: Manrope, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 220ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-accent svg { display: block; } .ds-btn-accent:hover { background: #C8A35B; } .ds-btn-accent:active { background: #8A6A26; }"
+    },
+    {
+      "name": "Pill Tabs (Segmented Selector)",
+      "kind": "nav",
+      "refersTo": "pill-tab",
+      "description": "Sunken paper track with one active pill in Sajjada Teal. Used for Surahs / Juz / Bookmarks segmentation on Home.",
+      "html": "<div class=\"ds-pill-tabs\" role=\"tablist\"><button role=\"tab\" aria-selected=\"true\" class=\"ds-pill ds-pill--active\">Surahs</button><button role=\"tab\" aria-selected=\"false\" class=\"ds-pill\">Juz</button><button role=\"tab\" aria-selected=\"false\" class=\"ds-pill\">Bookmarks</button></div>",
+      "css": ".ds-pill-tabs { display: inline-flex; background: #EBE2C9; border-radius: 28px; padding: 4px; gap: 4px; } .ds-pill { flex: 1; padding: 10px 14px; border: none; background: transparent; border-radius: 24px; font-family: Manrope, system-ui, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; color: #4A635F; cursor: pointer; transition: background 140ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-pill:hover:not(.ds-pill--active) { color: #0E2724; } .ds-pill--active { background: #0B5D53; color: #FBF6EA; box-shadow: 0 1px 2px rgba(14, 39, 36, 0.06); }"
+    },
+    {
+      "name": "Surah List Item",
+      "kind": "card",
+      "refersTo": "surah-list-item",
+      "description": "Three-column row: KhatamStar rosette, primary name + meta, ayah count. The 8-point khātam star wraps the surah numeral.",
+      "html": "<button class=\"ds-surah-row\"><span class=\"ds-surah-rosette\"><svg viewBox=\"0 0 44 44\" width=\"44\" height=\"44\" aria-hidden=\"true\"><path d=\"M22 4 L26 10 L33 8 L33 15 L40 18 L36 22 L40 26 L33 29 L33 36 L26 34 L22 40 L18 34 L11 36 L11 29 L4 26 L8 22 L4 18 L11 15 L11 8 L18 10 Z\" fill=\"#F5EEDB\" stroke=\"#B8923F\" stroke-width=\"1\"/></svg><span class=\"ds-surah-num\">1</span></span><span class=\"ds-surah-text\"><span class=\"ds-surah-name\">Al-Fatihah</span><span class=\"ds-surah-meta\">The Opening · Makki</span></span><span class=\"ds-surah-ayat\"><span class=\"ds-ayat-num\">7</span><span class=\"ds-ayat-label\">AYAT</span></span></button>",
+      "css": ".ds-surah-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px; margin: 2px 10px; background: transparent; border: none; border-radius: 14px; cursor: pointer; transition: background 140ms cubic-bezier(0.4, 0, 0.2, 1); text-align: left; } .ds-surah-row:hover { background: #0B5D5310; } .ds-surah-row:focus-visible { outline: 2px solid #0B5D5333; outline-offset: 1px; } .ds-surah-rosette { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; } .ds-surah-num { position: absolute; font-family: Manrope, system-ui, sans-serif; font-size: 13px; font-weight: 700; color: #B8923F; letter-spacing: 0.3px; } .ds-surah-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-surah-name { font-family: Manrope, system-ui, sans-serif; font-size: 16px; font-weight: 600; color: #0E2724; line-height: 1.4; } .ds-surah-meta { font-family: Manrope, system-ui, sans-serif; font-size: 12px; color: #4A635F; letter-spacing: 0.02em; } .ds-surah-ayat { display: flex; flex-direction: column; align-items: center; width: 56px; flex-shrink: 0; } .ds-ayat-num { font-family: Manrope, system-ui, sans-serif; font-size: 18px; font-weight: 600; color: #0E2724; line-height: 22px; } .ds-ayat-label { font-family: Manrope, system-ui, sans-serif; font-size: 9px; font-weight: 700; color: #8A9F9B; letter-spacing: 1.2px; margin-top: 2px; }"
+    },
+    {
+      "name": "Greeting Card",
+      "kind": "card",
+      "refersTo": "greeting-card",
+      "description": "The signature card. Linear-gradient Sajjada Teal with a soft Sarlawh Gold radial highlight in the top-left corner. The single gradient surface in the entire app.",
+      "html": "<div class=\"ds-greeting-card\"><div class=\"ds-greeting-glow\" aria-hidden=\"true\"></div><span class=\"ds-greeting-label\">CONTINUE READING</span><h2 class=\"ds-greeting-title\">Surah Al-Baqarah · Ayah 12</h2><p class=\"ds-greeting-sub\">Juz 1 · Page 14</p><div class=\"ds-greeting-cta\"><button class=\"ds-btn-accent\"><svg viewBox=\"0 0 24 24\" width=\"12\" height=\"12\" fill=\"#0E2724\" aria-hidden=\"true\"><path d=\"M8 5v14l11-7z\"/></svg><span>Resume</span></button><span class=\"ds-greeting-time\">5 minutes ago</span></div></div>",
+      "css": ".ds-greeting-card { position: relative; padding: 18px; border-radius: 22px; background: linear-gradient(135deg, #063831 0%, #0B5D53 55%, #0B5D53 100%); box-shadow: 0 4px 10px rgba(14, 39, 36, 0.08); overflow: hidden; max-width: 360px; } .ds-greeting-glow { position: absolute; top: -30px; left: -30px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(226, 196, 128, 0.18) 0%, rgba(226, 196, 128, 0) 60%); pointer-events: none; } .ds-greeting-label { font-family: Manrope, system-ui, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 2.2px; color: #E2C480; text-transform: uppercase; } .ds-greeting-title { font-family: Manrope, system-ui, sans-serif; font-size: 22px; font-weight: 700; color: #FBF6EA; margin: 6px 0 2px; line-height: 1.3; } .ds-greeting-sub { font-family: Manrope, system-ui, sans-serif; font-size: 11px; font-weight: 400; color: #FBF6EA; opacity: 0.78; letter-spacing: 0.4px; margin: 0; } .ds-greeting-cta { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; gap: 12px; } .ds-greeting-time { font-family: Manrope, system-ui, sans-serif; font-size: 11px; color: #FBF6EA; opacity: 0.68; } .ds-btn-accent { display: inline-flex; align-items: center; gap: 6px; background: #B8923F; color: #0E2724; padding: 5px 15px; border: none; border-radius: 12px; font-family: Manrope, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 220ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-accent:hover { background: #C8A35B; } .ds-btn-accent:active { background: #8A6A26; }"
+    },
+    {
+      "name": "Settings Row",
+      "kind": "card",
+      "refersTo": "settings-row",
+      "description": "Stacked rows on Paper Light, separated by hairline borders. Tinted icon tile is the only ground in the row.",
+      "html": "<button class=\"ds-settings-row\"><span class=\"ds-settings-icon\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"#0B5D53\" stroke-width=\"1.75\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 1v6m0 10v6m11-11h-6M7 12H1m16.36-7.36l-4.24 4.24m-6.36 6.36l-4.24 4.24M19.78 19.78l-4.24-4.24M8.46 8.46L4.22 4.22\" stroke-linecap=\"round\"/></svg></span><span class=\"ds-settings-text\"><span class=\"ds-settings-key\">Mushaf Font</span><span class=\"ds-settings-value\">KFGQPC Uthmani</span></span><svg class=\"ds-settings-chevron\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" aria-hidden=\"true\"><path d=\"m9 6 6 6-6 6\" stroke=\"#8A9F9B\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-settings-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; background: #FBF6EA; border: none; border-bottom: 0.5px solid rgba(14, 39, 36, 0.1); cursor: pointer; transition: opacity 140ms; text-align: left; } .ds-settings-row:hover { opacity: 0.92; } .ds-settings-row:focus-visible { outline: 2px solid #0B5D5333; outline-offset: -2px; } .ds-settings-row:active { opacity: 0.7; } .ds-settings-icon { width: 34px; height: 34px; border-radius: 10px; background: rgba(11, 93, 83, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; } .ds-settings-text { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; } .ds-settings-key { font-family: Manrope, system-ui, sans-serif; font-size: 15px; font-weight: 500; color: #0E2724; line-height: 18px; } .ds-settings-value { font-family: Manrope, system-ui, sans-serif; font-size: 11px; color: #4A635F; letter-spacing: 0.22px; } .ds-settings-chevron { flex-shrink: 0; }"
+    },
+    {
+      "name": "Practice Mic FAB",
+      "kind": "custom",
+      "refersTo": "practice-mic-fab",
+      "description": "The single ceremonial lift on the entire app. Sajjada Teal disc with a Sarlawh Gold halo ring and the only shadowFloat instance.",
+      "html": "<button class=\"ds-fab\" aria-label=\"Begin recitation\"><span class=\"ds-fab-halo\" aria-hidden=\"true\"></span><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"#FBF6EA\" stroke-width=\"1.75\" aria-hidden=\"true\"><rect x=\"9\" y=\"3\" width=\"6\" height=\"12\" rx=\"3\"/><path d=\"M5 11a7 7 0 0 0 14 0\" stroke-linecap=\"round\"/><path d=\"M12 18v3\" stroke-linecap=\"round\"/></svg></button>",
+      "css": ".ds-fab { position: relative; width: 60px; height: 60px; border-radius: 9999px; background: #0B5D53; border: 3px solid #FBF6EA; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 16px 40px rgba(14, 39, 36, 0.22); transition: background 220ms cubic-bezier(0.4, 0, 0.2, 1), transform 220ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-fab:hover { background: #094A42; } .ds-fab:active { background: #063831; transform: scale(0.96); } .ds-fab-halo { position: absolute; top: -5px; left: -5px; width: 70px; height: 70px; border-radius: 9999px; border: 1px solid #E2C480; opacity: 0.5; pointer-events: none; transition: opacity 220ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-fab:hover .ds-fab-halo { opacity: 0.85; }"
+    },
+    {
+      "name": "Ornament Divider",
+      "kind": "custom",
+      "refersTo": "ornament-divider",
+      "description": "Replaces every section break that would otherwise be a flat horizontal rule. Sarlawh Gold rule with a central medallion.",
+      "html": "<div class=\"ds-ornament\" role=\"separator\" aria-hidden=\"true\"><span class=\"ds-ornament-rule\"></span><svg class=\"ds-ornament-medallion\" viewBox=\"0 0 32 32\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"#B8923F\" stroke-width=\"1.25\"><path d=\"M16 4 L20 10 L26 10 L22 16 L26 22 L20 22 L16 28 L12 22 L6 22 L10 16 L6 10 L12 10 Z\"/><circle cx=\"16\" cy=\"16\" r=\"2\" fill=\"#B8923F\"/></svg><span class=\"ds-ornament-rule\"></span></div>",
+      "css": ".ds-ornament { display: flex; align-items: center; gap: 12px; padding: 16px 0; max-width: 360px; } .ds-ornament-rule { flex: 1; height: 1px; background: linear-gradient(to right, rgba(184, 146, 63, 0) 0%, #B8923F 50%, rgba(184, 146, 63, 0) 100%); } .ds-ornament-medallion { flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Study Desk and Prayer Rug",
+    "overview": "Mushaf Al Furqan is a private surface for scripture, not a destination of its own. The visual system is quiet, exact, and bilingual. Cream paper carries the page; ink carries the word; teal and gold appear only where ceremony demands them. The interface dissolves around the mushaf so the user looks at scripture, not at the app. The system explicitly rejects four neighbors: web-SaaS chrome (Quran.com), AI-startup gloss (Tarteel), Islamic clipart (SalamWeb), and feature creep with photographic religious imagery (generic prayer-time apps). Every ornament traces back to real Madani-mushaf geometry. The atmosphere is monastic. Restrained motion, sober palette, precise type. The app should feel like a study desk and a prayer rug, not a SaaS dashboard or an AI demo.",
+    "keyCharacteristics": [
+      "Cream-paper aesthetic. The light theme is paper, not white. The dark theme is night reading, not generic SaaS dark.",
+      "Bilingual and RTL-first. Arabic is the primary text; Latin chrome adapts to it.",
+      "Restrained color, with one ceremonial accent. Sarlawh Gold appears on ≤10% of any surface; Sajjada Teal carries identity, never decoration.",
+      "Authentic ornaments only. Ayah rosettes, sarlawh cartouches, Kufic glyph. No clip-art Islamic iconography.",
+      "Flat by default with one ceremonial lift. The Practice FAB is the single floating element on the entire app."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "The primary accent (Sarlawh Gold) appears on ≤10% of any given screen. Its rarity is the point. Use it for ayah-end rosettes, the ornament divider, the GreetingCard CTA, the FAB halo, and absolutely nowhere else by reflex.", "section": "colors" },
+      { "name": "The No Pure Black or White Rule", "body": "Every neutral is tinted toward paper warmth. #000 and #fff are forbidden. The cream theme uses #F5EEDB for surfaces and #0E2724 for ink; the night theme uses #0A1C1A for surfaces and #EFE5CE for ink. Both keep the same hue family.", "section": "colors" },
+      { "name": "The Sajjada Teal Identity Rule", "body": "Sajjada Teal is identity, not decoration. Use it for the GreetingCard, the active pill, the Practice FAB, the bottom-tab focus, and the surah-list active marker. Do not use it for icon strokes, hairline dividers, or generic body emphasis.", "section": "colors" },
+      { "name": "The Two-Element Rule", "body": "Arabic letters and Latin/Arabic numerals never share one Text element. The Quranic font wraps digits in scripture ornaments; the UI font does not. Always split: one Text for the label in theme.fonts.quran, a sibling Text for the number in theme.fonts.arabic or theme.fonts.latin.", "section": "typography" },
+      { "name": "The textAlign-Left Rule (RTL)", "body": "Under I18nManager.forceRTL(true), React Native flips textAlign. To land Arabic text on the physical right, write textAlign: 'left' paired with writingDirection: 'rtl'. Writing textAlign: 'right' puts the text on the physical left and is a bug.", "section": "typography" },
+      { "name": "The Editorial-Once Rule", "body": "Fraunces appears in exactly one place: the splash subtitle. Adding a second use is a violation. Use Manrope or KFGQPC-Uthmani everywhere else.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. List rows, tab bars, settings rows, and the mushaf page itself never carry shadow. Lift is reserved for elements that genuinely float (cards detached from the list, the FAB, transient overlays).", "section": "elevation" },
+      { "name": "The One Ceremonial Lift Rule", "body": "Exactly one element on the entire app uses shadowFloat: the Practice mic FAB. Its lift is the ritual gesture that says begin recitation. Adding a second shadowFloat anywhere — bottom sheets, modals, secondary FABs — dilutes the gesture and is forbidden.", "section": "elevation" },
+      { "name": "The Hairline Over Shadow Rule", "body": "When a row needs separation from its neighbors, prefer a 1px hairline at mushaf-ink 10% alpha over a shadow. Hairlines compose with paper; shadows imply weight.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use theme.semantic.* tokens via useTheme() rather than theme.palette.* directly. Semantic tokens auto-resolve light vs. night reading modes; palette stops do not.",
+      "Do split Arabic letters and numerals into separate Text elements. KFGQPC-Uthmani wraps digits in ayah-marker ornaments; ReemKufi/Manrope render them as plain numerals.",
+      "Do use textAlign: 'left' paired with writingDirection: 'rtl' for Arabic text. Under I18nManager.forceRTL(true), textAlign: 'right' lands on the physical left and is a bug.",
+      "Do reach for the ornament divider (OrnamentDivider) for every section break that would otherwise be a flat rule.",
+      "Do keep the GreetingCard the only gradient in the entire app. Its Sajjada Teal Focus → Sajjada Teal → Sajjada Teal radial-glow gradient is signature.",
+      "Do use Sajjada Tint Overlay (the 10% teal) for the selected surah/juz row ground. Pair it with a 3px vertical Sajjada Teal active-edge bar.",
+      "Do vary spacing for rhythm. Use theme.gutter.screen (24px) for screen edges, theme.gutter.row (16px) between rows, theme.gutter.ayah (28px) inside scripture surfaces.",
+      "Do verify every UI change on the iOS simulator, not on the web build. RN-web flattens shadows, breaks the SQLite hooks, and skips react-native-pager-view."
+    ],
+    "donts": [
+      "Don't use #000 or #fff anywhere. Every neutral is tinted toward paper warmth.",
+      "Don't repeat the web-SaaS chrome trap of Quran.com — no tabbed page headers, no sidebars, no settings panels surrounding the mushaf.",
+      "Don't repeat the AI-startup gloss trap of Tarteel — no streak counters, no AI-powered badges, no neon-on-dark hero cards, no gradient text.",
+      "Don't repeat the Islamic-clipart trap of SalamWeb — no crescents, no mosque silhouettes, no primary emerald green, no clip-art calligraphy.",
+      "Don't repeat the prayer-time-app feature creep trap — no Kaaba photos, no Qibla compass, no prayer-times widget, no zakat calculator, no hijri calendar.",
+      "Don't add a second shadowFloat element. The Practice FAB is the only floating element on the entire app.",
+      "Don't apply Sarlawh Gold beyond ≤10% of any screen. It is an ornament accent, not a brand color.",
+      "Don't use Fraunces outside the splash subtitle. One use, ever.",
+      "Don't use side-stripe borders (border-left/right > 1px) as decorative accents.",
+      "Don't use gradient text. The GreetingCard title is solid Paper Light; emphasis comes from weight and size.",
+      "Don't use modals as a first thought. Settings choosers and ayah actions should be inline or progressive.",
+      "Don't use identical card grids of icon-+-heading-+-text tiles.",
+      "Don't use em dashes in copy. Use commas, colons, semicolons, periods, or parentheses."
+    ]
+  }
+}

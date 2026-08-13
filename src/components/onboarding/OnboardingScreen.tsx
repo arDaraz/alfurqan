@@ -1,61 +1,87 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
+import { LogoGlyph } from '../brand/LogoGlyph';
+import { OrnamentDivider } from '../brand/OrnamentDivider';
+import { OnboardingDots } from './OnboardingDots';
 
 interface OnboardingScreenProps {
   heading: string;
   body: string;
   illustrationIcon: string;
   isLastScreen: boolean;
+  screenIndex: number;
+  totalScreens: number;
   onGetStarted?: () => void;
+  /** Whether this is the first page (gets the brand glyph instead of an icon). */
+  isFirstScreen?: boolean;
 }
 
+/**
+ * Onboarding page — uses the brand rosette on the first slide and
+ * Lucide-style icons on subsequent ones, with the v2 type ramp and
+ * a sage/gold ornament divider between hero and copy.
+ */
 export function OnboardingScreen({
   heading,
   body,
   illustrationIcon,
   isLastScreen,
+  screenIndex,
+  totalScreens,
+  isFirstScreen,
   onGetStarted,
 }: OnboardingScreenProps) {
   const { width } = useWindowDimensions();
+  const theme = useTheme();
   const strings = useStrings();
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(theme, insets.bottom);
 
   return (
     <View style={[styles.container, { width }]}>
-      {/* Illustration area */}
       <View style={styles.illustrationArea}>
-        <MaterialCommunityIcons
-          name={illustrationIcon as any}
-          size={120}
-          color={theme.colors.accent}
-        />
+        {isFirstScreen ? (
+          <LogoGlyph
+            size={140}
+            bg={theme.semantic.primary}
+            gold={theme.semantic.accentSoft}
+            goldSoft={theme.semantic.accentSoft}
+          />
+        ) : (
+          <MaterialCommunityIcons
+            name={illustrationIcon as any}
+            size={110}
+            color={theme.semantic.accent}
+          />
+        )}
       </View>
 
-      {/* Text content */}
+      <View style={styles.divider}>
+        <OrnamentDivider tier="compact" color={theme.semantic.accent} darkMode={theme.mode === 'dark'} />
+      </View>
+
       <View style={styles.textContent}>
-        <Text style={styles.heading}>
-          {heading}
-        </Text>
-
-        <Text style={styles.body}>
-          {body}
-        </Text>
+        <Text style={styles.heading}>{heading}</Text>
+        <Text style={styles.body}>{body}</Text>
       </View>
 
-      {/* Bottom area */}
       <View style={styles.bottomArea}>
+        <OnboardingDots total={totalScreens} active={screenIndex} />
         {isLastScreen ? (
-          <TouchableOpacity
+          <Pressable
             onPress={onGetStarted}
             accessibilityLabel={strings.getStarted}
             accessibilityRole="button"
-            activeOpacity={0.7}
-            style={styles.getStartedButton}
+            style={({ pressed }) => [styles.ctaHitArea, pressed && styles.ctaPressed]}
           >
-            <Text style={styles.getStartedText}>{strings.getStarted}</Text>
-          </TouchableOpacity>
+            <View style={styles.ctaSurface}>
+              <Text style={styles.ctaText}>{strings.getStarted}</Text>
+            </View>
+          </Pressable>
         ) : (
           <Text style={styles.swipeHint}>{strings.swipeToContinue}</Text>
         )}
@@ -64,63 +90,82 @@ export function OnboardingScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'space-between',
-  },
-  illustrationArea: {
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: theme.spacing['3xl'],
-  },
-  textContent: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    alignItems: 'center',
-  },
-  heading: {
-    fontSize: theme.typography.display.size,
-    fontWeight: theme.typography.display.weight,
-    color: theme.colors.text,
-    textAlign: 'center',
-    lineHeight: theme.typography.display.size * theme.typography.display.latinLineHeight,
-  },
-  body: {
-    fontSize: theme.typography.body.size,
-    fontWeight: theme.typography.body.weight,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    marginTop: theme.spacing.md,
-    lineHeight: theme.typography.body.size * theme.typography.body.latinLineHeight,
-  },
-  bottomArea: {
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.xl,
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  getStartedButton: {
-    backgroundColor: theme.colors.primary,
-    height: 44,
-    minWidth: 200,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  getStartedText: {
-    fontSize: theme.typography.body.size,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  swipeHint: {
-    fontSize: theme.typography.label.size,
-    fontWeight: '400',
-    color: theme.colors.textDisabled,
-    textAlign: 'center',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>, bottomInset: number) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.semantic.bg,
+      justifyContent: 'space-between',
+    },
+    illustrationArea: {
+      height: 220,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: theme.spacing['3xl'],
+    },
+    divider: {
+      alignItems: 'center',
+      marginVertical: theme.spacing.md,
+    },
+    textContent: {
+      flex: 1,
+      justifyContent: 'flex-start',
+      paddingHorizontal: theme.spacing.xl,
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    heading: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 26,
+      fontWeight: '700',
+      color: theme.semantic.fg,
+      textAlign: 'center',
+      lineHeight: 31,
+    },
+    body: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 16,
+      color: theme.semantic.fgMuted,
+      textAlign: 'center',
+      lineHeight: 24,
+      maxWidth: 320,
+    },
+    bottomArea: {
+      paddingBottom: Math.max(bottomInset, theme.spacing.md) + theme.spacing.xl,
+      paddingHorizontal: theme.spacing.xl,
+      alignItems: 'center',
+      gap: theme.spacing.lg,
+    },
+    ctaHitArea: {
+      minWidth: 220,
+      minHeight: 52,
+    },
+    ctaSurface: {
+      height: 52,
+      minWidth: 220,
+      paddingHorizontal: theme.spacing.lg,
+      borderRadius: theme.radii.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.semantic.primary,
+      ...theme.elevation.shadow2,
+    },
+    ctaPressed: {
+      opacity: 0.86,
+    },
+    ctaText: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.semantic.fgOnPrimary,
+      letterSpacing: 0,
+    },
+    swipeHint: {
+      fontFamily: theme.fonts.latin,
+      fontSize: 13,
+      color: theme.semantic.fgSubtle,
+      textAlign: 'center',
+      letterSpacing: 0,
+    },
+  });
+}
