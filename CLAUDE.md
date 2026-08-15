@@ -43,6 +43,25 @@ npm run seed:mushaf          # Populate mushaf_words table
 - The generated `ios/` and `android/` directories are ignored. `app.json` and Expo config plugins are their source of truth.
 - If Xcode reports that no destination matches because an iOS platform is missing, install the matching runtime in **Xcode > Settings > Components**, or run `xcodebuild -downloadPlatform iOS -architectureVariant arm64` on Apple Silicon.
 
+## Mandatory Agent Launch Protocol
+
+Every agent must use this protocol before launching or verifying the app. Do not guess which Metro server, worktree, native binary, or Simulator is active.
+
+1. Confirm the checkout and branch with `pwd` and `git status -sb`.
+2. Run `npm install` in this worktree when `node_modules` is absent or `package-lock.json` changed.
+3. Run `npm run dev:port` **before** `npm start`, `npm run ios`, or `npm run android`.
+4. If port 8081 belongs to another worktree, stop. Do not accept port 8082 and do not kill a generic Node process. Coordinate the handoff, then run `npm run dev:stop` from the worktree reported as the owner.
+5. Choose exactly one launch path:
+   - Native inputs unchanged and compatible development build already installed: `npm start`, then press `i` for iOS.
+   - First run or native inputs changed: `npm run ios`.
+   - Connected physical iPhone: `npm run ios:device`.
+   - Android emulator/device: `npm run android`.
+6. Verify that `npm run dev:port` reports the **current worktree path**, confirm the intended Simulator/device, and visually inspect the native app. For iOS, capture a screenshot with `xcrun simctl io booted screenshot /tmp/alfurqan-screen.png`.
+
+Agents must not use Expo Go, direct `npx expo start`, automatic port fallback, direct `xcodebuild` launch commands, or a web browser as substitutes for this workflow. If a launch command or port policy changes, update `README.md`, `AGENTS.md`, `CLAUDE.md`, and `docs/DEVELOPMENT_SETUP.md` together.
+
+The supported coordination model is **one active worktree/Metro server on port 8081 at a time**. Separate Simulator devices isolate the native binary and app data but do not remove the shared Metro-port conflict. See the worktree decision table and handoff procedure in `docs/DEVELOPMENT_SETUP.md#13-developing-with-git-worktrees`.
+
 ## Architecture
 
 ### Routing (Expo Router, file-based)

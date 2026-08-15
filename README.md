@@ -4,6 +4,12 @@ Al Furqan is an Expo development-build app. It uses native modules, so use the i
 
 For the complete first-time setup, account/sign-in requirements, simulator runtime installation and recovery, physical iPhone steps, Android steps, and Expo SDK upgrade record, read [docs/DEVELOPMENT_SETUP.md](docs/DEVELOPMENT_SETUP.md).
 
+## Non-negotiable launch rules
+
+Before any launch, run `npm run dev:port`. Port 8081 must either be available or owned by this exact checkout. If another worktree owns it, coordinate a handoff and run `npm run dev:stop` from that owning worktree. Never accept Expo's suggestion to use port 8082.
+
+Use only the project commands in this README. Do not use Expo Go, direct `npx expo start`, direct `xcodebuild` launch commands, or web rendering for native verification. The supported model is one active worktree/Metro server at a time; a separate Simulator isolates app binaries and data, but Metro port 8081 is still shared across the Mac.
+
 ## One-time setup
 
 Install JavaScript dependencies:

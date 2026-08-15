@@ -128,6 +128,38 @@ The output must contain eligible `iOS Simulator` devices, not only an `Any iOS S
 
 ## 5. Run in the iOS Simulator
 
+### Mandatory preflight for people and coding agents
+
+Run these commands from the worktree you intend to test:
+
+```bash
+pwd
+git status -sb
+npm run dev:port
+```
+
+Continue only when port 8081 is available or the reported process directory exactly matches the current `pwd` output. If another worktree owns the port:
+
+1. do not accept Expo's port 8082 fallback;
+2. do not kill all Node/Expo processes by name;
+3. determine whether the other worktree is actively in use;
+4. coordinate the handoff;
+5. run `npm run dev:stop` from the reported owning worktree;
+6. return here and run `npm run dev:port` again.
+
+Then use this decision table:
+
+| Situation | Command | What it does |
+| --- | --- | --- |
+| First run in this checkout, native app absent, or native inputs changed | `npm run ios` | Builds, installs, launches, and starts/reuses the correct Metro server. |
+| Compatible native development build already installed; only JS/TS/UI changed | `npm start`, then press `i` | Reuses the native shell and loads this worktree's bundle. |
+| Physical iPhone | `npm run ios:device` | Selects, signs, builds, and launches on the connected device. |
+| Android emulator/device | `npm run android` | Builds, installs, launches, and starts/reuses Metro. |
+| Unsure what owns Metro | `npm run dev:port` | Prints the listener PID, command, and working directory. |
+| Finished with this worktree | `npm run dev:stop` | Stops Metro only if this checkout owns it. |
+
+Do not use Expo Go, direct `npx expo start`, direct `xcodebuild` launch commands, or web rendering as an alternative path. These bypass the repository's ownership checks or do not support the native SQLite/pager behavior.
+
 For the first run:
 
 ```bash
@@ -440,6 +472,8 @@ The output includes PID, command, and working directory. Do not solve the confli
 
 ### Safe handoff from worktree A to worktree B
 
+This handoff is mandatory for agents as well as humans. A new task must not assume that the currently running Simulator app or Metro process belongs to its worktree.
+
 In worktree A:
 
 ```bash
@@ -480,6 +514,8 @@ npm run ios
 This installs worktree B's binary over worktree A's binary on the currently selected Simulator device because both use the same bundle identifier. Returning to worktree A may then require another `npm run ios` if A expects a different native binary.
 
 ### Simulator reuse versus isolation
+
+Use this rule: a worktree owns source files, but the Mac owns Simulator devices and TCP ports. The same Simulator device does not preserve two different builds with the same bundle identifier.
 
 #### Reuse one Simulator device
 
