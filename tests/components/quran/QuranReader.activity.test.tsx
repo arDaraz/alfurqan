@@ -11,7 +11,7 @@ jest.mock('react-native-mmkv', () => ({
 }));
 
 jest.mock('../../../src/data/quranRepository', () => ({
-  getJuzAndPageForAyah: (...args: unknown[]) => mockGetJuzAndPageForAyah(...args),
+  getMushafJuzAndPageForAyah: (...args: unknown[]) => mockGetJuzAndPageForAyah(...args),
 }));
 
 jest.mock('../../../src/stores/readingStore', () => ({
@@ -84,7 +84,14 @@ describe('QuranReader reading activity', () => {
     render(<QuranReader surahNumber={1} surah={surah} ayahs={ayahs} />);
 
     await waitFor(() => {
-      expect(mockSetLastRead).toHaveBeenCalledWith(1, 1, 1, 1);
+      expect(mockSetLastRead).toHaveBeenCalledWith(
+        1,
+        1,
+        1,
+        1,
+        expect.any(Date),
+        'madani-qcf-v2-hafs'
+      );
     });
   });
 
@@ -101,7 +108,14 @@ describe('QuranReader reading activity', () => {
     });
 
     await waitFor(() => {
-      expect(mockSetLastRead).toHaveBeenCalledWith(1, 7, 1, 1);
+      expect(mockSetLastRead).toHaveBeenCalledWith(
+        1,
+        7,
+        1,
+        1,
+        expect.any(Date),
+        'madani-qcf-v2-hafs'
+      );
     });
   });
 });

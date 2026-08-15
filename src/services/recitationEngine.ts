@@ -84,8 +84,11 @@ export class RecitationEngine {
 
   async pause(): Promise<void> {
     const snapshot = this.getSnapshot();
+    // A tap during loading used to leave the button showing "pause" until the
+    // ayah finished downloading. Show the paused state as soon as it is asked for.
     if (snapshot.state === 'loading') {
       this.pendingPause = true;
+      useRecitationStore.getState()._setState('paused');
       return;
     }
     if (snapshot.state !== 'playing') return;
@@ -95,8 +98,9 @@ export class RecitationEngine {
 
   async resume(): Promise<void> {
     const snapshot = this.getSnapshot();
-    if (snapshot.state === 'loading') {
+    if (this.pendingPause) {
       this.pendingPause = false;
+      useRecitationStore.getState()._setState('loading');
       return;
     }
     if (snapshot.state !== 'paused') return;

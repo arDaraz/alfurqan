@@ -17,6 +17,8 @@ describe('readingStore', () => {
       lastReadSurah: null,
       lastReadAyah: null,
       lastReadPage: null,
+      lastReadWordPosition: null,
+      lastReadPageByLayout: {},
       lastReadJuz: null,
       lastReadAt: null,
       streakDays: 0,
@@ -24,6 +26,35 @@ describe('readingStore', () => {
       hasCompletedOnboarding: false,
       bookmarks: [],
     });
+  });
+
+  it('keeps canonical progress while caching different edition pages', () => {
+    const now = new Date('2026-04-29T12:00:00');
+    useReadingStore.getState().setLastRead(
+      112,
+      1,
+      30,
+      604,
+      now,
+      'madani-qcf-v2-hafs',
+      1
+    );
+    useReadingStore.getState().setLastRead(
+      112,
+      1,
+      30,
+      609,
+      now,
+      'indopak-15-line-hafs',
+      1
+    );
+
+    const state = useReadingStore.getState();
+    expect(state.lastReadSurah).toBe(112);
+    expect(state.lastReadAyah).toBe(1);
+    expect(state.lastReadWordPosition).toBe(1);
+    expect(state.getCachedPage('madani-qcf-v2-hafs')).toBe(604);
+    expect(state.getCachedPage('indopak-15-line-hafs')).toBe(609);
   });
 
   it('has correct initial state', () => {

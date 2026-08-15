@@ -37,14 +37,24 @@ export interface LastReadPosition {
   ayahNumber: number;
 }
 
+/** Layout-independent reading identity. Visual page numbers are derived per Mushaf. */
+export interface CanonicalQuranLocation extends LastReadPosition {
+  wordPosition?: number | null;
+}
+
 export interface MushafWord {
   id: number;
+  /** Stable identity shared by every visual Mushaf: surah:ayah:word-position. */
+  canonicalWordKey?: string;
+  sourceWordId?: number;
   surahNumber: number;
   ayahNumber: number;
   wordPosition: number;
   pageNumber: number;
   lineNumber: number;
   codeV2: string;
+  /** Unicode text retained for copy, search, accessibility and review. */
+  semanticText?: string;
   charType: 'word' | 'end' | 'pause';
 }
 
@@ -52,6 +62,8 @@ export interface MushafLine {
   lineNumber: number;
   words: MushafWord[];
   isCentered: boolean;
+  lineType?: 'ayah' | 'surah_name' | 'basmallah' | 'empty';
+  surahNumber?: number | null;
 }
 
 export interface PageMarker {

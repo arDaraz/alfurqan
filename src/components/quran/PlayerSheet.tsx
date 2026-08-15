@@ -71,6 +71,15 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
   const currentDownload = range
     ? downloads[downloadKey(selectedReciterId, range.surah)]
     : undefined;
+  const isDownloading = currentDownload?.status === 'downloading';
+  const downloadIcon = isDownloading
+    ? 'progress-download'
+    : currentDownload?.status === 'complete'
+      ? 'check-circle-outline'
+      : 'download-outline';
+  const downloadLabel = isDownloading
+    ? `${strings.recitation.download} ${currentDownload.ayahsCached}/${currentDownload.ayahsTotal}`
+    : '';
 
   const handleSpeed = () => {
     const index = SPEEDS.indexOf(speed);
@@ -179,17 +188,21 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
           </View>
 
           <View style={styles.modeStrip}>
-            <SheetButton label="معلومات" icon="information-outline" compact />
-            <SheetButton label="السرعة" icon="speedometer" compact onPress={handleSpeed} />
             <SheetButton
-              label="تحميل"
-              icon={currentDownload?.status === 'complete' ? 'check-circle-outline' : 'download-outline'}
+              label={strings.recitation.speed}
+              icon="speedometer"
               compact
-              selected={currentDownload?.status === 'downloading' || currentDownload?.status === 'complete'}
+              onPress={handleSpeed}
+            />
+            <SheetButton
+              label={strings.recitation.download}
+              icon={downloadIcon}
+              compact
+              selected={isDownloading || currentDownload?.status === 'complete'}
               onPress={handleDownload}
             />
             <SheetButton
-              label="التكرار"
+              label={strings.recitation.repeat}
               icon="repeat"
               compact
               selected={mode === 'loop-surah'}
@@ -197,7 +210,9 @@ export function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
             />
           </View>
 
-          <Text style={styles.speedLabel}>{speed}x</Text>
+          <Text style={styles.speedLabel}>
+            {speed}x{downloadLabel ? ` · ${downloadLabel}` : ''}
+          </Text>
           <ReciterPickerSheet
             visible={reciterPickerVisible}
             onClose={() => setReciterPickerVisible(false)}

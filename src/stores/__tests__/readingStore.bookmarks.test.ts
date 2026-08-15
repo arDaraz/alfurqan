@@ -106,14 +106,18 @@ describe('readingStore bookmarks', () => {
     expect(migrated.bookmarks.every((b) => b.category === 'reading')).toBe(true);
   });
 
-  it('migrate is a no-op for v1+ state', () => {
+  it('migrates a v1 state to canonical layout-aware reading caches', () => {
     const { migrate } = require('../readingStore') as {
       migrate: (state: any, version: number) => any;
     };
     const state = {
       bookmarks: [{ surahNumber: 2, ayahNumber: 255, category: 'reading', createdAt: 1 }],
     };
-    expect(migrate(state, 1)).toEqual(state);
+    expect(migrate(state, 1)).toEqual({
+      ...state,
+      lastReadWordPosition: null,
+      lastReadPageByLayout: {},
+    });
   });
 
   it('migrate handles null/empty state without crashing', () => {
@@ -121,8 +125,12 @@ describe('readingStore bookmarks', () => {
       migrate: (state: any, version: number) => any;
     };
     expect(migrate(null, 0)).toBeNull();
-    expect(migrate({}, 0)).toEqual({});
-    expect(migrate({ bookmarks: null }, 0)).toEqual({ bookmarks: null });
+    expect(migrate({}, 0)).toEqual({ lastReadWordPosition: null, lastReadPageByLayout: {} });
+    expect(migrate({ bookmarks: null }, 0)).toEqual({
+      bookmarks: null,
+      lastReadWordPosition: null,
+      lastReadPageByLayout: {},
+    });
   });
 
   it('migrate does not mutate its input', () => {

@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
 import type { Bookmark, BookmarkCategory } from '../data/types';
+import {
+  DEFAULT_MUSHAF_LAYOUT_ID,
+  type MushafLayoutId,
+} from '../data/mushafLayouts';
 
 const mmkv = createMMKV({ id: 'reading-store' });
 
@@ -20,7 +24,10 @@ const mmkvStorage: StateStorage = {
 interface ReadingState {
   lastReadSurah: number | null;
   lastReadAyah: number | null;
+  lastReadWordPosition: number | null;
+  /** Compatibility cache for existing UI; canonical surah+ayah is authoritative. */
   lastReadPage: number | null;
+  lastReadPageByLayout: Partial<Record<MushafLayoutId, number>>;
   lastReadJuz: number | null;
   lastReadAt: number | null;
   streakDays: number;
@@ -32,10 +39,19 @@ interface ReadingState {
     ayah: number,
     juz: number,
     page: number,
-    now?: Date
+    now?: Date,
+    layoutId?: MushafLayoutId,
+    wordPosition?: number | null
   ) => void;
+  getCachedPage: (layoutId: MushafLayoutId) => number | null;
   completeOnboarding: () => void;
-  addBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
+  /** Pass `createdAt` only when restoring a removed bookmark, so Undo keeps its list position. */
+  addBookmark: (
+    surah: number,
+    ayah: number,
+    category: BookmarkCategory,
+    createdAt?: number
+  ) => void;
   removeBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
   toggleBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
   /**
@@ -67,13 +83,24 @@ function nextStreak(previousDays: number, previousDate: string | null, today: st
 
 export function migrate(state: any, version: number): any {
   if (!state || typeof state !== 'object') return state;
+  let migratedState = { ...state };
   if (version < 1 && Array.isArray(state.bookmarks)) {
     const bookmarks = state.bookmarks.map((b: any) =>
       b && typeof b === 'object' && !b.category ? { ...b, category: 'reading' } : b
     );
-    return { ...state, bookmarks };
+    migratedState = { ...migratedState, bookmarks };
   }
-  return state;
+  if (version < 2) {
+    migratedState = {
+      ...migratedState,
+      lastReadWordPosition: migratedState.lastReadWordPosition ?? null,
+      lastReadPageByLayout:
+        migratedState.lastReadPage != null
+          ? { [DEFAULT_MUSHAF_LAYOUT_ID]: migratedState.lastReadPage }
+          : {},
+    };
+  }
+  return migratedState;
 }
 
 export const useReadingStore = create<ReadingState>()(
@@ -81,28 +108,41 @@ export const useReadingStore = create<ReadingState>()(
     (set, get) => ({
       lastReadSurah: null,
       lastReadAyah: null,
+      lastReadWordPosition: null,
       lastReadPage: null,
+      lastReadPageByLayout: {},
       lastReadJuz: null,
       lastReadAt: null,
       streakDays: 0,
       streakLastReadDate: null,
       hasCompletedOnboarding: false,
       bookmarks: [],
-      setLastRead: (surah, ayah, juz, page, now = new Date()) => {
+      setLastRead: (
+        surah,
+        ayah,
+        juz,
+        page,
+        now = new Date(),
+        layoutId = DEFAULT_MUSHAF_LAYOUT_ID,
+        wordPosition = null
+      ) => {
         const today = localDateKey(now);
-        const { streakDays, streakLastReadDate } = get();
+        const { streakDays, streakLastReadDate, lastReadPageByLayout } = get();
         set({
           lastReadSurah: surah,
           lastReadAyah: ayah,
+          lastReadWordPosition: wordPosition,
           lastReadJuz: juz,
           lastReadPage: page,
+          lastReadPageByLayout: { ...lastReadPageByLayout, [layoutId]: page },
           lastReadAt: now.getTime(),
           streakDays: nextStreak(streakDays, streakLastReadDate, today),
           streakLastReadDate: today,
         });
       },
+      getCachedPage: (layoutId) => get().lastReadPageByLayout[layoutId] ?? null,
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
-      addBookmark: (surah, ayah, category) => {
+      addBookmark: (surah, ayah, category, createdAt) => {
         const exists = get().bookmarks.some(
           (b) =>
             b.surahNumber === surah && b.ayahNumber === ayah && b.category === category
@@ -111,7 +151,12 @@ export const useReadingStore = create<ReadingState>()(
           set({
             bookmarks: [
               ...get().bookmarks,
-              { surahNumber: surah, ayahNumber: ayah, category, createdAt: Date.now() },
+              {
+                surahNumber: surah,
+                ayahNumber: ayah,
+                category,
+                createdAt: createdAt ?? Date.now(),
+              },
             ],
           });
         }
@@ -142,7 +187,7 @@ export const useReadingStore = create<ReadingState>()(
     {
       name: 'reading-store',
       storage: createJSONStorage(() => mmkvStorage),
-      version: 1,
+      version: 2,
       migrate,
     }
   )

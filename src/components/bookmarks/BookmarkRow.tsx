@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Swipeable, RectButton } from 'react-native-gesture-handler';
+import { I18nManager, StyleSheet, Text, View } from 'react-native';
+// The row press must come from gesture-handler too. React Native's own Pressable
+// runs on the JS responder system, so a horizontal drag stayed a press and opened
+// the reader instead of letting Swipeable reveal Delete.
+import { Swipeable, RectButton, Pressable } from 'react-native-gesture-handler';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
@@ -65,6 +68,7 @@ export function BookmarkRow({
 
   const renderDeleteAction = () => (
     <RectButton
+      accessibilityRole="button"
       accessibilityLabel={`delete-${surahNumber}-${ayahNumber}`}
       onPress={onDelete}
       style={styles.deleteAction}

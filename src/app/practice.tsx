@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import { useStrings } from '../constants/strings';
 import { OrnamentDivider } from '../components/brand/OrnamentDivider';
 import { MicVisualizer } from '../components/practice/MicVisualizer';
 import { recitationEngine } from '../services/recitationEngine';
+import { useRecitationStore } from '../stores/recitationStore';
 import { toArabicIndic } from '../utils/arabic';
 
 type WordState = 'ok' | 'cur' | 'bad' | 'pending';
@@ -40,6 +41,10 @@ export default function PracticeScreen() {
   const strings = useStrings();
   const router = useRouter();
   const styles = createStyles(theme);
+  const playbackState = useRecitationStore((s) => s.state);
+  const [listening, setListening] = useState(false);
+  const [correctionSkipped, setCorrectionSkipped] = useState(false);
+
   const handleListenSample = () => {
     void recitationEngine.start({
       surah: 1,
@@ -47,6 +52,14 @@ export default function PracticeScreen() {
       stopAyah: ACTIVE_AYAH_NUMBER,
       trigger: 'practice',
     });
+  };
+
+  const handleTogglePlayback = () => {
+    if (playbackState === 'paused') {
+      void recitationEngine.resume();
+    } else if (playbackState === 'playing' || playbackState === 'loading') {
+      void recitationEngine.pause();
+    }
   };
 
   return (
@@ -82,67 +95,103 @@ export default function PracticeScreen() {
           </Text>
           <View style={styles.verseRow}>
             {DEMO_WORDS.map((w, i) => (
-              <PracticeWordSpan key={i} word={w} />
+              <PracticeWordSpan
+                key={i}
+                word={w}
+                onPress={w.state === 'bad' ? handleListenSample : undefined}
+              />
             ))}
             <Text style={styles.endNumber}>﴿{toArabicIndic(ACTIVE_AYAH_NUMBER)}﴾</Text>
           </View>
         </View>
 
-        <View style={styles.chip}>
-          <View style={styles.chipIcon}>
-            <Text style={styles.chipIconText}>!</Text>
-          </View>
-          <View style={styles.chipBody}>
-            <Text style={styles.chipWord}>ٱلْعَٰلَمِينَ</Text>
-            <Text style={styles.chipExplain}>{strings.practiceMistakeHint}</Text>
-            <View style={styles.chipActions}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={strings.practiceListenSample}
-                onPress={handleListenSample}
-                style={[styles.chipBtn, styles.chipBtnPrimary]}
-              >
-                <Svg width={11} height={11} viewBox="0 0 24 24" fill={theme.palette.paper[50]}>
-                  <Path d="M8 5v14l11-7z" />
-                </Svg>
-                <Text style={styles.chipBtnPrimaryText}>{strings.practiceListenSample}</Text>
-              </Pressable>
-              <Pressable style={styles.chipBtn}>
-                <Text style={styles.chipBtnText}>{strings.practiceSkip}</Text>
-              </Pressable>
+        {correctionSkipped ? (
+          <Text style={styles.skippedNote}>{strings.practiceSkipped}</Text>
+        ) : (
+          <View style={styles.chip}>
+            <View style={styles.chipIcon}>
+              <Text style={styles.chipIconText}>!</Text>
+            </View>
+            <View style={styles.chipBody}>
+              <Text style={styles.chipWord}>ٱلْعَٰلَمِينَ</Text>
+              <Text style={styles.chipExplain}>{strings.practiceMistakeHint}</Text>
+              <View style={styles.chipActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={strings.practiceListenSample}
+                  onPress={handleListenSample}
+                  style={[styles.chipBtn, styles.chipBtnPrimary]}
+                >
+                  <Svg width={11} height={11} viewBox="0 0 24 24" fill={theme.palette.paper[50]}>
+                    <Path d="M8 5v14l11-7z" />
+                  </Svg>
+                  <Text style={styles.chipBtnPrimaryText}>{strings.practiceListenSample}</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={strings.practiceSkip}
+                  onPress={() => setCorrectionSkipped(true)}
+                  style={styles.chipBtn}
+                >
+                  <Text style={styles.chipBtnText}>{strings.practiceSkip}</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
+        )}
       </ScrollView>
 
       <View style={styles.micArea}>
         <MicVisualizer />
         <View style={styles.micRow}>
-          <View style={styles.micSide}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={strings.practiceReplaySample}
+            onPress={handleListenSample}
+            style={styles.micSide}
+          >
             <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
               <Path d="M11 5 6 9H2v6h4l5 4V5z" stroke={theme.semantic.fg} strokeWidth={1.75} strokeLinejoin="round" />
               <Path d="M19.5 12a4 4 0 0 0-2-3.5v7a4 4 0 0 0 2-3.5z" stroke={theme.semantic.fg} strokeWidth={1.75} />
             </Svg>
-          </View>
-          <MicButton />
-          <View style={styles.micSide}>
-            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-              <Rect x={6} y={5} width={4} height={14} rx={1} stroke={theme.semantic.fg} strokeWidth={1.75} />
-              <Rect x={14} y={5} width={4} height={14} rx={1} stroke={theme.semantic.fg} strokeWidth={1.75} />
-            </Svg>
-          </View>
+          </Pressable>
+          <MicButton listening={listening} onToggle={() => setListening((on) => !on)} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              playbackState === 'paused' ? strings.recitation.play : strings.recitation.pause
+            }
+            accessibilityState={{ disabled: playbackState === 'idle' }}
+            disabled={playbackState === 'idle'}
+            onPress={handleTogglePlayback}
+            style={[styles.micSide, playbackState === 'idle' && styles.micSideDisabled]}
+          >
+            {playbackState === 'paused' ? (
+              <Svg width={20} height={20} viewBox="0 0 24 24" fill={theme.semantic.fg}>
+                <Path d="M8 5v14l11-7z" />
+              </Svg>
+            ) : (
+              <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                <Rect x={6} y={5} width={4} height={14} rx={1} stroke={theme.semantic.fg} strokeWidth={1.75} />
+                <Rect x={14} y={5} width={4} height={14} rx={1} stroke={theme.semantic.fg} strokeWidth={1.75} />
+              </Svg>
+            )}
+          </Pressable>
         </View>
         <View style={styles.listenRow}>
-          <View style={styles.recDot} />
-          <Text style={styles.listenLabel}>{strings.practiceListening}</Text>
+          {listening && <View style={styles.recDot} />}
+          <Text style={[styles.listenLabel, !listening && styles.listenLabelIdle]}>
+            {listening ? strings.practiceListening : strings.practiceIdle}
+          </Text>
         </View>
       </View>
     </SafeAreaView>
   );
 }
 
-function PracticeWordSpan({ word }: { word: PracticeWord }) {
+function PracticeWordSpan({ word, onPress }: { word: PracticeWord; onPress?: () => void }) {
   const theme = useTheme();
+  const strings = useStrings();
   const styles = createStyles(theme);
   const pulse = useSharedValue(1);
   useEffect(() => {
@@ -181,16 +230,27 @@ function PracticeWordSpan({ word }: { word: PracticeWord }) {
         ? theme.semantic.danger
         : theme.semantic.fg;
 
-  return (
+  const content = (
     <Animated.View style={[styles.wordWrap, styleByState[word.state], animStyle]}>
       <Text style={[styles.word, { color: textColor }]}>{word.text}</Text>
     </Animated.View>
   );
+
+  if (!onPress) return content;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${word.text} - ${strings.practiceReplaySample}`}
+      onPress={onPress}
+    >
+      {content}
+    </Pressable>
+  );
 }
 
-function MicButton() {
+function MicButton({ listening, onToggle }: { listening: boolean; onToggle: () => void }) {
   const theme = useTheme();
-  const router = useRouter();
+  const strings = useStrings();
   const ringScale = useSharedValue(0.9);
   const ringOpacity = useSharedValue(0.6);
   useEffect(() => {
@@ -203,13 +263,16 @@ function MicButton() {
   }));
   const styles = createStyles(theme);
   return (
+    // ponytail: toggles the listening state only. Audio capture and live
+    // verification are not wired yet, see docs/superpowers/specs/2026-05-01-recitation-verification-adr.md.
     <Pressable
-      onPress={() => router.back()}
+      onPress={onToggle}
       accessibilityRole="button"
-      accessibilityLabel="Toggle mic"
-      style={styles.micBtn}
+      accessibilityLabel={listening ? strings.practiceMicStop : strings.practiceMicStart}
+      accessibilityState={{ selected: listening }}
+      style={[styles.micBtn, listening && styles.micBtnActive]}
     >
-      <Animated.View style={[styles.micBtnRing, ringStyle]} />
+      {listening && <Animated.View style={[styles.micBtnRing, ringStyle]} />}
       <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
         <Rect x={9} y={3} width={6} height={12} rx={3} stroke={theme.semantic.fgOnPrimary} strokeWidth={1.75} />
         <Path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke={theme.semantic.fgOnPrimary} strokeWidth={1.75} strokeLinecap="round" />
@@ -401,6 +464,9 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       borderWidth: 3,
       ...theme.elevation.shadowFloat,
     },
+    micBtnActive: {
+      backgroundColor: theme.semantic.danger,
+    },
     micBtnRing: {
       position: 'absolute',
       top: -10,
@@ -422,6 +488,9 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    micSideDisabled: {
+      opacity: 0.45,
+    },
     listenRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -442,6 +511,19 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.semantic.primary,
       textTransform: 'uppercase',
       fontWeight: '700',
+    },
+    listenLabelIdle: {
+      color: theme.semantic.fgMuted,
+      letterSpacing: 1.2,
+      textTransform: 'none',
+      fontWeight: '600',
+    },
+    skippedNote: {
+      marginTop: theme.spacing.md,
+      fontFamily: theme.fonts.arabic,
+      fontSize: 13,
+      color: theme.semantic.fgMuted,
+      textAlign: 'center',
     },
   });
 }

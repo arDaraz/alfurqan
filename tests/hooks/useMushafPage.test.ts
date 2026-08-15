@@ -10,6 +10,7 @@ import {
   buildMushafHtmlCacheKey,
   quranFontScaleToHtmlScale,
 } from '../../src/hooks/useMushafPage';
+import { DEFAULT_MUSHAF_LAYOUT_ID } from '../../src/data/mushafLayouts';
 
 describe('mushaf page font scaling', () => {
   it('maps the default settings slider value to the default reader scale', () => {
@@ -22,14 +23,14 @@ describe('mushaf page font scaling', () => {
   });
 
   it('keys generated mushaf HTML by font size so cached pages refresh after slider changes', () => {
-    expect(buildMushafHtmlCacheKey('uthmanic', 604, 0.4)).not.toBe(
-      buildMushafHtmlCacheKey('uthmanic', 604, 0.8)
+    expect(buildMushafHtmlCacheKey(DEFAULT_MUSHAF_LAYOUT_ID, 604, 0.4)).not.toBe(
+      buildMushafHtmlCacheKey(DEFAULT_MUSHAF_LAYOUT_ID, 604, 0.8)
     );
   });
 
   it('keys generated mushaf HTML by night reading mode so palette changes refresh cached pages', () => {
-    expect(buildMushafHtmlCacheKey('uthmanic', 604, 0.58, 'off')).not.toBe(
-      buildMushafHtmlCacheKey('uthmanic', 604, 0.58, 'indigo')
+    expect(buildMushafHtmlCacheKey(DEFAULT_MUSHAF_LAYOUT_ID, 604, 0.58, 'off')).not.toBe(
+      buildMushafHtmlCacheKey(DEFAULT_MUSHAF_LAYOUT_ID, 604, 0.58, 'indigo')
     );
   });
 });

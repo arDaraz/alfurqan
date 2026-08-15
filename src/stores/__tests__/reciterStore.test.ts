@@ -136,6 +136,36 @@ describe('reciterStore', () => {
     });
   });
 
+  // The ayah already in flight cannot be aborted, so its progress callback still
+  // fires after the cancel. It used to write "downloading" back over the cancel.
+  it('ignores progress that arrives after a cancel', async () => {
+    let cachedAfterLateProgress: number | undefined;
+    const { useReciterStore, downloadKey } = loadStore();
+    const key = downloadKey('Husary_128kbps', 1);
+
+    mockAyahAudioCache.downloadSurah.mockImplementation(
+      (_reciterId, _surah, activeSignal, onProgress) =>
+        new Promise<void>((resolve) => {
+          activeSignal.addEventListener('abort', () => {
+            onProgress(3, 7);
+            cachedAfterLateProgress = useReciterStore.getState().downloads[key]?.ayahsCached;
+            resolve();
+          });
+        })
+    );
+
+    const downloadPromise = useReciterStore.getState().startSurahDownload('Husary_128kbps', 1);
+    await Promise.resolve();
+    useReciterStore.getState().cancelSurahDownload('Husary_128kbps', 1);
+    await downloadPromise;
+
+    expect(cachedAfterLateProgress).toBe(0);
+    expect(useReciterStore.getState().downloads[key]).toMatchObject({
+      ayahsCached: 0,
+      status: 'idle',
+    });
+  });
+
   it('sets error status when a download fails', async () => {
     mockAyahAudioCache.downloadSurah.mockRejectedValue(new Error('disk full'));
     const { useReciterStore, downloadKey } = loadStore();

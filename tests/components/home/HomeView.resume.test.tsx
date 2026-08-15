@@ -8,6 +8,7 @@ jest.mock('react-native-mmkv', () => ({
 }));
 
 const mockPush = jest.fn();
+const mockGetMushafPageForAyah = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -45,11 +46,16 @@ jest.mock('../../../src/hooks/useSearch', () => ({
   useSearch: jest.fn(),
 }));
 
+jest.mock('../../../src/data/quranRepository', () => ({
+  getMushafPageForAyah: (...args: unknown[]) => mockGetMushafPageForAyah(...args),
+}));
+
 const mockReadingState = {
   lastReadSurah: 2,
   lastReadAyah: 255,
   lastReadJuz: 3,
   lastReadPage: 45,
+  lastReadPageByLayout: { 'madani-qcf-v2-hafs': 45 } as Record<string, number>,
   lastReadAt: new Date('2026-04-29T10:00:00Z').getTime(),
   streakDays: 4,
   streakLastReadDate: '2026-04-29',
@@ -83,6 +89,8 @@ const surahs = [
 describe('HomeView resume route', () => {
   beforeEach(() => {
     mockPush.mockClear();
+    mockGetMushafPageForAyah.mockReset();
+    mockGetMushafPageForAyah.mockResolvedValue(42);
     jest.mocked(useSurahList).mockReturnValue({
       surahs,
       loading: false,
@@ -103,14 +111,34 @@ describe('HomeView resume route', () => {
     useSettingsStore.setState({ language: 'ar', themeMode: 'light' });
   });
 
-  it('passes the persisted page when resuming from the greeting card', () => {
+  it('passes the canonical ayah when resuming from the greeting card', () => {
     const { getByLabelText } = render(<HomeView />);
 
     fireEvent.press(getByLabelText('استأنف'));
 
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/surah/[id]',
-      params: { id: '2', page: '45' },
+      params: { id: '2', ayah: '255' },
     });
+  });
+
+  it('recomputes a stale layout page cache from the canonical ayah', async () => {
+    mockReadingState.lastReadPageByLayout = {
+      'madani-qcf-v2-hafs': 45,
+      'indopak-15-line-hafs': 44,
+    };
+    useSettingsStore.setState({
+      language: 'en',
+      mushafLayoutId: 'indopak-15-line-hafs',
+    });
+
+    const { findByText } = render(<HomeView />);
+
+    expect(await findByText('Juz 3 · Page 42')).toBeTruthy();
+    expect(mockGetMushafPageForAyah).toHaveBeenCalledWith(
+      'indopak-15-line-hafs',
+      2,
+      255
+    );
   });
 });

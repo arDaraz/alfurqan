@@ -16,7 +16,7 @@ jest.mock('expo-clipboard', () => ({
 // Mock quranRepository
 jest.mock('../../src/data/quranRepository', () => ({
   getAyahTextRange: jest.fn().mockResolvedValue('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
-  getJuzAndPageForAyah: jest.fn().mockResolvedValue({ juz: 3, page: 51 }),
+  getMushafJuzAndPageForAyah: jest.fn().mockResolvedValue({ juz: 3, page: 51 }),
   getSurahLastAyah: jest.fn().mockResolvedValue(7),
 }));
 
@@ -31,7 +31,7 @@ import { Share } from 'react-native';
 import { handleAyahAction } from '../../src/actions/ayahActions';
 import {
   getAyahTextRange,
-  getJuzAndPageForAyah,
+  getMushafJuzAndPageForAyah,
   getSurahLastAyah,
 } from '../../src/data/quranRepository';
 import { recitationEngine } from '../../src/services/recitationEngine';

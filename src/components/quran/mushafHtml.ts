@@ -2,6 +2,7 @@ import type { MushafWord, MushafLine, PageMarker } from '../../data/types';
 import { surahHasBismillah } from '../../constants/quran';
 import { getNightReadingPalette, type NightReadingMode } from '../../constants/nightReading';
 import { isSurahEndingLine } from './surahLine';
+import { isMadaniCenterAlignedLine } from './madaniLineLayout';
 
 export interface BismillahData {
   codes: string; // QCF v2 codes for Bismillah from page 1
@@ -17,6 +18,7 @@ export interface MushafHtmlOptions {
   bismillah?: BismillahData;
   markers?: PageMarker[];
   nightReadingMode?: NightReadingMode;
+  surahNames?: Record<number, string>;
 }
 
 function cssNumber(value: number): string {
@@ -31,11 +33,10 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
     surahNumber,
     bismillah,
     nightReadingMode = 'off',
+    surahNames = {},
   } = opts;
   const palette = getNightReadingPalette(nightReadingMode);
   const bodyFontVw = cssNumber(7 * fontSizeScale);
-  const compactFontVw = cssNumber(7 * fontSizeScale);
-  const compactFontPx = cssNumber(28 * fontSizeScale);
   const bismillahFontVw = cssNumber(5.5 * fontSizeScale);
   const bismillahFontPx = cssNumber(24 * fontSizeScale);
   const lineMap = new Map<number, MushafWord[]>();
@@ -52,25 +53,17 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
   const sortedKeys = Array.from(lineMap.keys()).sort((a, b) => a - b);
   for (const lineNum of sortedKeys) {
     const lineWords = lineMap.get(lineNum)!;
-    const isSurahEnd = isSurahEndingLine(lineWords);
-    const isCentered =
-      isSurahEnd ||
-      lineWords.length <= 2 &&
-      lineWords.every((w) => w.charType !== 'word');
+    const isCentered = isMadaniCenterAlignedLine(opts.pageNumber, lineNum);
     lines.push({ lineNumber: lineNum, words: lineWords, isCentered });
   }
 
   const isSurahStart = surahNumber !== undefined;
   const isFullPage = lines.length >= 9;
-  const surahCode = surahNumber !== undefined
-    ? `surah${String(surahNumber).padStart(3, '0')}`
-    : '';
-
   const frameSvg = `<svg viewBox="0 0 440 80" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="${palette.accent}" stroke-linejoin="miter"><path d="M 22,6 L 418,6 L 440,40 L 418,74 L 22,74 L 0,40 Z" stroke-width="1.3"/><path d="M 28,12 L 412,12 L 432,40 L 412,68 L 28,68 L 8,40 Z" stroke-width=".6" opacity=".55"/></g><g transform="translate(12 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(428 40)"><rect x="-8" y="-8" width="16" height="16" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width="1.1" transform="rotate(45)"/><circle r="1.8" fill="${palette.accent}"/></g><g transform="translate(220 6)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g><g transform="translate(220 74)"><rect x="-4" y="-4" width="8" height="8" fill="${palette.ornamentFill}" stroke="${palette.accent}" stroke-width=".9" transform="rotate(45)"/></g></svg>`;
 
   const buildLine = (line: MushafLine) => {
     const isSurahEnd = isSurahEndingLine(line.words);
-    const cls = line.isCentered ? `lc${isSurahEnd ? ' surahEnd' : ''}` : 'l';
+    const cls = `${line.isCentered ? 'lc' : 'l'}${isSurahEnd ? ' surahEnd' : ''}`;
     const attrs = isSurahEnd ? ' data-surah-end="true"' : '';
     const parts: string[] = [];
     let runSurah: number | null = null;
@@ -79,41 +72,46 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
 
     const flushRun = () => {
       if (runSurah === null || runAyah === null || runTokens.length === 0) return;
-      parts.push(`<span class="ayahRun" data-s="${runSurah}" data-a="${runAyah}">${runTokens.join(' ')}</span>`);
+      parts.push(`<span class="ayahRun" data-s="${runSurah}" data-a="${runAyah}">${runTokens.join('')}</span>`);
       runSurah = null;
       runAyah = null;
       runTokens = [];
     };
 
     for (const w of line.words) {
-      if (w.charType === 'end') {
-        flushRun();
-        parts.push(`<span class="ayahMarker">${w.codeV2}</span>`);
-        continue;
-      }
-
       if (runSurah !== w.surahNumber || runAyah !== w.ayahNumber) {
         flushRun();
         runSurah = w.surahNumber;
         runAyah = w.ayahNumber;
       }
 
+      if (w.charType === 'end') {
+        runTokens.push(
+          `<span class="ayahMarker" data-wk="${w.canonicalWordKey ?? `${w.surahNumber}:${w.ayahNumber}:${w.wordPosition}`}" data-p="${w.wordPosition}">${w.codeV2}</span>`
+        );
+        continue;
+      }
+
       // Detect ۞ rub al-hizb glyph: first word of an ayah with space-separated code
       if (w.wordPosition === 1 && w.codeV2.includes(' ')) {
         const codeParts = w.codeV2.split(' ');
-        runTokens.push(`<span class="rub">۞</span> <span class="w">${codeParts.slice(1).join(' ')}</span>`);
+        runTokens.push(
+          `<span class="rub">۞</span><span class="w" data-wk="${w.canonicalWordKey ?? `${w.surahNumber}:${w.ayahNumber}:${w.wordPosition}`}" data-p="${w.wordPosition}">${codeParts.slice(1).join(' ')}</span>`
+        );
       } else {
-        runTokens.push(`<span class="w">${w.codeV2}</span>`);
+        runTokens.push(
+          `<span class="w" data-wk="${w.canonicalWordKey ?? `${w.surahNumber}:${w.ayahNumber}:${w.wordPosition}`}" data-p="${w.wordPosition}">${w.codeV2}</span>`
+        );
       }
     }
 
     flushRun();
-    const text = parts.join(' ');
+    const text = parts.join('');
     return `<div class="${cls}"${attrs}><span class="lineInner">${text}</span></div>`;
   };
 
-  const buildBanner = (code: string, inSlot = false) =>
-    `<div class="sb${inSlot ? ' slot' : ''}">${frameSvg}<span class="sn">${code}</span></div>`;
+  const buildBanner = (surah: number, inSlot = false) =>
+    `<div class="sb${inSlot ? ' slot' : ''}">${frameSvg}<span class="sn">${surahNames[surah] ?? ''}</span></div>`;
 
   const buildBismillah = (inSlot = false) =>
     `<div class="bsm${inSlot ? ' slot' : ''}">${bismillah?.codes ?? ''}</div>`;
@@ -128,7 +126,7 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
   if (isSurahStart && !isFullPage) {
     // Compact layout (e.g., Al-Fatiha, Al-Baqarah) — single surah, centered
     const hasBismillah = surahHasBismillah(surahNumber!) && !!bismillah;
-    const banner = buildBanner(surahCode);
+    const banner = buildBanner(surahNumber!);
     const bsm = hasBismillah ? buildBismillah() : '';
     const textLines = lines.map(buildLine).join('\n');
     bodyContent = `<div class="group">\n${banner}\n${bsm}\n${textLines}\n</div>`;
@@ -159,12 +157,11 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
         }
       }
 
-      const code = `surah${String(sn).padStart(3, '0')}`;
       const needsBismillah = surahHasBismillah(sn) && !!bismillah;
 
       if (emptyBefore.length >= 2) {
         // 2+ empty slots: banner + bismillah (use last two, closest to text)
-        slotOverrides.set(emptyBefore[emptyBefore.length - 2], buildBanner(code, true));
+        slotOverrides.set(emptyBefore[emptyBefore.length - 2], buildBanner(sn, true));
         if (needsBismillah) {
           slotOverrides.set(emptyBefore[emptyBefore.length - 1], buildBismillah(true));
         }
@@ -184,8 +181,7 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
       if (nextSurah <= 114) {
         const trailingSlot = maxLineWithData + 1;
         if (!slotOverrides.has(trailingSlot)) {
-          const code = `surah${String(nextSurah).padStart(3, '0')}`;
-          slotOverrides.set(trailingSlot, buildBanner(code, true));
+          slotOverrides.set(trailingSlot, buildBanner(nextSurah, true));
         }
       }
     }
@@ -211,60 +207,79 @@ export function generateMushafHtml(opts: MushafHtmlOptions): string {
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <style>
 @font-face{font-family:'QCF';src:url(data:font/woff2;base64,${fontBase64});font-display:block}
-@font-face{font-family:'SurahNames';src:url('https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf') format('truetype');font-display:swap}
 ${bismillahFontFace}
 @font-palette-values --QcfSepia{font-family:'QCF';base-palette:2}
 @font-palette-values --QcfBismillahSepia{font-family:'QCF1';base-palette:2}
 *{margin:0;padding:0;box-sizing:border-box}
-html{min-height:100%;max-width:100vw;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
-body{width:100%;max-width:100vw;overflow-x:hidden;min-height:100%;height:auto;background:${palette.background};color:${palette.foreground};font-family:'QCF';font-palette:--QcfSepia;font-size:${bodyFontVw}vw;direction:rtl;display:flex;flex-direction:column;padding:0 4vw max(12vh,72px);-webkit-user-select:none;user-select:none;position:relative}
-.l,.lc,.empty{min-height:max(calc(100vh/15),2.2em);height:auto;width:100%;max-width:100%;overflow:hidden;display:flex;align-items:center;white-space:nowrap;transform-origin:right center;line-height:1.2}
-.l{justify-content:center;transform-origin:center center}
+html,body{width:100%;height:100%;max-width:100vw;overflow:visible}
+body{background:${palette.background};color:${palette.foreground};font-family:'QCF';font-palette:--QcfSepia;font-size:${bodyFontVw}vw;direction:rtl;padding:1vh 4vw;-webkit-user-select:none;user-select:none;position:relative;touch-action:pan-x}
+#pageViewport{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:visible}
+#pageCanvas{flex:none;width:100%;height:100%;direction:rtl;display:grid;grid-template-rows:repeat(15,minmax(0,1fr))}
+#pageCanvas.compact{display:flex;flex-direction:column;justify-content:center}
+.l,.lc,.empty{min-height:0;height:100%;width:100%;max-width:100%;overflow:visible;display:flex;align-items:center;white-space:nowrap;line-height:1.05}
+.l{justify-content:stretch;transform-origin:center center}
 .lc{justify-content:center;transform-origin:center center}
-.lineInner{display:inline-block;white-space:nowrap;max-width:none;transform-origin:center center;line-height:1.2}
-.group{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh;margin-bottom:10vh}
-.group .l,.group .lc{height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:min(${compactFontVw}vw,${compactFontPx}px)}
+.lineInner{display:flex;align-items:center;direction:rtl;white-space:nowrap;max-width:none;transform-origin:center center;line-height:1.2}
+.l .lineInner{width:100%;justify-content:space-between}
+.lc .lineInner{width:auto;justify-content:center;gap:.18em}
+.ayahRun{display:contents}
+.w,.ayahMarker,.rub{display:inline-flex;align-items:center;flex:0 0 auto}
+.group{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:1vh}
+.group .l,.group .lc{height:auto;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:inherit}
 .sb{position:relative;text-align:center;direction:ltr;margin:0 0 0.5vh}
 .sb svg{width:100%;height:auto;display:block}
-.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'SurahNames';font-size:min(6.5vw,28px);color:${palette.foreground};white-space:nowrap}
-.sb.slot{min-height:max(calc(100vh/15),2.2em);height:auto;display:flex;align-items:center;justify-content:center;margin:0}
+.sb .sn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Geeza Pro','Arial',serif;font-size:min(5.2vw,22px);color:${palette.foreground};white-space:nowrap}
+.sb.slot{min-height:0;height:100%;display:flex;align-items:center;justify-content:center;margin:0}
 .sb.slot svg{width:100%;height:auto;max-height:100%}
 .bsm{display:flex;align-items:center;justify-content:center;color:${palette.foreground};font-family:'QCF1';font-palette:--QcfBismillahSepia;font-size:min(${bismillahFontVw}vw,${bismillahFontPx}px);white-space:nowrap}
-.bsm.slot{min-height:max(calc(100vh/15),2.2em);height:auto}
+.bsm.slot{min-height:0;height:100%}
 .rub{font-family:'Noto Naskh Arabic',serif;color:${palette.accent};font-size:1.8em;line-height:0.5;vertical-align:middle}
-.ayahRun,.w,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ayahRun.sel{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
-.ayahRun.playing{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.accent};transition:background 120ms ease,box-shadow 120ms ease}
+.ayahRun,.w,.ayahMarker,.rub{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ayahRun.sel>.w,.ayahRun.sel>.ayahMarker,.ayahRun.sel>.rub{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.selectedBorder}}
+.ayahRun.playing>.w,.ayahRun.playing>.ayahMarker,.ayahRun.playing>.rub{background:${palette.selectedBackground};border-radius:4px;box-shadow:inset 0 0 0 1px ${palette.accent};transition:background 120ms ease,box-shadow 120ms ease}
 </style>
 </head>
 <body>
-${bodyContent}
+<div id="pageViewport"><div id="pageCanvas" class="${isFullPage ? 'full' : 'compact'}">${bodyContent}</div></div>
 <script>
-document.fonts.ready.then(function(){
-  requestAnimationFrame(function(){requestAnimationFrame(function(){
-    var els=document.querySelectorAll('.l,.lc');
-    for(var i=0;i<els.length;i++){
-      var inner=els[i].querySelector('.lineInner');
-      if(!inner)continue;
-      inner.style.transform='';
-      els[i].style.justifyContent='';
-      var cw=els[i].clientWidth;
-      var sw=inner.scrollWidth||inner.getBoundingClientRect().width;
-      if(sw>0&&cw>0){
-        var s=cw/sw;
-        if(s>0.3&&s<1)inner.style.transform='scaleX('+s+')';
-        else els[i].style.justifyContent='center';
-      }
+function naturalLineWidth(inner){
+  var tokens=inner.querySelectorAll('.w,.ayahMarker,.rub'),width=0;
+  tokens.forEach(function(token){width+=token.getBoundingClientRect().width});
+  var gap=parseFloat(getComputedStyle(inner).columnGap)||0;
+  return width+Math.max(0,tokens.length-1)*gap;
+}
+function fitPageFont(){
+  var canvas=document.getElementById('pageCanvas'),available=canvas.clientWidth,scale=1;
+  var targetAvailable=Math.max(0,available-(canvas.classList.contains('compact')?32:0));
+  canvas.style.fontSize='';
+  document.querySelectorAll('.lineInner').forEach(function(inner){
+    var naturalWidth=Math.max(inner.clientWidth,naturalLineWidth(inner));
+    if(naturalWidth>0)scale=Math.min(scale,targetAvailable/naturalWidth);
+    var row=inner.parentElement;
+    if(canvas.classList.contains('full')&&row&&row.clientHeight>0&&inner.scrollHeight>0){
+      scale=Math.min(scale,(row.clientHeight*.94)/inner.scrollHeight);
     }
-  })});
-});
+  });
+  if(scale<1){
+    var fontSize=parseFloat(getComputedStyle(canvas).fontSize);
+    canvas.style.fontSize=(fontSize*scale)+'px';
+  }
+}
+function announceReady(){postMsg({type:'ready'})}
+function fitAndAnnounce(){fitPageFont();announceReady()}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){requestAnimationFrame(fitAndAnnounce)});
+window.addEventListener('load',fitAndAnnounce);window.addEventListener('resize',fitPageFont);
 
 // --- Ayah selection ---
 var sel={active:false,startS:0,startA:0,endS:0,endA:0};
 var LONG_PRESS_DELAY=300;
+// A touch that travels further than this is a page swipe, not a selection. Leaving
+// the pending long press armed let the reader eat the swipe the pager needed.
+var MOVE_SLOP=10;
 var longPressTimer=null;
 var isDragging=false;
 var touchStartAyah=null;
+var touchStartPoint=null;
 var rafPending=false;
 
 function getAyah(el){
@@ -277,6 +292,8 @@ function clearSelection(){
   document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel')});
   sel.active=false;
   isDragging=false;
+  touchStartAyah=null;
+  touchStartPoint=null;
   if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
   postMsg({type:'deselect'});
 }
@@ -322,6 +339,7 @@ document.body.addEventListener('touchstart',function(e){
   var ayah=getAyah(document.elementFromPoint(t.clientX,t.clientY));
   if(!ayah){return;}
   touchStartAyah=ayah;
+  touchStartPoint={x:t.clientX,y:t.clientY};
   longPressTimer=setTimeout(function(){
     isDragging=true;
     sel.active=true;
@@ -332,7 +350,14 @@ document.body.addEventListener('touchstart',function(e){
 
 document.body.addEventListener('touchmove',function(e){
   if(!isDragging){
+    var m=e.touches[0];
+    if(!m||!touchStartPoint)return;
+    // Small jitter keeps the long press armed. A real swipe cancels it and is
+    // left untouched so the native pager can turn the page.
+    if(Math.abs(m.clientX-touchStartPoint.x)<=MOVE_SLOP&&Math.abs(m.clientY-touchStartPoint.y)<=MOVE_SLOP)return;
     if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+    touchStartAyah=null;
+    touchStartPoint=null;
     return;
   }
   e.preventDefault();
@@ -357,6 +382,7 @@ document.body.addEventListener('touchend',function(e){
   if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
   if(isDragging){
     isDragging=false;
+    touchStartPoint=null;
     var t=e.changedTouches[0];
     var x=t?t.clientX:0,y=t?t.clientY:0;
     postMsg({type:'select',startSurah:sel.startS,startAyah:sel.startA,endSurah:sel.endS,endAyah:sel.endA,x:x,y:y,openMenu:true});
@@ -365,6 +391,7 @@ document.body.addEventListener('touchend',function(e){
   if(!touchStartAyah)return;
   var ayah=touchStartAyah;
   touchStartAyah=null;
+  touchStartPoint=null;
   var t2=e.changedTouches[0];
   var tx=t2?t2.clientX:0,ty=t2?t2.clientY:0;
 
@@ -377,13 +404,14 @@ document.body.addEventListener('touchend',function(e){
   sel.active=true;
   sel.startS=ayah.s;sel.startA=ayah.a;sel.endS=ayah.s;sel.endA=ayah.a;
   highlightRange(ayah.s,ayah.a,ayah.s,ayah.a);
-  postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:tx,y:ty,openMenu:false});
+  postMsg({type:'select',startSurah:ayah.s,startAyah:ayah.a,endSurah:ayah.s,endAyah:ayah.a,x:tx,y:ty,openMenu:true});
 });
 
 document.body.addEventListener('touchcancel',function(){
   if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
   isDragging=false;
   touchStartAyah=null;
+  touchStartPoint=null;
 });
 </script>
 </body>

@@ -36,4 +36,20 @@ describe('settings store appearance defaults', () => {
       hasChosenThemeMode: true,
     });
   });
+
+  it('migrates legacy font choices to genuine layout identities', () => {
+    expect(migrateSettingsState({ mushafFont: 'indopak-nastaleeq' }, 1)).toMatchObject({
+      mushafLayoutId: 'indopak-15-line-hafs',
+    });
+    expect(migrateSettingsState({ mushafFont: 'qcf-v4' }, 1)).toMatchObject({
+      mushafLayoutId: 'madani-qcf-v2-hafs',
+    });
+    expect(migrateSettingsState({ mushafFont: 'digital-khatt-indopak' }, 1))
+      .not.toHaveProperty('mushafFont');
+  });
+
+  it('preserves a valid saved layout selection', () => {
+    expect(migrateSettingsState({ mushafLayoutId: 'indopak-15-line-hafs' }, 2))
+      .toMatchObject({ mushafLayoutId: 'indopak-15-line-hafs' });
+  });
 });

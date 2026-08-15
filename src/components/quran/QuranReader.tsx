@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { View, ScrollView, Text, Alert, StyleSheet, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSelectionStore } from '../../stores/selectionStore';
 import { useReadingStore } from '../../stores/readingStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { type AyahSelectionState } from './AyahText';
 import { SurahHeaderBanner } from './SurahHeaderBanner';
 import { Bismillah } from './Bismillah';
@@ -10,7 +11,7 @@ import { toArabicIndic } from '../../utils/arabic';
 import { theme } from '../../constants/theme';
 import { surahHasBismillah } from '../../constants/quran';
 import { useStrings } from '../../constants/strings';
-import { getJuzAndPageForAyah } from '../../data/quranRepository';
+import { getMushafJuzAndPageForAyah } from '../../data/quranRepository';
 import type { Ayah, Surah } from '../../data/types';
 
 interface QuranReaderProps {
@@ -27,6 +28,7 @@ export function QuranReader({
   initialAyahNumber,
 }: QuranReaderProps) {
   const strings = useStrings();
+  const layoutId = useSettingsStore((state) => state.mushafLayoutId);
   const scrollRef = useRef<ScrollView>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Store Y positions of ayah layout markers for scroll-to-ayah
@@ -49,11 +51,13 @@ export function QuranReader({
 
   const saveLastRead = useCallback(
     (ayahNumber: number) => {
-      getJuzAndPageForAyah(surahNumber, ayahNumber)
-        .then(({ juz, page }) => setLastRead(surahNumber, ayahNumber, juz, page))
+      getMushafJuzAndPageForAyah(layoutId, surahNumber, ayahNumber)
+        .then(({ juz, page }) =>
+          setLastRead(surahNumber, ayahNumber, juz, page, new Date(), layoutId)
+        )
         .catch(() => undefined);
     },
-    [surahNumber, setLastRead]
+    [layoutId, surahNumber, setLastRead]
   );
 
   const getClosestAyahForScroll = useCallback(

@@ -20,19 +20,26 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
+const mockSetPageWithoutAnimation = jest.fn();
+
 jest.mock('react-native-pager-view', () => {
   const React = require('react');
   const { View } = require('react-native');
 
-  return React.forwardRef((props: Record<string, unknown>, ref: React.Ref<unknown>) => (
-    <View ref={ref} testID="pager-view" {...props} />
-  ));
+  // The reader now moves the pager through this method instead of remounting it,
+  // so the mock has to carry it on the ref.
+  return React.forwardRef((props: Record<string, unknown>, ref: React.Ref<unknown>) => {
+    React.useImperativeHandle(ref, () => ({
+      setPageWithoutAnimation: mockSetPageWithoutAnimation,
+    }));
+    return <View testID="pager-view" {...props} />;
+  });
 });
 
 jest.mock('../../../src/data/quranRepository', () => ({
-  getTopAyahForPage: (...args: unknown[]) => mockGetTopAyahForPage(...args),
-  getJuzAndPageForAyah: (...args: unknown[]) => mockGetJuzAndPageForAyah(...args),
-  getPageForAyah: jest.fn(),
+  getMushafTopAyahForPage: (...args: unknown[]) => mockGetTopAyahForPage(...args),
+  getMushafJuzAndPageForAyah: (...args: unknown[]) => mockGetJuzAndPageForAyah(...args),
+  getMushafPageForAyah: jest.fn(),
   getSurahByNumber: jest.fn().mockResolvedValue(null),
   getSurahLastAyah: jest.fn(),
 }));
@@ -101,7 +108,10 @@ jest.mock('../../../src/stores/readingStore', () => ({
 
 import React from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react-native';
-import { MushafReader } from '../../../src/components/quran/MushafReader';
+import {
+  getMushafPageWindow,
+  MushafReader,
+} from '../../../src/components/quran/MushafReader';
 
 const selectEvent = (openMenu: boolean) => ({
   type: 'select',
@@ -120,7 +130,7 @@ describe('MushafReader', () => {
     mockSetLastRead.mockClear();
     mockGetTopAyahForPage.mockReset();
     mockGetJuzAndPageForAyah.mockReset();
-    mockGetTopAyahForPage.mockResolvedValue({ surahNumber: 2, ayahNumber: 1 });
+    mockGetTopAyahForPage.mockResolvedValue({ surahNumber: 2, ayahNumber: 1, wordPosition: 1 });
     mockGetJuzAndPageForAyah.mockResolvedValue({ juz: 1, page: 1 });
   });
 
@@ -128,7 +138,15 @@ describe('MushafReader', () => {
     render(<MushafReader initialPage={1} />);
 
     await waitFor(() => {
-      expect(mockSetLastRead).toHaveBeenCalledWith(2, 1, 1, 1);
+      expect(mockSetLastRead).toHaveBeenCalledWith(
+        2,
+        1,
+        1,
+        1,
+        expect.any(Date),
+        'madani-qcf-v2-hafs',
+        1
+      );
     });
   });
 
@@ -154,5 +172,18 @@ describe('MushafReader', () => {
     render(<MushafReader initialPage={1} />);
 
     expect(screen.queryByTestId('page-indicator')).toBeNull();
+  });
+
+  it('keeps only a three-page native window at the start, middle, and end', () => {
+    expect(getMushafPageWindow(1, 604)).toEqual({ pages: [1, 2, 3], selectedIndex: 0 });
+    expect(getMushafPageWindow(42, 604)).toEqual({ pages: [41, 42, 43], selectedIndex: 1 });
+    expect(getMushafPageWindow(604, 604)).toEqual({
+      pages: [602, 603, 604],
+      selectedIndex: 2,
+    });
+    expect(getMushafPageWindow(610, 610)).toEqual({
+      pages: [608, 609, 610],
+      selectedIndex: 2,
+    });
   });
 });

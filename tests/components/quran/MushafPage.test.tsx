@@ -48,16 +48,17 @@ jest.mock('../../../src/components/ui/ErrorState', () => ({
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { MushafPage } from '../../../src/components/quran/MushafPage';
+import { DEFAULT_MUSHAF_LAYOUT_ID } from '../../../src/data/mushafLayouts';
 
 describe('MushafPage', () => {
-  it('keeps WebView scrolling enabled so larger Quran text remains readable', () => {
-    render(<MushafPage pageNumber={77} />);
+  it('keeps the canonical whole-page canvas fixed inside the native pager', () => {
+    render(<MushafPage pageNumber={77} layoutId={DEFAULT_MUSHAF_LAYOUT_ID} />);
 
-    expect(screen.getByTestId('mushaf-webview')).toHaveProp('scrollEnabled', true);
+    expect(screen.getByTestId('mushaf-webview')).toHaveProp('scrollEnabled', false);
   });
 
-  it('locks WebView scrolling to the vertical axis', () => {
-    render(<MushafPage pageNumber={77} />);
+  it('does not allow WebView bounce or overscroll to distort the page canvas', () => {
+    render(<MushafPage pageNumber={77} layoutId={DEFAULT_MUSHAF_LAYOUT_ID} />);
 
     expect(screen.getByTestId('mushaf-webview')).toHaveProp('directionalLockEnabled', true);
     expect(screen.getByTestId('mushaf-webview')).toHaveProp('bounces', false);

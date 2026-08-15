@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
@@ -22,6 +22,7 @@ import { EmptySearchResult } from '../ui/EmptySearchResult';
 import { ErrorState } from '../ui/ErrorState';
 
 import type { Surah, Juz } from '../../data/types';
+import { getMushafPageForAyah } from '../../data/quranRepository';
 
 interface Props {
   /** Hide the brand bar + greeting card (used by the Surahs tab). */
@@ -33,6 +34,7 @@ export function HomeView({ hideGreeting = false }: Props) {
   const strings = useStrings();
   const theme = useTheme();
   const language = useSettingsStore((s) => s.language);
+  const mushafLayoutId = useSettingsStore((s) => s.mushafLayoutId);
   const isArabic = language === 'ar';
   const styles = createStyles(theme, isArabic);
 
@@ -47,24 +49,49 @@ export function HomeView({ hideGreeting = false }: Props) {
   const lastReadAyah = useReadingStore((s) => s.lastReadAyah);
   const lastReadJuz = useReadingStore((s) => s.lastReadJuz);
   const lastReadPage = useReadingStore((s) => s.lastReadPage);
+  const lastReadPageByLayout = useReadingStore((s) => s.lastReadPageByLayout);
   const lastReadAt = useReadingStore((s) => s.lastReadAt);
+  const [displayLastReadPage, setDisplayLastReadPage] = useState<number | null>(
+    lastReadPageByLayout?.[mushafLayoutId] ?? lastReadPage
+  );
+
+  useEffect(() => {
+    const cachedPage = lastReadPageByLayout?.[mushafLayoutId];
+    setDisplayLastReadPage(cachedPage ?? null);
+    if (lastReadSurah == null || lastReadAyah == null) {
+      setDisplayLastReadPage(null);
+      return;
+    }
+    let cancelled = false;
+    getMushafPageForAyah(mushafLayoutId, lastReadSurah, lastReadAyah)
+      .then((pageNumber) => {
+        if (!cancelled) setDisplayLastReadPage(pageNumber);
+      })
+      .catch(() => {
+        if (!cancelled) setDisplayLastReadPage(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastReadAyah, lastReadPageByLayout, lastReadSurah, mushafLayoutId]);
 
   const surahNames = useMemo(
     () => new Map(surahs.map((s) => [s.number, isArabic ? s.nameArabic : s.nameEnglish])),
     [surahs, isArabic]
   );
 
-  const handleSurahSelect = useCallback((n: number) => setSelectedSurah((prev) => prev === n ? null : n), []);
+  // Selection marks the row the reader was opened from, so it is set, never toggled.
+  const handleSurahSelect = useCallback((n: number) => setSelectedSurah(n), []);
   const handleSurahOpen = useCallback((n: number) => router.push(`/surah/${n}`), [router]);
-  const handleJuzSelect = useCallback((n: number) => setSelectedJuz((prev) => prev === n ? null : n), []);
+  const handleJuzSelect = useCallback((n: number) => setSelectedJuz(n), []);
   const handleJuzOpen = useCallback((n: number) => router.push(`/juz/${n}`), [router]);
 
   const handleResume = useCallback(() => {
     if (lastReadSurah !== null) {
-      if (lastReadPage !== null) {
+      if (lastReadAyah !== null) {
         router.push({
           pathname: '/surah/[id]',
-          params: { id: String(lastReadSurah), page: String(lastReadPage) },
+          params: { id: String(lastReadSurah), ayah: String(lastReadAyah) },
         });
       } else {
         router.push(`/surah/${lastReadSurah}`);
@@ -72,7 +99,7 @@ export function HomeView({ hideGreeting = false }: Props) {
     } else {
       router.push('/surah/1');
     }
-  }, [router, lastReadSurah, lastReadPage]);
+  }, [router, lastReadAyah, lastReadSurah]);
 
   const handleStart = useCallback(() => {
     router.push('/surah/1');
@@ -124,7 +151,7 @@ export function HomeView({ hideGreeting = false }: Props) {
     lastReadSurah !== null &&
     lastReadAyah !== null &&
     lastReadJuz !== null &&
-    lastReadPage !== null &&
+    displayLastReadPage !== null &&
     lastReadAt !== null;
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -137,7 +164,7 @@ export function HomeView({ hideGreeting = false }: Props) {
             surahName={surahNames.get(lastReadSurah) ?? (isArabic ? 'الفاتحة' : 'Al-Fatihah')}
             ayahNumber={lastReadAyah}
             juzNumber={lastReadJuz}
-            pageNumber={lastReadPage}
+            pageNumber={displayLastReadPage}
             onResume={handleResume}
           />
         ) : (

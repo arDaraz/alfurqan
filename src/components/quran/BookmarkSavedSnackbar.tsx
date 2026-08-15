@@ -16,6 +16,8 @@ interface BookmarkSavedSnackbarProps {
   pageNumber: number;
   juzNumber: number;
   resultingCategories: BookmarkCategory[];
+  /** Confirms a completed Undo: restates the restored state and drops the Undo action. */
+  undone?: boolean;
   onUndo: () => void;
   onDismiss: () => void;
 }
@@ -25,6 +27,7 @@ export function BookmarkSavedSnackbar({
   pageNumber,
   juzNumber,
   resultingCategories,
+  undone = false,
   onUndo,
   onDismiss,
 }: BookmarkSavedSnackbarProps) {
@@ -73,22 +76,24 @@ export function BookmarkSavedSnackbar({
 
       <View style={styles.textColumn}>
         <Text style={styles.title} numberOfLines={1}>
-          {strings.bookmark.savedTitle}
+          {undone ? strings.bookmark.undoneTitle : strings.bookmark.savedTitle}
         </Text>
         <Text style={styles.subtitle} numberOfLines={1}>
           {subtitle}
         </Text>
       </View>
 
-      <Pressable
-        onPress={onUndo}
-        accessibilityRole="button"
-        accessibilityLabel={strings.bookmark.undo}
-        hitSlop={10}
-        style={({ pressed }) => [styles.undoBtn, pressed && styles.undoBtnPressed]}
-      >
-        <Text style={styles.undoText}>{strings.bookmark.undo}</Text>
-      </Pressable>
+      {!undone && (
+        <Pressable
+          onPress={onUndo}
+          accessibilityRole="button"
+          accessibilityLabel={strings.bookmark.undo}
+          hitSlop={10}
+          style={({ pressed }) => [styles.undoBtn, pressed && styles.undoBtnPressed]}
+        >
+          <Text style={styles.undoText}>{strings.bookmark.undo}</Text>
+        </Pressable>
+      )}
     </Animated.View>
   );
 }

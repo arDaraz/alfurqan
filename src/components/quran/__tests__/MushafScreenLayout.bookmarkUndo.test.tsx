@@ -20,7 +20,12 @@ jest.mock('expo-status-bar', () => ({
 }));
 
 jest.mock('../../../data/quranRepository', () => ({
-  getJuzAndPageForAyah: jest.fn(async () => ({ juz: 3, page: 42 })),
+  getMushafJuzAndPageForAyah: jest.fn(async () => ({ juz: 3, page: 42 })),
+  getMushafTopAyahForPage: jest.fn(async () => ({
+    surahNumber: 2,
+    ayahNumber: 255,
+    wordPosition: 1,
+  })),
   getSurahByNumber: jest.fn(async () => ({
     number: 2,
     nameArabic: 'البقرة',
@@ -30,7 +35,7 @@ jest.mock('../../../data/quranRepository', () => ({
     revelationOrder: 87,
     juzStart: 1,
   })),
-  getSurahForPage: jest.fn(async () => null),
+  getMushafSurahForPage: jest.fn(async () => null),
 }));
 
 jest.mock('../../../actions/ayahActions', () => ({
@@ -179,6 +184,41 @@ describe('MushafScreenLayout bookmark undo', () => {
     sheetRef.commit = null;
     snackbarPropsRef.props = null;
     useReadingStore.setState({ bookmarks: [] } as any);
+  });
+
+  // The audit's own repro: the page was not bookmarked before the save.
+  it('None → Reading: undo leaves the ayah with no bookmark at all', async () => {
+    const { getByLabelText } = await renderLayout();
+    fireEvent.press(getByLabelText('trigger-page-bookmark'));
+    await waitFor(() => {
+      if (!sheetRef.commit) throw new Error('sheet not opened');
+    });
+    await commitSheet(['reading'], []);
+    await waitFor(() => getByLabelText('undo-snackbar'));
+    fireEvent.press(getByLabelText('undo-snackbar'));
+    await waitFor(() => {
+      expect(
+        useReadingStore
+          .getState()
+          .bookmarks.filter((b) => b.surahNumber === 2 && b.ayahNumber === 255)
+      ).toEqual([]);
+    });
+  });
+
+  it('restores the original creation time so undo keeps the list order', async () => {
+    seed(['reading']);
+    const original = useReadingStore.getState().bookmarks[0].createdAt;
+    const { getByLabelText } = await renderLayout();
+    await openSheetForAyah(getByLabelText);
+    await commitSheet([], ['reading']);
+    await waitFor(() => getByLabelText('undo-snackbar'));
+    fireEvent.press(getByLabelText('undo-snackbar'));
+    await waitFor(() => {
+      const restored = useReadingStore
+        .getState()
+        .bookmarks.find((b) => b.surahNumber === 2 && b.ayahNumber === 255);
+      expect(restored?.createdAt).toBe(original);
+    });
   });
 
   it('Reading → Recitation: undo restores only Reading', async () => {

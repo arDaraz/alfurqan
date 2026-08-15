@@ -10,7 +10,7 @@ import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { PillTabs } from '../home/PillTabs';
 import { BookmarkRow } from './BookmarkRow';
-import { getJuzAndPageForAyah, getSurahByNumber } from '../../data/quranRepository';
+import { getMushafJuzAndPageForAyah, getSurahByNumber } from '../../data/quranRepository';
 import { toArabicIndic } from '../../utils/arabic';
 import type { Bookmark, BookmarkCategory } from '../../data/types';
 
@@ -25,6 +25,7 @@ export function BookmarksScreen() {
   const strings = useStrings();
   const router = useRouter();
   const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const layoutId = useSettingsStore((s) => s.mushafLayoutId);
   const styles = createStyles(theme, isArabic);
   const params = useLocalSearchParams<{ tab?: string }>();
 
@@ -33,6 +34,7 @@ export function BookmarksScreen() {
 
   const initialTab: BookmarkCategory = params.tab === 'reading' ? 'reading' : 'recitation';
   const [activeTab, setActiveTab] = useState<BookmarkCategory>(initialTab);
+  const [newestFirst, setNewestFirst] = useState(true);
   const [hydrated, setHydrated] = useState<
     Record<string, { nameArabic: string; nameEnglish: string; page: number; juz: number }>
   >({});
@@ -46,7 +48,7 @@ export function BookmarksScreen() {
     let cancelled = false;
     (async () => {
       const missing = bookmarks.filter(
-        (b) => !hydratedRef.current[`${b.surahNumber}:${b.ayahNumber}`]
+        (b) => !hydratedRef.current[`${layoutId}:${b.surahNumber}:${b.ayahNumber}`]
       );
       if (missing.length === 0) return;
 
@@ -55,11 +57,11 @@ export function BookmarksScreen() {
         { nameArabic: string; nameEnglish: string; page: number; juz: number }
       > = {};
       for (const b of bookmarks) {
-        const key = `${b.surahNumber}:${b.ayahNumber}`;
+        const key = `${layoutId}:${b.surahNumber}:${b.ayahNumber}`;
         if (hydratedRef.current[key] || additions[key]) continue;
         try {
           const [{ page, juz }, surah] = await Promise.all([
-            getJuzAndPageForAyah(b.surahNumber, b.ayahNumber),
+            getMushafJuzAndPageForAyah(layoutId, b.surahNumber, b.ayahNumber),
             getSurahByNumber(b.surahNumber),
           ]);
           if (cancelled) return;
@@ -80,14 +82,14 @@ export function BookmarksScreen() {
     return () => {
       cancelled = true;
     };
-  }, [bookmarks]);
+  }, [bookmarks, layoutId]);
 
   const filtered: RowData[] = useMemo(() => {
     return bookmarks
       .filter((b) => b.category === activeTab)
-      .sort((a, b) => b.createdAt - a.createdAt)
+      .sort((a, b) => (newestFirst ? b.createdAt - a.createdAt : a.createdAt - b.createdAt))
       .map((b) => {
-        const key = `${b.surahNumber}:${b.ayahNumber}`;
+        const key = `${layoutId}:${b.surahNumber}:${b.ayahNumber}`;
         const h = hydrated[key];
         return {
           ...b,
@@ -96,7 +98,7 @@ export function BookmarksScreen() {
           juzNumber: h?.juz ?? 1,
         };
       });
-  }, [bookmarks, activeTab, hydrated, isArabic]);
+  }, [bookmarks, activeTab, hydrated, isArabic, layoutId, newestFirst]);
 
   const countReading = bookmarks.filter((b) => b.category === 'reading').length;
   const countRecitation = bookmarks.filter((b) => b.category === 'recitation').length;
@@ -123,6 +125,7 @@ export function BookmarksScreen() {
 
   const emptyCopy =
     activeTab === 'reading' ? strings.bookmarks.emptyReading : strings.bookmarks.emptyRecitation;
+  const sortLabel = newestFirst ? strings.bookmarks.sortNewest : strings.bookmarks.sortOldest;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -130,7 +133,8 @@ export function BookmarksScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={strings.bookmarks.moreMenuLabel}
-          onPress={() => { /* overflow menu — wiring TBD */ }}
+          accessibilityValue={{ text: sortLabel }}
+          onPress={() => setNewestFirst((newest) => !newest)}
           hitSlop={8}
           style={styles.iconBtn}
         >
@@ -164,9 +168,14 @@ export function BookmarksScreen() {
         <PillTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
       </View>
 
-      <View style={styles.sortRow}>
-        <Text style={styles.sortLabel}>{strings.bookmarks.sortOldest}</Text>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={sortLabel}
+        onPress={() => setNewestFirst((newest) => !newest)}
+        style={styles.sortRow}
+      >
+        <Text style={styles.sortLabel}>{sortLabel}</Text>
+      </Pressable>
 
       {filtered.length === 0 ? (
         <View style={styles.empty}>
@@ -189,7 +198,7 @@ export function BookmarksScreen() {
               onPress={() =>
                 router.push({
                   pathname: '/surah/[id]',
-                  params: { id: String(item.surahNumber), page: String(item.pageNumber) },
+                  params: { id: String(item.surahNumber), ayah: String(item.ayahNumber) },
                 })
               }
               onDelete={() => removeBookmark(item.surahNumber, item.ayahNumber, item.category)}
