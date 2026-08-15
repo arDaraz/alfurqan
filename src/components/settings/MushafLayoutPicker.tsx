@@ -114,7 +114,7 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     root: { flex: 1, justifyContent: 'flex-end' },
     backdrop: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: `${theme.semantic.fg}66`,
     },
     sheet: {

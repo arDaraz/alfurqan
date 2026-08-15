@@ -1,11 +1,14 @@
 import React from 'react';
 import { View, Pressable, Text, StyleSheet, Platform } from 'react-native';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
+
+type TabBarProps = Parameters<
+  NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>
+>[0];
 
 /**
  * 5-column tab bar with a central Tasmi' FAB. Layout from the v2 design:
@@ -15,7 +18,7 @@ import { useSettingsStore } from '../../stores/settingsStore';
  * to `/practice`. Tab order matches the design left-to-right; React
  * Navigation handles RTL flipping automatically.
  */
-export function TabBar({ state, navigation }: BottomTabBarProps) {
+export function TabBar({ state, navigation }: TabBarProps) {
   const theme = useTheme();
   const strings = useStrings();
   const router = useRouter();
