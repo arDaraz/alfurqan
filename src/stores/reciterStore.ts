@@ -89,16 +89,19 @@ export const useReciterStore = create<ReciterStoreState>()((set, get) => ({
   downloads: initialState.downloads,
   cancelSurahDownload: (reciterId, surah) => {
     const key = downloadKey(reciterId, surah);
-    downloadControllers.get(key)?.abort();
-    downloadControllers.delete(key);
+    // The cancelled state is written before the abort, so anything the abort
+    // wakes up already sees the download as stopped.
     const existing = get().downloads[key];
     if (existing) {
       get().setSurahDownload(key, {
         ...existing,
+        ayahsCached: 0,
         status: 'idle',
         errorMessage: undefined,
       });
     }
+    downloadControllers.get(key)?.abort();
+    downloadControllers.delete(key);
   },
   deleteSurahDownload: async (reciterId, surah) => {
     const key = downloadKey(reciterId, surah);
@@ -137,6 +140,9 @@ export const useReciterStore = create<ReciterStoreState>()((set, get) => ({
         surah,
         controller.signal,
         (ayahsCached, total) => {
+          // The ayah in flight cannot be aborted, so its progress callback still
+          // fires after a cancel. Dropping it keeps the cancelled state on screen.
+          if (controller.signal.aborted) return;
           get().setSurahDownload(key, {
             ayahsTotal: total,
             ayahsCached,

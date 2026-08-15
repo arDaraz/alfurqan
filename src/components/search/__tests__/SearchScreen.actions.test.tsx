@@ -261,7 +261,7 @@ describe('SearchScreen action wiring', () => {
     fireEvent.press(card);
 
     await waitFor(() => {
-      expect(mockRouterPush).toHaveBeenCalledWith('/surah/2?page=8');
+      expect(mockRouterPush).toHaveBeenCalledWith('/surah/2?ayah=53');
     });
   });
 });

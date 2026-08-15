@@ -4,9 +4,10 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  getJuzAndPageForAyah,
+  getMushafJuzAndPageForAyah,
+  getMushafSurahForPage,
+  getMushafTopAyahForPage,
   getSurahByNumber,
-  getSurahForPage,
 } from '../../data/quranRepository';
 import { handleAyahAction } from '../../actions/ayahActions';
 import { MushafReader } from './MushafReader';
@@ -15,22 +16,29 @@ import { BookmarkCategorySheet, type BookmarkCommit } from './BookmarkCategorySh
 import { BookmarkSavedSnackbar } from './BookmarkSavedSnackbar';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
+import { InfoSheet } from '../ui/InfoSheet';
+import { getMushafLayout } from '../../data/mushafLayouts';
+import { useStrings } from '../../constants/strings';
 import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
 import { useReadingStore } from '../../stores/readingStore';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { toArabicIndic } from '../../utils/arabic';
 import type {
   AyahActionType,
   AyahSelection,
   BookmarkCategory,
+  CanonicalQuranLocation,
 } from '../../data/types';
 
-interface Props {
-  loadInitialPage: () => Promise<{ page: number; surahName: string }>;
-  errorMessage: string;
+export interface InitialMushafPage {
+  page: number;
+  surahName: string;
+  location?: CanonicalQuranLocation;
 }
 
-const PAGES_PER_JUZ = 604 / 30;
-function juzForPage(page: number): number {
-  return Math.max(1, Math.min(30, Math.ceil(page / PAGES_PER_JUZ)));
+interface Props {
+  loadInitialPage: () => Promise<InitialMushafPage>;
+  errorMessage: string;
 }
 
 interface SnackbarInfo {
@@ -39,16 +47,23 @@ interface SnackbarInfo {
   juz: number;
   resulting: BookmarkCategory[];
   previous: BookmarkCategory[];
+  previousCreatedAt?: Partial<Record<BookmarkCategory, number>>;
   surahNumber: number;
   ayahNumber: number;
+  undone?: boolean;
 }
 
 export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   const { colors, nightReadingEnabled } = useReaderColors();
+  const strings = useStrings();
+  const language = useSettingsStore((state) => state.language);
   const styles = createStyles(colors);
+  const [infoVisible, setInfoVisible] = useState(false);
   const [surahName, setSurahName] = useState('');
   const [currentPage, setCurrentPage] = useState<number | null>(null);
   const [initialPage, setInitialPage] = useState<number | null>(null);
+  const [initialLocation, setInitialLocation] = useState<CanonicalQuranLocation | undefined>();
+  const [currentJuz, setCurrentJuz] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +74,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   const addBookmark = useReadingStore((s) => s.addBookmark);
   const removeBookmark = useReadingStore((s) => s.removeBookmark);
   const getBookmarkCategories = useReadingStore((s) => s.getBookmarkCategories);
+  const layoutId = useSettingsStore((state) => state.mushafLayoutId);
 
   const loadData = useCallback(async () => {
     try {
@@ -67,6 +83,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       const result = await loadInitialPage();
       setSurahName(result.surahName);
       setInitialPage(result.page);
+      setInitialLocation(result.location);
       setCurrentPage(result.page);
     } catch (err) {
       setError(err instanceof Error ? err.message : errorMessage);
@@ -111,10 +128,24 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
     async (commit: BookmarkCommit) => {
       if (!sheetSelection) return;
       const { startSurah, startAyah } = sheetSelection;
+      // Captured before the commit so Undo can restore each bookmark's original
+      // creation time instead of pushing it to the top of the Bookmarks list.
+      const previousCreatedAt: Partial<Record<BookmarkCategory, number>> = {};
+      useReadingStore
+        .getState()
+        .bookmarks.filter((b) => b.surahNumber === startSurah && b.ayahNumber === startAyah)
+        .forEach((b) => {
+          previousCreatedAt[b.category] = b.createdAt;
+        });
+
       commit.added.forEach((c) => addBookmark(startSurah, startAyah, c));
       commit.removed.forEach((c) => removeBookmark(startSurah, startAyah, c));
       try {
-        const { juz, page } = await getJuzAndPageForAyah(startSurah, startAyah);
+        const { juz, page } = await getMushafJuzAndPageForAyah(
+          layoutId,
+          startSurah,
+          startAyah
+        );
         setSnackbar({
           surahNumber: startSurah,
           ayahNumber: startAyah,
@@ -123,19 +154,20 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
           juz,
           resulting: commit.next,
           previous: commit.previous,
+          previousCreatedAt,
         });
       } catch {
         /* non-critical */
       }
       setSheetSelection(null);
     },
-    [sheetSelection, sheetSurahName, addBookmark, removeBookmark]
+    [sheetSelection, sheetSurahName, addBookmark, layoutId, removeBookmark]
   );
 
   const handleSheetDismiss = useCallback(() => setSheetSelection(null), []);
 
   const handleUndoSnackbar = useCallback(() => {
-    if (!snackbar) return;
+    if (!snackbar || snackbar.undone) return;
     const current = getBookmarkCategories(snackbar.surahNumber, snackbar.ayahNumber);
     const prevSet = new Set(snackbar.previous);
     const curSet = new Set(current);
@@ -143,9 +175,18 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       if (!prevSet.has(c)) removeBookmark(snackbar.surahNumber, snackbar.ayahNumber, c);
     });
     snackbar.previous.forEach((c) => {
-      if (!curSet.has(c)) addBookmark(snackbar.surahNumber, snackbar.ayahNumber, c);
+      if (!curSet.has(c)) {
+        addBookmark(
+          snackbar.surahNumber,
+          snackbar.ayahNumber,
+          c,
+          snackbar.previousCreatedAt?.[c]
+        );
+      }
     });
-    setSnackbar(null);
+    // Undo can land on an ayah that still holds another category, so the toolbar
+    // icon stays filled. Restate the restored categories so the result is visible.
+    setSnackbar({ ...snackbar, resulting: snackbar.previous, undone: true });
   }, [snackbar, addBookmark, removeBookmark, getBookmarkCategories]);
 
   const handleDismissSnackbar = useCallback(() => setSnackbar(null), []);
@@ -153,19 +194,48 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   const handlePageChange = useCallback(async (pageNumber: number) => {
     setCurrentPage(pageNumber);
     try {
-      const surah = await getSurahForPage(pageNumber);
+      const [topAyah, surah] = await Promise.all([
+        getMushafTopAyahForPage(layoutId, pageNumber),
+        getMushafSurahForPage(layoutId, pageNumber),
+      ]);
+      const { juz } = await getMushafJuzAndPageForAyah(
+        layoutId,
+        topAyah.surahNumber,
+        topAyah.ayahNumber
+      );
+      setCurrentJuz(juz);
       if (surah) {
         setSurahName((prev) => (prev === surah.nameArabic ? prev : surah.nameArabic));
       }
     } catch {
       /* non-critical */
     }
-  }, []);
+  }, [layoutId]);
 
   const initialCategories =
     sheetSelection !== null
       ? getBookmarkCategories(sheetSelection.startSurah, sheetSelection.startAyah)
       : [];
+
+  const readerLayout = getMushafLayout(layoutId);
+  const isArabic = language === 'ar';
+  const digits = (value: number) => (isArabic ? toArabicIndic(value) : String(value));
+  const infoRows = [
+    { label: strings.reader.infoSurah, value: surahName || '-' },
+    { label: strings.reader.infoJuz, value: digits(currentJuz), numeric: true },
+    {
+      label: strings.reader.infoPage,
+      value: strings.reader.infoPageValue(
+        digits(currentPage ?? 1),
+        digits(readerLayout.pageCount)
+      ),
+      numeric: true,
+    },
+    {
+      label: strings.reader.infoMushaf,
+      value: isArabic ? readerLayout.displayName.ar : readerLayout.displayName.en,
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -173,8 +243,9 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       {nightReadingEnabled && <StatusBar style="light" />}
       <ReaderHeader
         surahName={surahName}
-        juzNumber={juzForPage(currentPage ?? 1)}
+        juzNumber={currentJuz}
         pageNumber={currentPage ?? 1}
+        onMore={() => setInfoVisible(true)}
       />
       {loading ? (
         <LoadingSkeleton />
@@ -183,10 +254,14 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       ) : initialPage !== null ? (
         <View style={styles.body}>
           <MushafReader
+            key={`${layoutId}-${initialPage}`}
             initialPage={initialPage}
+            initialLocation={initialLocation}
+            layoutId={layoutId}
             onPageChange={handlePageChange}
             onAyahAction={handleAction}
             onPageBookmarkRequest={handlePageBookmarkRequest}
+            onPageInfoRequest={() => setInfoVisible(true)}
           />
           {sheetSelection && (
             <BookmarkCategorySheet
@@ -199,17 +274,25 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
           )}
           {snackbar && (
             <BookmarkSavedSnackbar
-              key={`${snackbar.surahNumber}-${snackbar.ayahNumber}-${snackbar.resulting.join('|')}`}
+              key={`${snackbar.surahNumber}-${snackbar.ayahNumber}-${snackbar.resulting.join('|')}-${snackbar.undone ? 'undone' : 'saved'}`}
               surahName={snackbar.surahName}
               pageNumber={snackbar.page}
               juzNumber={snackbar.juz}
               resultingCategories={snackbar.resulting}
+              undone={snackbar.undone}
               onUndo={handleUndoSnackbar}
               onDismiss={handleDismissSnackbar}
             />
           )}
         </View>
       ) : null}
+      <InfoSheet
+        visible={infoVisible}
+        title={strings.reader.pageOptions}
+        rows={infoRows}
+        note={language === 'ar' ? readerLayout.attribution.ar : readerLayout.attribution.en}
+        onClose={() => setInfoVisible(false)}
+      />
     </SafeAreaView>
   );
 }

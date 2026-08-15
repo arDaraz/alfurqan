@@ -24,7 +24,8 @@
     "lint": "expo lint",
     "test": "jest",
     "seed": "npx tsx src/data/seed/buildQuranDb.ts",
-    "seed:mushaf": "npx tsx src/data/seed/seedMushafData.ts"
+    "seed:mushaf": "npx tsx src/data/seed/seedMushafData.ts",
+    "seed:mushaf-layouts": "npx tsx scripts/build-mushaf-content-packs.ts"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.15.5",

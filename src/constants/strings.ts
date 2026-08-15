@@ -1,5 +1,6 @@
 import { useSettingsStore } from '../stores/settingsStore';
 import type { AppLanguage } from '../utils/locale';
+import { toArabicIndic } from '../utils/arabic';
 
 const ar = {
   // App
@@ -95,9 +96,10 @@ const ar = {
   juzShortLabel: (n: number) => `جزء ${n}`,
 
   // Mushaf
-  mushafPageIndicator: (n: number) => `صفحة ${n} من ٦٠٤`,
+  mushafPageIndicator: (n: number, total = 604) => `صفحة ${n} من ${toArabicIndic(total)}`,
   mushafPageLoadError: 'تعذّر تحميل هذه الصفحة. يرجى المحاولة مرة أخرى.',
   mushafFontLoadError: 'تعذّر تحميل خط المصحف. يرجى إعادة تشغيل التطبيق.',
+  mushafContentPackError: 'حزمة هذا المصحف مفقودة أو تالفة. أعد تثبيت التطبيق لاستعادتها.',
   recitation: {
     loading: 'جاري التحميل...',
     playing: 'قيد التشغيل',
@@ -124,6 +126,22 @@ const ar = {
     errorStorage: 'لا توجد مساحة كافية',
   },
 
+  // Reader - page options and info sheet
+  reader: {
+    pageOptions: 'معلومات الصفحة',
+    surahIndex: 'فهرس السور',
+    infoSurah: 'السورة',
+    infoJuz: 'الجزء',
+    infoPage: 'الصفحة',
+    infoMushaf: 'المصحف',
+    infoPageValue: (page: string | number, total: string | number) => `${page} من ${total}`,
+  },
+  about: {
+    version: 'الإصدار',
+    credits: 'الاعتمادات',
+  },
+  close: 'إغلاق',
+
   // Reader toolbar
   toolBookmark: 'إشارة',
   toolListen: 'استماع',
@@ -134,6 +152,7 @@ const ar = {
   // Bookmark snackbar
   bookmark: {
     savedTitle: 'تم حفظ الصفحة',
+    undoneTitle: 'تم التراجع',
     savedSubtitleReading: (surahName: string, page: string | number, juz: string | number) =>
       `${surahName} · صفحة ${page} · جزء ${juz} · للقراءة`,
     savedSubtitleRecitation: (surahName: string, page: string | number, juz: string | number) =>
@@ -160,10 +179,11 @@ const ar = {
     categoryRecitation: 'الحفظ',
     categoryBadgeReading: 'قراءة',
     categoryBadgeRecitation: 'حفظ',
-    sortOldest: 'أقدم',
+    sortOldest: 'الأقدم أولًا',
+    sortNewest: 'الأحدث أولًا',
     openCta: 'فتح',
     countLabel: (n: number | string) => `${n}`,
-    moreMenuLabel: 'خيارات الإشارات المرجعية',
+    moreMenuLabel: 'تغيير ترتيب المحفوظات',
   },
 
   // Settings — sections
@@ -174,8 +194,14 @@ const ar = {
   settingsSectionApp: 'التطبيق',
   // Settings — rows
   settingsQuranSize: 'حجم النص القرآني',
-  settingsMushafFont: 'خط المصحف',
+  settingsMushafFont: 'نسخة المصحف',
   settingsMushafFontValue: 'KFGQPC Uthmani · Hafs',
+  settingsMushafLayoutTitle: 'اختر نسخة المصحف',
+  settingsMushafLayoutSubtitle: 'يحافظ التبديل على السورة والآية نفسها ويغيّر تخطيط الصفحات فقط.',
+  settingsMushafLayoutMeta: (pages: number, lines: number) => `${toArabicIndic(pages)} صفحة · ${toArabicIndic(lines)} سطرًا`,
+  settingsMushafLayoutSelected: 'محدد',
+  settingsMushafLayoutOffline: 'متاح دون اتصال',
+  settingsMushafLayoutAttribution: 'بيانات التخطيط موثقة ومضمّنة داخل التطبيق. راجع الاعتمادات قبل النشر.',
   settingsNightReading: 'القراءة الليلية',
   settingsNightReadingValue: 'وضع المصحف الليلي',
   settingsNightClassical: 'المصحف الكلاسيكي',
@@ -210,8 +236,13 @@ const ar = {
   practiceTitle: 'وضع التسميع',
   practiceSubtitle: 'استمع. سجّل. صحّح.',
   practiceListening: 'يستمع',
+  practiceIdle: 'اضغط الميكروفون للبدء',
   practiceListenSample: 'استمع',
+  practiceReplaySample: 'إعادة الاستماع',
   practiceSkip: 'تخطَّ',
+  practiceSkipped: 'تم تخطي التصحيح',
+  practiceMicStart: 'ابدأ الاستماع',
+  practiceMicStop: 'أوقف الاستماع',
   practiceMistakeHint: 'انقر الكلمة الحمراء لسماع النطق الصحيح.',
 
   // Profile / streak
@@ -305,9 +336,10 @@ const en = {
   pageIndicator: (page: number, hizb: number) => `PAGE ${page} · ḤIZB ${hizb}`,
   juzShortLabel: (n: number) => `Juzʾ ${n}`,
 
-  mushafPageIndicator: (n: number) => `Page ${n} of 604`,
+  mushafPageIndicator: (n: number, total = 604) => `Page ${n} of ${total}`,
   mushafPageLoadError: 'Unable to load this page. Please try again.',
   mushafFontLoadError: 'Unable to load Mushaf font. Please restart the app.',
+  mushafContentPackError: 'This Mushaf content pack is missing or corrupt. Reinstall the app to restore it.',
   recitation: {
     loading: 'Loading...',
     playing: 'Playing',
@@ -334,6 +366,21 @@ const en = {
     errorStorage: 'Not enough storage space',
   },
 
+  reader: {
+    pageOptions: 'Page information',
+    surahIndex: 'Surah index',
+    infoSurah: 'Surah',
+    infoJuz: 'Juz',
+    infoPage: 'Page',
+    infoMushaf: 'Mushaf',
+    infoPageValue: (page: string | number, total: string | number) => `${page} of ${total}`,
+  },
+  about: {
+    version: 'Version',
+    credits: 'Credits',
+  },
+  close: 'Close',
+
   toolBookmark: 'Bookmark',
   toolListen: 'Listen',
   toolTasmi: 'Tasmīʿ',
@@ -342,6 +389,7 @@ const en = {
 
   bookmark: {
     savedTitle: 'Page saved',
+    undoneTitle: 'Undone',
     savedSubtitleReading: (surahName: string, page: string | number, juz: string | number) =>
       `${surahName} · Page ${page} · Juz ${juz} · Reading`,
     savedSubtitleRecitation: (surahName: string, page: string | number, juz: string | number) =>
@@ -368,10 +416,11 @@ const en = {
     categoryRecitation: 'Memorization',
     categoryBadgeReading: 'Reading',
     categoryBadgeRecitation: 'Memorize',
-    sortOldest: 'Oldest',
+    sortOldest: 'Oldest first',
+    sortNewest: 'Newest first',
     openCta: 'Open',
     countLabel: (n: number | string) => `${n}`,
-    moreMenuLabel: 'Bookmark options',
+    moreMenuLabel: 'Change bookmark order',
   },
 
   settingsTitle: 'Settings',
@@ -380,8 +429,14 @@ const en = {
   settingsSectionAudio: 'Audio',
   settingsSectionApp: 'App',
   settingsQuranSize: 'Quran text size',
-  settingsMushafFont: 'Mushaf typeface',
+  settingsMushafFont: 'Mushaf edition',
   settingsMushafFontValue: 'KFGQPC Uthmani · Hafs',
+  settingsMushafLayoutTitle: 'Choose a Mushaf edition',
+  settingsMushafLayoutSubtitle: 'Switching keeps the same Surah and Ayah while changing the physical page layout.',
+  settingsMushafLayoutMeta: (pages: number, lines: number) => `${pages} pages · ${lines} lines`,
+  settingsMushafLayoutSelected: 'Selected',
+  settingsMushafLayoutOffline: 'Available offline',
+  settingsMushafLayoutAttribution: 'Layout data is verified and bundled in the app. Review attribution before release.',
   settingsNightReading: 'Night reading',
   settingsNightReadingValue: 'Choose reader palette',
   settingsNightClassical: 'Classical Mushaf',
@@ -415,8 +470,13 @@ const en = {
   practiceTitle: 'Practice Mode',
   practiceSubtitle: 'Listen. Recite. Correct.',
   practiceListening: 'Listening',
+  practiceIdle: 'Tap the microphone to start',
   practiceListenSample: 'Listen',
+  practiceReplaySample: 'Replay sample',
   practiceSkip: 'Skip',
+  practiceSkipped: 'Correction skipped',
+  practiceMicStart: 'Start listening',
+  practiceMicStop: 'Stop listening',
   practiceMistakeHint: 'Tap the red word to hear correct pronunciation.',
 
   streakDays: 'DAY',

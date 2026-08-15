@@ -63,7 +63,7 @@ export function ReaderHeader({ surahName, juzNumber, pageNumber, onMore }: Props
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="More"
+        accessibilityLabel={strings.reader.pageOptions}
         onPress={onMore}
         hitSlop={8}
         style={styles.iconBtn}

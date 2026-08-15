@@ -15,6 +15,11 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { MushafBottomToolbar } from '../MushafBottomToolbar';
@@ -35,6 +40,20 @@ describe('MushafBottomToolbar', () => {
 
     fireEvent.press(getByLabelText('ابدأ التسميع'));
     expect(onPlayPress).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith('/practice');
+  });
+
+  it('opens the surah index and the page info from their own slots', () => {
+    const onInfoPress = jest.fn();
+    const { getByLabelText } = render(
+      <MushafBottomToolbar onPlayPress={jest.fn()} onInfoPress={onInfoPress} />
+    );
+
+    fireEvent.press(getByLabelText('فهرس السور'));
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)');
+
+    fireEvent.press(getByLabelText('معلومات الصفحة'));
+    expect(onInfoPress).toHaveBeenCalledTimes(1);
   });
 
   it('does not start another toolbar session while playback is active', () => {

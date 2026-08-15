@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useStrings } from '../../constants/strings';
 import { theme } from '../../constants/theme';
 import { useRecitationStore } from '../../stores/recitationStore';
@@ -9,24 +10,36 @@ interface MushafBottomToolbarProps {
   onPlayPress: () => void;
   bookmarkActive?: boolean;
   onBookmarkPress?: () => void;
+  onInfoPress?: () => void;
 }
 
 export function MushafBottomToolbar({
   onPlayPress,
   bookmarkActive = false,
   onBookmarkPress,
+  onInfoPress,
 }: MushafBottomToolbarProps) {
   const strings = useStrings();
+  const router = useRouter();
   const playbackState = useRecitationStore((s) => s.state);
   const playbackDisabled = playbackState === 'playing' || playbackState === 'loading';
 
   return (
     <View style={styles.container}>
-      <ToolbarIcon label="معلومات" icon="information-outline" />
-      <ToolbarIcon label="القائمة" icon="format-list-bulleted" />
+      <ToolbarIcon
+        label={strings.reader.pageOptions}
+        icon="information-outline"
+        onPress={onInfoPress}
+      />
+      <ToolbarIcon
+        label={strings.reader.surahIndex}
+        icon="format-list-bulleted"
+        onPress={() => router.push('/(tabs)')}
+      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={strings.startPractice}
+        onPress={() => router.push('/practice')}
         style={styles.micButton}
       >
         <MaterialCommunityIcons name="microphone-outline" size={22} color={theme.colors.surface} />
@@ -38,7 +51,7 @@ export function MushafBottomToolbar({
         disabled={playbackDisabled}
       />
       <ToolbarIcon
-        label="علامة"
+        label={strings.recitation.bookmark}
         icon={bookmarkActive ? 'bookmark' : 'bookmark-outline'}
         onPress={onBookmarkPress}
         active={bookmarkActive}

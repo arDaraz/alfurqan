@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { Juz } from '../../data/types';
 import { toArabicIndic } from '../../utils/arabic';
@@ -27,22 +27,10 @@ export function JuzListItem({ juz, surahNames, onSelect, onOpen, isActive = fals
     : `Starts at Surah ${surahName}, Ayah ${juz.startAyah}`;
   const accessibilityLabel = isArabic ? `الجزء ${juz.number}` : `Juz ${juz.number}`;
 
-  const lastTapRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  // A row is a button: one tap marks it active and opens the juz reader.
   const handlePress = () => {
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) {
-      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-      lastTapRef.current = 0;
-      onOpen(juz.number);
-    } else {
-      lastTapRef.current = now;
-      tapTimerRef.current = setTimeout(() => {
-        onSelect(juz.number);
-        lastTapRef.current = 0;
-      }, 300);
-    }
+    onSelect(juz.number);
+    onOpen(juz.number);
   };
 
   const strokeColor = isActive ? theme.semantic.primary : theme.semantic.accent;
@@ -52,10 +40,9 @@ export function JuzListItem({ juz, surahNames, onSelect, onOpen, isActive = fals
   return (
     <Pressable
       onPress={handlePress}
-      onLongPress={() => onOpen(juz.number)}
-      delayLongPress={400}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={{ selected: isActive }}
       style={[styles.container, isActive && styles.activeContainer]}
     >
       {isActive && <View style={styles.activeBar} />}

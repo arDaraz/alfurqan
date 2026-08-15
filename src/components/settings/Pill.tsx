@@ -8,13 +8,15 @@ interface Props {
   label: string;
   onPress?: () => void;
   withChevron?: boolean;
+  /** Set when the pill shows a value ("Strict"); the label then names the setting. */
+  accessibilityLabel?: string;
 }
 
 /**
  * Pill — small bordered button used as the trailing slot for "change" rows
  * and pill-style values (e.g., "Strict" sensitivity).
  */
-export function Pill({ label, onPress, withChevron = true }: Props) {
+export function Pill({ label, onPress, withChevron = true, accessibilityLabel }: Props) {
   const theme = useTheme();
   const isArabic = useSettingsStore((s) => s.language) === 'ar';
   const styles = createStyles(theme, isArabic);
@@ -35,7 +37,13 @@ export function Pill({ label, onPress, withChevron = true }: Props) {
     </View>
   );
   return onPress ? (
-    <Pressable onPress={onPress} hitSlop={4}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityValue={accessibilityLabel ? { text: label } : undefined}
+      hitSlop={4}
+    >
       {content}
     </Pressable>
   ) : (

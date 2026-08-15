@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { useMushafPage } from '../../hooks/useMushafPage';
@@ -7,9 +7,11 @@ import { ErrorState } from '../ui/ErrorState';
 import { useStrings } from '../../constants/strings';
 import { recitationEngine } from '../../services/recitationEngine';
 import { useReaderColors, type ReaderColors } from '../../hooks/useReaderColors';
+import type { MushafLayoutId } from '../../data/mushafLayouts';
 
 interface MushafPageProps {
   pageNumber: number;
+  layoutId: MushafLayoutId;
   isActive?: boolean;
   onSelectionEvent?: (data: unknown) => void;
   clearSelectionRef?: React.MutableRefObject<(() => void) | null>;
@@ -17,19 +19,27 @@ interface MushafPageProps {
 
 export function MushafPage({
   pageNumber,
+  layoutId,
   isActive = false,
   onSelectionEvent,
   clearSelectionRef,
 }: MushafPageProps) {
-  const { html, loading, error, retry } = useMushafPage(pageNumber);
+  const { html, accessibilityLabel, loading, error, retry } = useMushafPage(pageNumber, layoutId);
   const strings = useStrings();
   const { colors } = useReaderColors();
   const styles = createStyles(colors);
   const webViewRef = useRef<WebView>(null);
+  // The WebView paints an empty page while it decodes the Qur'an font, so the
+  // skeleton stays until the page reports that its text is laid out.
+  const [painted, setPainted] = useState(false);
+
+  React.useEffect(() => {
+    setPainted(false);
+  }, [html]);
 
   // Attach clearSelection to the ref so parent can call it
   const clearSelection = useCallback(() => {
-    webViewRef.current?.injectJavaScript('clearSelection();true;');
+    webViewRef.current?.injectJavaScript('window.clearSelection&&window.clearSelection();true;');
   }, []);
 
   React.useEffect(() => {
@@ -47,6 +57,10 @@ export function MushafPage({
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      if (data?.type === 'ready') {
+        setPainted(true);
+        return;
+      }
       onSelectionEvent?.(data);
     } catch {}
   }, [onSelectionEvent]);
@@ -58,7 +72,9 @@ export function MushafPage({
   if (error || !html) {
     const errorMessage = error === 'font_load_error'
       ? strings.mushafFontLoadError
-      : strings.mushafPageLoadError;
+      : error === 'content_pack_error'
+        ? strings.mushafContentPackError
+        : strings.mushafPageLoadError;
     return <ErrorState message={errorMessage} onRetry={retry} />;
   }
 
@@ -68,7 +84,7 @@ export function MushafPage({
         ref={webViewRef}
         source={{ html }}
         style={styles.webview}
-        scrollEnabled={true}
+        scrollEnabled={false}
         directionalLockEnabled={true}
         bounces={false}
         overScrollMode="never"
@@ -77,8 +93,15 @@ export function MushafPage({
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         onMessage={handleMessage}
-        accessibilityLabel={`Mushaf page ${pageNumber}`}
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={accessibilityLabel || `Mushaf page ${pageNumber}`}
       />
+      {!painted && (
+        <View style={styles.paintOverlay} pointerEvents="none">
+          <LoadingSkeleton />
+        </View>
+      )}
     </View>
   );
 }
@@ -92,6 +115,10 @@ function createStyles(colors: ReaderColors) {
     webview: {
       flex: 1,
       backgroundColor: 'transparent',
+    },
+    paintOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.bg,
     },
   });
 }

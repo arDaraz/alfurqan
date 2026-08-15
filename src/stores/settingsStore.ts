@@ -3,6 +3,11 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 import { createMMKV } from 'react-native-mmkv';
 import type { NightReadingMode } from '../constants/nightReading';
 import type { AppLanguage } from '../utils/locale';
+import {
+  DEFAULT_MUSHAF_LAYOUT_ID,
+  isMushafLayoutId,
+  type MushafLayoutId,
+} from '../data/mushafLayouts';
 
 const mmkv = createMMKV({ id: 'settings-store' });
 
@@ -20,10 +25,10 @@ const mmkvStorage: StateStorage = {
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type CorrectionSensitivity = 'gentle' | 'standard' | 'strict';
-export type MushafFont = 'uthmanic' | 'qcf-v1' | 'qcf-v4' | 'indopak-nastaleeq' | 'digital-khatt-indopak';
+type LegacyMushafFont = 'uthmanic' | 'qcf-v1' | 'qcf-v4' | 'indopak-nastaleeq' | 'digital-khatt-indopak';
 
 export const DEFAULT_THEME_MODE: ThemeMode = 'light';
-const SETTINGS_STORE_VERSION = 1;
+const SETTINGS_STORE_VERSION = 2;
 
 interface SettingsState {
   language: AppLanguage;
@@ -35,7 +40,7 @@ interface SettingsState {
   dailyReminder: boolean;
   qariId: string;
   correctionSensitivity: CorrectionSensitivity;
-  mushafFont: MushafFont;
+  mushafLayoutId: MushafLayoutId;
   nightReadingMode: NightReadingMode;
 
   setLanguage: (lang: AppLanguage) => void;
@@ -45,7 +50,7 @@ interface SettingsState {
   setDailyReminder: (v: boolean) => void;
   setQariId: (id: string) => void;
   setCorrectionSensitivity: (s: CorrectionSensitivity) => void;
-  setMushafFont: (f: MushafFont) => void;
+  setMushafLayoutId: (id: MushafLayoutId) => void;
   setNightReadingMode: (mode: NightReadingMode) => void;
 }
 
@@ -57,8 +62,16 @@ export function migrateSettingsState(
     return {};
   }
 
-  const state = persistedState as Partial<SettingsState>;
+  const state = persistedState as Partial<SettingsState> & { mushafFont?: LegacyMushafFont };
   const hasChosenThemeMode = state.hasChosenThemeMode ?? false;
+  const legacyRequestedIndopak =
+    state.mushafFont === 'indopak-nastaleeq' || state.mushafFont === 'digital-khatt-indopak';
+  const mushafLayoutId = isMushafLayoutId(state.mushafLayoutId)
+    ? state.mushafLayoutId
+    : legacyRequestedIndopak
+      ? 'indopak-15-line-hafs'
+      : DEFAULT_MUSHAF_LAYOUT_ID;
+  const { mushafFont: _legacyMushafFont, ...currentState } = state;
 
   if (
     version < SETTINGS_STORE_VERSION &&
@@ -66,15 +79,17 @@ export function migrateSettingsState(
     state.themeMode === 'system'
   ) {
     return {
-      ...state,
+      ...currentState,
       themeMode: DEFAULT_THEME_MODE,
       hasChosenThemeMode: false,
+      mushafLayoutId,
     };
   }
 
   return {
-    ...state,
+    ...currentState,
     hasChosenThemeMode,
+    mushafLayoutId,
   };
 }
 
@@ -89,7 +104,7 @@ export const useSettingsStore = create<SettingsState>()(
       dailyReminder: true,
       qariId: 'mishary',
       correctionSensitivity: 'strict',
-      mushafFont: 'uthmanic',
+      mushafLayoutId: DEFAULT_MUSHAF_LAYOUT_ID,
       nightReadingMode: 'off',
 
       setLanguage: (language) => set({ language }),
@@ -100,7 +115,7 @@ export const useSettingsStore = create<SettingsState>()(
       setQariId: (qariId) => set({ qariId }),
       setCorrectionSensitivity: (correctionSensitivity) =>
         set({ correctionSensitivity }),
-      setMushafFont: (mushafFont) => set({ mushafFont }),
+      setMushafLayoutId: (mushafLayoutId) => set({ mushafLayoutId }),
       setNightReadingMode: (nightReadingMode) => set({ nightReadingMode }),
     }),
     {

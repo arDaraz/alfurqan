@@ -81,14 +81,19 @@ export function AyahResultRow({
   );
 
   return (
-    <Pressable
-      onPress={() => onPress?.(result)}
-      accessibilityRole="button"
-      accessibilityLabel={a11yLabel}
-      accessibilityHint={strings.searchResultOpenHint}
-    >
+    // The card is not one accessibility element: iOS would merge the nested
+    // Play/Copy/Bookmark buttons into it and leave them unreachable. The open
+    // action lives on its own labelled Pressable inside instead.
+    <Pressable accessible={false} onPress={() => onPress?.(result)}>
       {({ pressed }) => (
         <View style={[styles.card, pressed && styles.cardPressed]}>
+          <Pressable
+            onPress={() => onPress?.(result)}
+            accessibilityRole="button"
+            accessibilityLabel={a11yLabel}
+            accessibilityHint={strings.searchResultOpenHint}
+            style={styles.openArea}
+          >
           <View style={styles.headerRow}>
         <View style={styles.ayahPill}>
           <Text style={styles.ayahPillLabel} allowFontScaling>{strings.searchAyahLabel}</Text>
@@ -116,6 +121,7 @@ export function AyahResultRow({
           ),
         )}
       </Text>
+          </Pressable>
 
       <View style={styles.footerRow}>
         <View style={styles.metaCluster}>
@@ -271,6 +277,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     cardPressed: {
       backgroundColor: theme.semantic.bgRaised,
+    },
+    openArea: {
+      gap: theme.spacing.md,
     },
 
     headerRow: {

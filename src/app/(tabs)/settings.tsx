@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
-import { useSettingsStore, type CorrectionSensitivity, type ThemeMode, type MushafFont } from '../../stores/settingsStore';
+import { useSettingsStore, type CorrectionSensitivity, type ThemeMode } from '../../stores/settingsStore';
 import { isNightReadingEnabled, type ActiveNightReadingMode } from '../../constants/nightReading';
 import { ReciterPickerSheet } from '../../components/quran/ReciterPickerSheet';
 import { getReciterById } from '../../data/reciters';
@@ -16,14 +17,22 @@ import { Toggle } from '../../components/settings/Toggle';
 import { Pill } from '../../components/settings/Pill';
 import { FontSizeRow } from '../../components/settings/FontSizeRow';
 import { NightReadingPicker } from '../../components/settings/NightReadingPicker';
+import { MushafLayoutPicker } from '../../components/settings/MushafLayoutPicker';
+import { InfoSheet } from '../../components/ui/InfoSheet';
+import { getMushafLayout } from '../../data/mushafLayouts';
 
 const ICON_PROPS = { width: 17, height: 17, fill: 'none', strokeWidth: 1.75 } as const;
+/** Height the tab bar's floating Tasmiʿ button and its halo reach above the bar. */
+const TAB_BAR_FAB_OVERHANG = 40;
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const strings = useStrings();
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [mushafPickerVisible, setMushafPickerVisible] = useState(false);
   const [savedVisible, setSavedVisible] = useState(false);
+  const [aboutVisible, setAboutVisible] = useState(false);
+  const appVersion = `${strings.about.version} ${Constants.expoConfig?.version ?? '1.0.0'}`;
 
   const language = useSettingsStore((s) => s.language);
   const isArabic = language === 'ar';
@@ -31,8 +40,6 @@ export default function SettingsScreen() {
 
   const themeMode = useSettingsStore((s) => s.themeMode);
   const setThemeMode = useSettingsStore((s) => s.setThemeMode);
-  const showTashkeel = useSettingsStore((s) => s.showTashkeel);
-  const setShowTashkeel = useSettingsStore((s) => s.setShowTashkeel);
   const dailyReminder = useSettingsStore((s) => s.dailyReminder);
   const setDailyReminder = useSettingsStore((s) => s.setDailyReminder);
   const correctionSensitivity = useSettingsStore((s) => s.correctionSensitivity);
@@ -48,28 +55,15 @@ export default function SettingsScreen() {
   const savedDownloads = Object.entries(downloads).filter(([, download]) => download.status === 'complete');
   const savedBytes = savedDownloads.reduce((total, [, download]) => total + (download.bytes ?? 0), 0);
 
-  const mushafFont = useSettingsStore((s) => s.mushafFont);
-  const setMushafFont = useSettingsStore((s) => s.setMushafFont);
+  const mushafLayoutId = useSettingsStore((s) => s.mushafLayoutId);
+  const setMushafLayoutId = useSettingsStore((s) => s.setMushafLayoutId);
   const nightReadingMode = useSettingsStore((s) => s.nightReadingMode);
   const setNightReadingMode = useSettingsStore((s) => s.setNightReadingMode);
 
-  const mushafFontLabels: Record<MushafFont, string> = {
-    uthmanic: 'Uthmanic Naskh',
-    'qcf-v1': 'QCF/QPC V1',
-    'qcf-v4': 'QCF/QPC V4 Tajweed',
-    'indopak-nastaleeq': 'IndoPak Nastaleeq',
-    'digital-khatt-indopak': 'Digital Khatt IndoPak',
-  };
-
-  const activeMushafFont: MushafFont = mushafFont in mushafFontLabels ? mushafFont : 'uthmanic';
-
-  const cycleMushafFont = () => {
-    const order: MushafFont[] = ['uthmanic', 'qcf-v1', 'qcf-v4', 'indopak-nastaleeq', 'digital-khatt-indopak'];
-    const idx = order.indexOf(activeMushafFont);
-    setMushafFont(order[(idx + 1) % order.length]);
-  };
-
-  const mushafFontLabel = mushafFontLabels[activeMushafFont];
+  const selectedMushafLayout = getMushafLayout(mushafLayoutId);
+  const mushafLayoutLabel = isArabic
+    ? selectedMushafLayout.displayName.ar
+    : selectedMushafLayout.displayName.en;
   const nightModeLabels: Record<ActiveNightReadingMode, { title: string; subtitle: string }> = {
     classical: {
       title: strings.settingsNightClassical,
@@ -154,8 +148,9 @@ export default function SettingsScreen() {
               </Svg>
             }
             label={strings.settingsMushafFont}
-            value={mushafFontLabel}
-            trailing={<Pill label={strings.settingsChange} onPress={cycleMushafFont} />}
+            value={mushafLayoutLabel}
+            onPress={() => setMushafPickerVisible(true)}
+            trailing={<Pill label={strings.settingsChange} />}
           />
           <SettingsRow
             isLast={!nightReadingEnabled}
@@ -255,7 +250,14 @@ export default function SettingsScreen() {
             }
             label={strings.settingsCorrection}
             value={strings.settingsCorrection}
-            trailing={<Pill label={sensitivityLabel} onPress={cycleSensitivity} withChevron={false} />}
+            trailing={
+              <Pill
+                label={sensitivityLabel}
+                accessibilityLabel={strings.settingsCorrection}
+                onPress={cycleSensitivity}
+                withChevron={false}
+              />
+            }
           />
         </SettingsGroup>
 
@@ -307,12 +309,31 @@ export default function SettingsScreen() {
               </Svg>
             }
             label={strings.settingsAbout}
-            value={strings.settingsAbout}
+            value={appVersion}
+            onPress={() => setAboutVisible(true)}
           />
         </SettingsGroup>
       </ScrollView>
 
       <ReciterPickerSheet visible={pickerVisible} onClose={() => setPickerVisible(false)} />
+      <MushafLayoutPicker
+        visible={mushafPickerVisible}
+        value={mushafLayoutId}
+        onChange={setMushafLayoutId}
+        onDismiss={() => setMushafPickerVisible(false)}
+      />
+      <InfoSheet
+        visible={aboutVisible}
+        title={strings.settingsAbout}
+        rows={[
+          { label: strings.appTitleFull, value: appVersion },
+          { label: strings.reader.infoMushaf, value: mushafLayoutLabel },
+        ]}
+        note={`${strings.about.credits}: ${
+          isArabic ? selectedMushafLayout.attribution.ar : selectedMushafLayout.attribution.en
+        }`}
+        onClose={() => setAboutVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -363,7 +384,8 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     },
     scrollContent: {
       paddingHorizontal: theme.gutter.screen - 6,
-      paddingBottom: 28,
+      // The tab bar's Tasmiʿ button floats above the bar and covered the last row.
+      paddingBottom: 28 + TAB_BAR_FAB_OVERHANG,
     },
     savedList: {
       borderBottomWidth: StyleSheet.hairlineWidth,

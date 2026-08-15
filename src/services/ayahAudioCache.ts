@@ -101,6 +101,7 @@ export class AyahAudioCache {
     for (let ayah = 1; ayah <= ayahsTotal; ayah += 1) {
       if (signal?.aborted) throw new CacheError('aborted', 'Audio download was cancelled');
       await this.getLocalPath(reciterId, surah, ayah, signal);
+      if (signal?.aborted) throw new CacheError('aborted', 'Audio download was cancelled');
       onProgress?.(ayah, ayahsTotal);
     }
   }

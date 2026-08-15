@@ -1,5 +1,11 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, GestureResponderEvent } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  GestureResponderEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 
 interface Props {
@@ -7,6 +13,9 @@ interface Props {
   value: number;
   onChange: (next: number) => void;
 }
+
+const ADJUST_ACTIONS = [{ name: 'increment' }, { name: 'decrement' }] as const;
+const STEP = 0.1;
 
 export function FontSizeRow({ label, value, onChange }: Props) {
   const theme = useTheme();
@@ -33,11 +42,19 @@ export function FontSizeRow({ label, value, onChange }: Props) {
     updateFromPageX(e.nativeEvent.pageX);
   };
 
+  const percent = Math.round(value * 100);
+  const handleAccessibilityAction = (
+    event: NativeSyntheticEvent<{ actionName: string }>
+  ) => {
+    const step = event.nativeEvent.actionName === 'increment' ? STEP : -STEP;
+    onChange(Math.max(0, Math.min(1, value + step)));
+  };
+
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
         <Text style={styles.k}>{label}</Text>
-        <Text style={styles.v}>A · {Math.round(value * 100)}%</Text>
+        <Text style={styles.v}>A · {percent}%</Text>
       </View>
       <Text style={[styles.preview, { fontSize: previewSize, lineHeight: previewSize * 1.6 }]}>
         بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
@@ -48,6 +65,12 @@ export function FontSizeRow({ label, value, onChange }: Props) {
         onMoveShouldSetResponder={() => true}
         onResponderGrant={handleGrant}
         onResponderMove={handleMove}
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={label}
+        accessibilityValue={{ min: 0, max: 100, now: percent, text: `${percent}%` }}
+        accessibilityActions={ADJUST_ACTIONS}
+        onAccessibilityAction={handleAccessibilityAction}
         style={styles.track}
       >
         <View style={styles.trackBg} />

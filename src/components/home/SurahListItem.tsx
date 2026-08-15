@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { Surah } from '../../data/types';
 import { useTheme } from '../../hooks/useTheme';
@@ -43,22 +43,11 @@ export function SurahListItem({ surah, onSelect, onOpen, isActive = false }: Sur
   const ayatNumber = isArabic ? toArabicIndic(surah.ayahCount) : String(surah.ayahCount);
   const ayatLabel = strings.ayat;
 
-  const lastTapRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  // A row is a button: one tap marks it active and opens the reader. The old
+  // hidden double-tap left a standard tap doing nothing but re-styling the row.
   const handlePress = () => {
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) {
-      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-      lastTapRef.current = 0;
-      onOpen(surah.number);
-    } else {
-      lastTapRef.current = now;
-      tapTimerRef.current = setTimeout(() => {
-        onSelect(surah.number);
-        lastTapRef.current = 0;
-      }, 300);
-    }
+    onSelect(surah.number);
+    onOpen(surah.number);
   };
 
   const strokeColor = isActive ? theme.semantic.primary : theme.semantic.accent;
@@ -68,10 +57,9 @@ export function SurahListItem({ surah, onSelect, onOpen, isActive = false }: Sur
   return (
     <Pressable
       onPress={handlePress}
-      onLongPress={() => onOpen(surah.number)}
-      delayLongPress={400}
       accessibilityLabel={isArabic ? surah.nameArabic : surah.nameEnglish}
       accessibilityRole="button"
+      accessibilityState={{ selected: isActive }}
       style={[styles.container, isActive && styles.activeContainer]}
     >
       {isActive && <View style={styles.activeBar} />}

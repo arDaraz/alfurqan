@@ -1,3 +1,16 @@
+import React from 'react';
+import { act, render, waitFor } from '@testing-library/react-native';
+import {
+  getMushafJuzAndPageForAyah,
+  getMushafPageForAyah,
+  getSurahLastAyah,
+  getMushafTopAyahForPage,
+} from '../../../data/quranRepository';
+import { recitationEngine } from '../../../services/recitationEngine';
+import { useRecitationStore } from '../../../stores/recitationStore';
+import { useReadingStore } from '../../../stores/readingStore';
+import { MushafReader, startToolbarRecitationFromPage } from '../MushafReader';
+
 jest.mock('react-native-mmkv', () => ({
   createMMKV: jest.fn(() => ({
     getString: jest.fn(),
@@ -6,25 +19,6 @@ jest.mock('react-native-mmkv', () => ({
     getAllKeys: jest.fn().mockReturnValue([]),
   })),
 }));
-
-const mockSetPage = jest.fn();
-
-jest.mock('react-native-pager-view', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  const MockPagerView = React.forwardRef((props: any, ref: any) => {
-    React.useImperativeHandle(ref, () => ({
-      setPage: mockSetPage,
-    }));
-    return <View {...props} />;
-  });
-  MockPagerView.displayName = 'MockPagerView';
-
-  return {
-    __esModule: true,
-    default: MockPagerView,
-  };
-});
 
 jest.mock('../MushafPage', () => ({
   MushafPage: () => null,
@@ -43,11 +37,11 @@ jest.mock('../BookmarkSavedSnackbar', () => ({
 }));
 
 jest.mock('../../../data/quranRepository', () => ({
-  getJuzAndPageForAyah: jest.fn(),
-  getPageForAyah: jest.fn(),
+  getMushafJuzAndPageForAyah: jest.fn(),
+  getMushafPageForAyah: jest.fn(),
   getSurahByNumber: jest.fn().mockResolvedValue(null),
   getSurahLastAyah: jest.fn(),
-  getTopAyahForPage: jest.fn(),
+  getMushafTopAyahForPage: jest.fn(),
 }));
 
 jest.mock('../../../services/recitationEngine', () => ({
@@ -57,35 +51,23 @@ jest.mock('../../../services/recitationEngine', () => ({
   },
 }));
 
-import React from 'react';
-import { act, render, waitFor } from '@testing-library/react-native';
-import {
-  getJuzAndPageForAyah,
-  getPageForAyah,
-  getSurahLastAyah,
-  getTopAyahForPage,
-} from '../../../data/quranRepository';
-import { recitationEngine } from '../../../services/recitationEngine';
-import { useRecitationStore } from '../../../stores/recitationStore';
-import { MushafReader, startToolbarRecitationFromPage } from '../MushafReader';
-
-const getPageForAyahMock = getPageForAyah as jest.MockedFunction<typeof getPageForAyah>;
-const getJuzAndPageForAyahMock = getJuzAndPageForAyah as jest.MockedFunction<typeof getJuzAndPageForAyah>;
-const getTopAyahForPageMock = getTopAyahForPage as jest.MockedFunction<typeof getTopAyahForPage>;
+const getPageForAyahMock = getMushafPageForAyah as jest.MockedFunction<typeof getMushafPageForAyah>;
+const getJuzAndPageForAyahMock = getMushafJuzAndPageForAyah as jest.MockedFunction<typeof getMushafJuzAndPageForAyah>;
+const getTopAyahForPageMock = getMushafTopAyahForPage as jest.MockedFunction<typeof getMushafTopAyahForPage>;
 const getSurahLastAyahMock = getSurahLastAyah as jest.MockedFunction<typeof getSurahLastAyah>;
 
 describe('startToolbarRecitationFromPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useRecitationStore.getState()._reset();
-    getTopAyahForPageMock.mockResolvedValue({ surahNumber: 2, ayahNumber: 6 });
+    getTopAyahForPageMock.mockResolvedValue({ surahNumber: 2, ayahNumber: 6, wordPosition: 1 });
     getSurahLastAyahMock.mockResolvedValue(286);
   });
 
   it('starts a toolbar session from the current page top ayah when idle', async () => {
     await startToolbarRecitationFromPage(2);
 
-    expect(getTopAyahForPage).toHaveBeenCalledWith(2);
+    expect(getMushafTopAyahForPage).toHaveBeenCalledWith('madani-qcf-v2-hafs', 2);
     expect(getSurahLastAyah).toHaveBeenCalledWith(2);
     expect(recitationEngine.start).toHaveBeenCalledWith({
       surah: 2,
@@ -102,7 +84,7 @@ describe('startToolbarRecitationFromPage', () => {
 
     expect(recitationEngine.resume).toHaveBeenCalledTimes(1);
     expect(recitationEngine.start).not.toHaveBeenCalled();
-    expect(getTopAyahForPage).not.toHaveBeenCalled();
+    expect(getMushafTopAyahForPage).not.toHaveBeenCalled();
   });
 
   it('does not start a duplicate session while already playing', async () => {
@@ -112,7 +94,7 @@ describe('startToolbarRecitationFromPage', () => {
 
     expect(recitationEngine.resume).not.toHaveBeenCalled();
     expect(recitationEngine.start).not.toHaveBeenCalled();
-    expect(getTopAyahForPage).not.toHaveBeenCalled();
+    expect(getMushafTopAyahForPage).not.toHaveBeenCalled();
   });
 
   it('starts a fresh toolbar session from error state', async () => {
@@ -132,7 +114,6 @@ describe('startToolbarRecitationFromPage', () => {
 describe('MushafReader recitation page sync', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSetPage.mockClear();
     useRecitationStore.getState()._reset();
     getPageForAyahMock.mockResolvedValue(2);
     getJuzAndPageForAyahMock.mockResolvedValue({ juz: 1, page: 2 });
@@ -148,8 +129,38 @@ describe('MushafReader recitation page sync', () => {
       store._setState('playing');
     });
 
-    await waitFor(() => expect(getPageForAyahMock).toHaveBeenCalledWith(2, 1));
-    await waitFor(() => expect(mockSetPage).toHaveBeenCalledWith(1));
+    await waitFor(() =>
+      expect(getPageForAyahMock).toHaveBeenCalledWith('madani-qcf-v2-hafs', 2, 1)
+    );
     expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('preserves an exact canonical location when the selected layout opens its page', async () => {
+    getTopAyahForPageMock.mockResolvedValue({
+      surahNumber: 109,
+      ayahNumber: 3,
+      wordPosition: 1,
+    });
+    getJuzAndPageForAyahMock.mockImplementation(async () => ({
+      juz: 30,
+      page: 609,
+    }));
+
+    render(
+      <MushafReader
+        initialPage={609}
+        initialLocation={{ surahNumber: 112, ayahNumber: 1 }}
+        layoutId="indopak-15-line-hafs"
+      />
+    );
+
+    await waitFor(() => {
+      expect(useReadingStore.getState()).toMatchObject({
+        lastReadSurah: 112,
+        lastReadAyah: 1,
+        lastReadPage: 609,
+        lastReadJuz: 30,
+      });
+    });
   });
 });

@@ -18,7 +18,7 @@ jest.mock('react-native-mmkv', () => ({
 
 jest.mock('../../../data/quranRepository', () => ({
   getAyahPreview: jest.fn(async (s: number, a: number) => `preview-${s}-${a}`),
-  getJuzAndPageForAyah: jest.fn(async () => ({ juz: 1, page: 1 })),
+  getMushafJuzAndPageForAyah: jest.fn(async () => ({ juz: 1, page: 1 })),
   getSurahByNumber: jest.fn(async (n: number) => ({
     number: n,
     nameArabic: `سورة-${n}`,
@@ -83,6 +83,7 @@ jest.mock('react-native-gesture-handler', () => {
         {children}
       </Pressable>
     ),
+    Pressable: (props: any) => <Pressable {...props} />,
   };
 });
 
@@ -131,14 +132,17 @@ describe('BookmarksScreen', () => {
     expect(await findByText(/سورة-2/)).toBeTruthy();
   });
 
-  it('navigates to /surah/[id]?page=N when a row is pressed', async () => {
+  it('navigates to the canonical Surah/Ayah when a row is pressed', async () => {
     seedBookmarks([{ s: 2, a: 255, c: 'recitation' }]);
     const { findByLabelText } = render(<BookmarksScreen />);
     const row = await findByLabelText('bookmark-row-2-255');
     fireEvent.press(row);
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(
-        expect.objectContaining({ pathname: '/surah/[id]' })
+        {
+          pathname: '/surah/[id]',
+          params: { id: '2', ayah: '255' },
+        }
       );
     });
   });

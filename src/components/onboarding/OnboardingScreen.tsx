@@ -16,8 +16,11 @@ interface OnboardingScreenProps {
   screenIndex: number;
   totalScreens: number;
   onGetStarted?: () => void;
+  onNext?: () => void;
   /** Whether this is the first page (gets the brand glyph instead of an icon). */
   isFirstScreen?: boolean;
+  /** Offscreen slides stay out of the accessibility tree and out of reach. */
+  isActive?: boolean;
 }
 
 /**
@@ -33,16 +36,22 @@ export function OnboardingScreen({
   screenIndex,
   totalScreens,
   isFirstScreen,
+  isActive = true,
   onGetStarted,
+  onNext,
 }: OnboardingScreenProps) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const theme = useTheme();
   const strings = useStrings();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets.bottom);
 
   return (
-    <View style={[styles.container, { width }]}>
+    <View
+      style={[styles.container, { width, height }]}
+      accessibilityElementsHidden={!isActive}
+      importantForAccessibility={isActive ? 'yes' : 'no-hide-descendants'}
+    >
       <View style={styles.illustrationArea}>
         {isFirstScreen ? (
           <LogoGlyph
@@ -83,7 +92,18 @@ export function OnboardingScreen({
             </View>
           </Pressable>
         ) : (
-          <Text style={styles.swipeHint}>{strings.swipeToContinue}</Text>
+          // The hint used to be plain text, so a slide that would not swipe left
+          // the user with no way forward. It is a real Next control now.
+          <Pressable
+            onPress={onNext}
+            accessibilityLabel={strings.swipeToContinue}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.ctaHitArea, pressed && styles.ctaPressed]}
+          >
+            <View style={styles.nextSurface}>
+              <Text style={styles.nextText}>{strings.swipeToContinue}</Text>
+            </View>
+          </Pressable>
         )}
       </View>
     </View>
@@ -92,8 +112,9 @@ export function OnboardingScreen({
 
 function createStyles(theme: ReturnType<typeof useTheme>, bottomInset: number) {
   return StyleSheet.create({
+    // No `flex: 1` here. Inside a horizontal ScrollView a flexible child fights
+    // the explicit page width, which is what stopped the pager from advancing.
     container: {
-      flex: 1,
       backgroundColor: theme.semantic.bg,
       justifyContent: 'space-between',
     },
@@ -160,10 +181,22 @@ function createStyles(theme: ReturnType<typeof useTheme>, bottomInset: number) {
       color: theme.semantic.fgOnPrimary,
       letterSpacing: 0,
     },
-    swipeHint: {
+    nextSurface: {
+      height: 52,
+      minWidth: 220,
+      paddingHorizontal: theme.spacing.lg,
+      borderRadius: theme.radii.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.semantic.bgRaised,
+      borderWidth: 1,
+      borderColor: theme.semantic.border,
+    },
+    nextText: {
       fontFamily: theme.fonts.latin,
-      fontSize: 13,
-      color: theme.semantic.fgSubtle,
+      fontSize: 15,
+      fontWeight: '600',
+      color: theme.semantic.fg,
       textAlign: 'center',
       letterSpacing: 0,
     },

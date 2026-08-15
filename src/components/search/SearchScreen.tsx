@@ -33,6 +33,7 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
   const strings = useStrings();
   const theme = useTheme();
   const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const mushafLayoutId = useSettingsStore((s) => s.mushafLayoutId);
   const styles = createStyles(theme, isArabic);
 
   const { surahs } = useSurahList();
@@ -77,7 +78,7 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
     }
     const id = ++requestId.current;
     setStatus('loading');
-    searchAyahs(trimmed)
+    searchAyahs(trimmed, undefined, mushafLayoutId)
       .then((r) => {
         if (id !== requestId.current) return;
         setResults(r);
@@ -89,7 +90,7 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
         setResults([]);
         setStatus('error');
       });
-  }, [debouncedQuery]);
+  }, [debouncedQuery, mushafLayoutId]);
 
   const totalCount = results.length;
   const totalDigits = isArabic ? toArabicIndic(totalCount) : String(totalCount);
@@ -133,7 +134,7 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
   );
 
   const handleOpen = useCallback((r: AyahSearchResult) => {
-    router.push(`/surah/${r.surahNumber}?page=${r.pageNumber}`);
+    router.push(`/surah/${r.surahNumber}?ayah=${r.ayahNumber}`);
   }, []);
 
   const handlePlay = useCallback((r: AyahSearchResult) => {

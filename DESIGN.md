@@ -167,6 +167,16 @@ components:
 
 # Design System: Mushaf Al Furqan
 
+### Quran renderer typography exception
+
+The reader has a narrow, content-authentic exception to the UI typography
+scale. `QCF` and `QCF1` are the bundled Madani per-page glyph fonts;
+`IndoPakPack` is the bundled QUL IndoPak Nastaleeq 4.2.2 font. `Geeza Pro` and
+`Arial` are offline system fallbacks for semantic Arabic Surah names inside a
+Madani banner. These families are sacred-content renderers only and must not be
+used for application UI. Their metrics and names are controlled by the
+selected Mushaf content pack.
+
 ## 1. Overview
 
 **Creative North Star: "The Study Desk and Prayer Rug"**

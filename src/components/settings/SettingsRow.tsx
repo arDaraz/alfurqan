@@ -44,7 +44,13 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
 
   if (!onPress) return row;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+    // A pressable row is one accessibility element, so the value has to travel in
+    // its label. Otherwise iOS announces only the row title and drops the value.
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={value ? `${label}، ${value}` : label}
+    >
       {({ pressed }) => (
         <View testID={`settings-row-${label}`} style={[styles.row, pressed && { opacity: 0.7 }]}>
           <View style={styles.iconWrap}>{icon}</View>
