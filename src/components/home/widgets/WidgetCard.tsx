@@ -39,12 +39,14 @@ export function WidgetCard({ label, children, onPress, accessibilityLabel, style
 
   if (!onPress) return <View style={[styles.card, style]}>{body}</View>;
 
+  // A function-form `style` does not apply on Pressable in this RN version, so
+  // the resolved array is passed directly.
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed, style]}
+      style={[styles.card, style]}
     >
       {body}
     </Pressable>
@@ -78,7 +80,6 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       borderRadius: theme.radii.md,
       padding: 14,
     },
-    cardPressed: { opacity: 0.75 },
     label: createWidgetLabelStyle(theme, isArabic),
   });
 }

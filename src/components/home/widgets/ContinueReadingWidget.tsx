@@ -7,6 +7,7 @@ import { useStrings } from '../../../constants/strings';
 import { useTheme } from '../../../hooks/useTheme';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { toArabicIndic } from '../../../utils/arabic';
+import { NumeralText } from './NumeralText';
 import { WidgetCard } from './WidgetCard';
 
 interface ResumeProps {
@@ -48,16 +49,27 @@ export function ContinueReadingWidget(props: Props) {
           <Text style={styles.badgeText}>{isResume ? digits(props.surahNumber) : ''}</Text>
         </View>
         <View style={styles.copy}>
-          <Text style={styles.title} numberOfLines={1}>
+          <NumeralText
+            style={styles.title}
+            numeralStyle={isArabic ? styles.inlineNumeral : undefined}
+            numberOfLines={1}
+          >
             {title}
-          </Text>
-          {subtitle !== null && <Text style={styles.subtitle}>{subtitle}</Text>}
+          </NumeralText>
+          {subtitle !== null && (
+            <NumeralText
+              style={styles.subtitle}
+              numeralStyle={isArabic ? styles.inlineNumeral : undefined}
+            >
+              {subtitle}
+            </NumeralText>
+          )}
         </View>
         <Pressable
           onPress={props.onPress}
           accessibilityRole="button"
           accessibilityLabel={isResume ? strings.greetingResume : strings.greetingStart}
-          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+          style={styles.cta}
         >
           <Svg width={12} height={12} viewBox="0 0 24 24" fill={theme.semantic.fgOnGold}>
             <Path d={isArabic ? 'M16 5v14L5 12z' : 'M8 5v14l11-7z'} />
@@ -113,6 +125,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       marginTop: 2,
       textAlign: 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
+    },
+    inlineNumeral: {
+      fontFamily: theme.fonts.arabicSerif,
     },
     cta: {
       direction: isArabic ? 'rtl' : 'ltr',

@@ -11,10 +11,7 @@ export function useCompassHeading(enabled: boolean): number | null {
   const [heading, setHeading] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
-      setHeading(null);
-      return;
-    }
+    if (!enabled) return;
     let subscription: Location.LocationSubscription | undefined;
     let cancelled = false;
 
@@ -38,5 +35,7 @@ export function useCompassHeading(enabled: boolean): number | null {
     };
   }, [enabled]);
 
-  return heading;
+  // Derived rather than cleared in the effect, so no render cascades when the
+  // widget is switched off.
+  return enabled ? heading : null;
 }

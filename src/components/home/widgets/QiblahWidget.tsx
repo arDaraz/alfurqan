@@ -30,7 +30,11 @@ export function QiblahWidget({ point, size = 92, style }: Props) {
 
   const bearing = qiblahBearing(point);
   const heading = useCompassHeading(true);
-  const needleAngle = heading === null ? bearing : (bearing - heading + 360) % 360;
+  // With a live compass the dial is device-relative: north swings opposite the
+  // heading and the needle follows it, so both stay consistent. Without one,
+  // north sits at the top and the needle shows the raw bearing.
+  const northAngle = heading === null ? 0 : -heading;
+  const needleAngle = (bearing + northAngle + 360) % 360;
 
   return (
     <WidgetCard label={strings.widgets.qiblahLabel} style={style}>
@@ -45,25 +49,27 @@ export function QiblahWidget({ point, size = 92, style }: Props) {
             strokeWidth={1}
           />
           <Circle cx={46} cy={46} r={31} fill="none" stroke={theme.semantic.border} strokeWidth={1} />
-          <G stroke={theme.semantic.fgSubtle} strokeWidth={1}>
-            <Line x1={46} y1={6} x2={46} y2={12} />
-            <Line x1={86} y1={46} x2={80} y2={46} />
-            <Line x1={46} y1={86} x2={46} y2={80} />
-            <Line x1={6} y1={46} x2={12} y2={46} />
+          <G transform={`rotate(${northAngle} 46 46)`}>
+            <G stroke={theme.semantic.fgSubtle} strokeWidth={1}>
+              <Line x1={46} y1={6} x2={46} y2={12} />
+              <Line x1={86} y1={46} x2={80} y2={46} />
+              <Line x1={46} y1={86} x2={46} y2={80} />
+              <Line x1={6} y1={46} x2={12} y2={46} />
+            </G>
+            <G
+              transform="translate(46 8)"
+              stroke={theme.semantic.qiblahNorth}
+              strokeWidth={1}
+              fill={theme.semantic.bg}
+            >
+              <Rect x={-5} y={-5} width={10} height={10} />
+              <Rect x={-5} y={-5} width={10} height={10} transform="rotate(45)" />
+            </G>
           </G>
           <G transform={`translate(46 46) rotate(${needleAngle})`}>
             <Path d="M0 -30 L6 8 L0 3 L-6 8 Z" fill={theme.semantic.primary} />
           </G>
           <Circle cx={46} cy={46} r={3} fill={theme.semantic.primary} />
-          <G
-            transform="translate(46 8)"
-            stroke={theme.semantic.qiblahNorth}
-            strokeWidth={1}
-            fill={theme.semantic.bg}
-          >
-            <Rect x={-5} y={-5} width={10} height={10} />
-            <Rect x={-5} y={-5} width={10} height={10} transform="rotate(45)" />
-          </G>
         </Svg>
         <View style={styles.readout}>
           <Text style={styles.bearing}>{formatBearing(bearing, isArabic)}</Text>

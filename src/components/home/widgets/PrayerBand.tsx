@@ -8,6 +8,7 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { PRAYER_ORDER, minutesUntil, type PrayerDay, type PrayerName } from '../../../services/prayerTimes';
 import { formatClock, formatCountdown } from '../../../utils/clock';
+import { NumeralText } from './NumeralText';
 
 interface Props {
   day: PrayerDay;
@@ -60,9 +61,9 @@ export function PrayerBand({ day, city, now }: Props) {
         </Text>
       </View>
 
-      <Text style={styles.countdown}>
+      <NumeralText style={styles.countdown} numeralStyle={isArabic ? styles.inlineNumeral : undefined}>
         {strings.widgets.countdown(countdown.hoursText, countdown.minutesText, countdown.hours)}
-      </Text>
+      </NumeralText>
 
       <View style={styles.divider} />
 
@@ -190,6 +191,10 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       marginTop: isArabic ? 0 : 6,
       textAlign: 'left',
       writingDirection: isArabic ? 'rtl' : 'ltr',
+    },
+    // Digits inside an Arabic sentence: Amiri, never the ayah-ornamented Quran font.
+    inlineNumeral: {
+      fontFamily: theme.fonts.arabicSerif,
     },
     divider: {
       height: 1,

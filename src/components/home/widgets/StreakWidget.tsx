@@ -5,6 +5,7 @@ import { useStrings } from '../../../constants/strings';
 import { useTheme } from '../../../hooks/useTheme';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { toArabicIndic } from '../../../utils/arabic';
+import { NumeralText } from './NumeralText';
 import { WidgetCard } from './WidgetCard';
 
 interface Props {
@@ -23,7 +24,7 @@ export function StreakWidget({ days, longest, week, style }: Props) {
   const digits = (n: number) => (isArabic ? toArabicIndic(n) : String(n));
 
   return (
-    <WidgetCard label={strings.widgets.streakLabel} style={style}>
+    <WidgetCard label={strings.widgets.streakLabel} style={[styles.fill, style]}>
       <View style={styles.countRow}>
         <Text style={styles.count}>{digits(days)}</Text>
         <Text style={styles.unit}>{strings.widgets.streakDays}</Text>
@@ -33,13 +34,19 @@ export function StreakWidget({ days, longest, week, style }: Props) {
           <View key={i} style={[styles.pip, read ? styles.pipOn : styles.pipOff]} />
         ))}
       </View>
-      <Text style={styles.longest}>{strings.widgets.streakLongest(digits(longest))}</Text>
+      <NumeralText style={styles.longest} numeralStyle={isArabic ? styles.inlineNumeral : undefined}>
+        {strings.widgets.streakLongest(digits(longest))}
+      </NumeralText>
     </WidgetCard>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
+    // The design distributes the streak content over the full tile height.
+    fill: {
+      justifyContent: 'space-between',
+    },
     countRow: {
       flexDirection: 'row',
       alignItems: 'baseline',
@@ -74,6 +81,10 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     pipOff: {
       borderWidth: 1,
       borderColor: theme.palette.paper[300],
+    },
+    // Digits inside an Arabic sentence: Amiri, never the ayah-ornamented Quran font.
+    inlineNumeral: {
+      fontFamily: theme.fonts.arabicSerif,
     },
     longest: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,

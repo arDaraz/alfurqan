@@ -5,6 +5,7 @@ import { useStrings } from '../../../constants/strings';
 import { useTheme } from '../../../hooks/useTheme';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { toArabicIndic } from '../../../utils/arabic';
+import { NumeralText } from './NumeralText';
 import { createWidgetLabelStyle, WidgetCard } from './WidgetCard';
 
 const TOTAL_JUZ = 30;
@@ -27,9 +28,13 @@ export function KhatamWidget({ juzReached }: Props) {
     <WidgetCard>
       <View style={styles.header}>
         <Text style={styles.label}>{strings.widgets.khatamLabel}</Text>
-        <Text style={styles.value} numberOfLines={1}>
+        <NumeralText
+          style={styles.value}
+          numeralStyle={isArabic ? styles.inlineNumeral : undefined}
+          numberOfLines={1}
+        >
           {strings.widgets.khatamProgress(digits(clamped), digits(TOTAL_JUZ))}
-        </Text>
+        </NumeralText>
       </View>
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${(clamped / TOTAL_JUZ) * 100}%` }]} />
@@ -53,6 +58,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       lineHeight: isArabic ? 22 : 16,
       color: theme.semantic.fgMuted,
       writingDirection: isArabic ? 'rtl' : 'ltr',
+    },
+    inlineNumeral: {
+      fontFamily: theme.fonts.arabicSerif,
     },
     track: {
       height: 4,
