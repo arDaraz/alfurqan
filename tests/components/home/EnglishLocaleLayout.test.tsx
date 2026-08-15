@@ -15,9 +15,8 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { BrandBar } from '../../../src/components/home/BrandBar';
-import { GreetingCard } from '../../../src/components/home/GreetingCard';
+import { ContinueReadingWidget } from '../../../src/components/home/widgets/ContinueReadingWidget';
 import { JuzListItem } from '../../../src/components/home/JuzListItem';
-import { SearchBar } from '../../../src/components/home/SearchBar';
 import { SurahListItem } from '../../../src/components/home/SurahListItem';
 import { TabBar } from '../../../src/components/navigation/TabBar';
 import { useSettingsStore } from '../../../src/stores/settingsStore';
@@ -46,56 +45,43 @@ describe('Home English locale layout', () => {
     useSettingsStore.setState({ language: 'en' });
   });
 
-  it('keeps the brand wordmark and search field in LTR text flow', () => {
-    const { getByPlaceholderText, getByText, queryByText } = render(
-      <>
-        <BrandBar />
-        <SearchBar value="" onChangeText={jest.fn()} />
-      </>
-    );
+  it('keeps the brand wordmark in LTR text flow', () => {
+    const { getByText, queryByText } = render(<BrandBar />);
 
     const titleStyle = StyleSheet.flatten(getByText('Al Furqan').props.style);
     expect(queryByText('ALFURQAN')).toBeNull();
     expect(queryByText('الفرقان')).toBeNull();
-    expect(queryByText('A')).toBeNull();
     expect(titleStyle).toMatchObject({
       fontFamily: 'Manrope',
       lineHeight: 36,
       textAlign: 'left',
       writingDirection: 'ltr',
     });
-
-    const inputStyle = StyleSheet.flatten(getByPlaceholderText('Search surahs...').props.style);
-    expect(inputStyle).toMatchObject({
-      fontFamily: 'Manrope',
-      textAlign: 'left',
-      writingDirection: 'ltr',
-    });
   });
 
-  it('uses English greeting copy without duplicating the continue label', () => {
+  it('uses English continue-reading copy without duplicating the label', () => {
     const { getByText, queryByText } = render(
-      <GreetingCard
-        variant="continue"
+      <ContinueReadingWidget
+        variant="resume"
+        surahNumber={2}
         surahName="Al-Baqarah"
         ayahNumber={255}
         juzNumber={3}
         pageNumber={42}
-        onResume={jest.fn()}
+        onPress={jest.fn()}
       />
     );
 
-    expect(getByText('Continue')).toBeTruthy();
-    expect(queryByText('Continue · Continue')).toBeNull();
+    expect(getByText('Continue reading')).toBeTruthy();
     expect(getByText('Surah Al-Baqarah · Ayah 255')).toBeTruthy();
+    expect(getByText('Juz 3 · Page 42')).toBeTruthy();
     expect(queryByText(/day streak/)).toBeNull();
-    expect(queryByText(/Last read/)).toBeNull();
     expect(queryByText(/سورة/)).toBeNull();
   });
 
   it('shows cold-start copy without progress metadata', () => {
     const { getByText, queryByText } = render(
-      <GreetingCard variant="cold-start" onStart={jest.fn()} />
+      <ContinueReadingWidget variant="start" onPress={jest.fn()} />
     );
 
     expect(getByText('Begin with Al-Fatihah')).toBeTruthy();
@@ -190,15 +176,16 @@ describe('Home Arabic locale layout', () => {
     });
   });
 
-  it('does not leak English-only greeting copy into Arabic', () => {
+  it('does not leak English-only continue-reading copy into Arabic', () => {
     const { getByText, queryByText } = render(
-      <GreetingCard
-        variant="continue"
+      <ContinueReadingWidget
+        variant="resume"
+        surahNumber={2}
         surahName="البقرة"
         ayahNumber={255}
         juzNumber={3}
         pageNumber={42}
-        onResume={jest.fn()}
+        onPress={jest.fn()}
       />
     );
 
@@ -213,48 +200,36 @@ describe('Home Arabic locale layout', () => {
     });
   });
 
-  it('uses readable UI typography for Arabic greeting card metadata', () => {
-    const { getByTestId, getByText, queryByText } = render(
-      <GreetingCard
-        variant="continue"
+  it('uses readable UI typography for Arabic continue-reading metadata', () => {
+    const { getByText, queryByText } = render(
+      <ContinueReadingWidget
+        variant="resume"
+        surahNumber={3}
         surahName="آل عمران"
         ayahNumber={3}
         juzNumber={3}
         pageNumber={51}
-        onResume={jest.fn()}
+        onPress={jest.fn()}
       />
     );
 
-    const title = getByText('سورة آل عمران · الآية ٣');
     expect(queryByText(/﴿٣﴾/)).toBeNull();
     expect(queryByText(/آخر قراءة/)).toBeNull();
-    expect(StyleSheet.flatten(getByText('تابع').props.style)).toMatchObject({
+    expect(StyleSheet.flatten(getByText('تابع القراءة').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 20,
+      fontSize: 15,
     });
-    expect(StyleSheet.flatten(title.props.style)).toMatchObject({
+    expect(StyleSheet.flatten(getByText('سورة آل عمران · الآية ٣').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 24,
-    });
-    expect(StyleSheet.flatten(getByTestId('greeting-title-glyph').props.style)).toMatchObject({
-      fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 30,
+      fontSize: 19,
     });
     expect(StyleSheet.flatten(getByText('الجزء ٣ · صفحة ٥١').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 20,
+      fontSize: 13,
     });
     expect(StyleSheet.flatten(getByText('استأنف').props.style)).toMatchObject({
       fontFamily: 'KFGQPC-Uthmani',
       fontSize: 20,
-    });
-    expect(StyleSheet.flatten(getByTestId('greeting-juz-glyph').props.style)).toMatchObject({
-      fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 30,
-    });
-    expect(StyleSheet.flatten(getByTestId('greeting-page-glyph').props.style)).toMatchObject({
-      fontFamily: 'KFGQPC-Uthmani',
-      fontSize: 30,
     });
   });
 

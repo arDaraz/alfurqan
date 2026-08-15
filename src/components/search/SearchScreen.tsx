@@ -20,6 +20,7 @@ import { BookmarkCategorySheet, type BookmarkCommit } from '../quran/BookmarkCat
 
 import { SearchInput } from './SearchInput';
 import { AyahResultRow } from './AyahResultRow';
+import { SurahBrowser } from './SurahBrowser';
 
 const DEBOUNCE_MS = 300;
 
@@ -222,17 +223,11 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
       </View>
 
       <View style={styles.inputWrap}>
-        <SearchInput value={query} onChangeText={setQuery} autoFocus />
+        {/* No autoFocus: the idle state is the surah browser, and a keyboard would cover it. */}
+        <SearchInput value={query} onChangeText={setQuery} />
       </View>
 
-      {status === 'idle' && (
-        <View style={styles.center}>
-          <OrnamentDivider tier="compact" />
-          <Text style={styles.idleHint} allowFontScaling>
-            {strings.searchHint}
-          </Text>
-        </View>
-      )}
+      {status === 'idle' && <SurahBrowser />}
 
       {status === 'loading' && (
         <View

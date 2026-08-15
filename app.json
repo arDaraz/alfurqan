@@ -58,7 +58,15 @@
       ],
       "expo-font",
       "expo-status-bar",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Al Furqan uses your location to calculate prayer times and the direction of the Qiblah.",
+          "locationWhenInUsePermission": "Al Furqan uses your location to calculate prayer times and the direction of the Qiblah.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

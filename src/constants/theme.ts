@@ -76,6 +76,11 @@ const lightSemantic = {
   borderGold: palette.gold[500],
 
   selectedRange: '#0B5D5324',
+
+  // Home widgets — aliases so a widget never reaches for a palette stop directly.
+  widgetSurface: palette.paper[50],
+  railSurface: palette.paper[200],
+  qiblahNorth: palette.gold[500],
 } as const;
 
 const darkSemantic = {
@@ -109,6 +114,10 @@ const darkSemantic = {
   borderGold: '#D4AB5E',
 
   selectedRange: '#5FA89538',
+
+  widgetSurface: '#0F2420',
+  railSurface: '#061412',
+  qiblahNorth: '#D4AB5E',
 } as const;
 
 const spacing = {

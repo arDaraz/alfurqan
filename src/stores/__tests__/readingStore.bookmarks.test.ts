@@ -117,6 +117,7 @@ describe('readingStore bookmarks', () => {
       ...state,
       lastReadWordPosition: null,
       lastReadPageByLayout: {},
+      longestStreak: 0,
     });
   });
 
@@ -125,11 +126,16 @@ describe('readingStore bookmarks', () => {
       migrate: (state: any, version: number) => any;
     };
     expect(migrate(null, 0)).toBeNull();
-    expect(migrate({}, 0)).toEqual({ lastReadWordPosition: null, lastReadPageByLayout: {} });
+    expect(migrate({}, 0)).toEqual({
+      lastReadWordPosition: null,
+      lastReadPageByLayout: {},
+      longestStreak: 0,
+    });
     expect(migrate({ bookmarks: null }, 0)).toEqual({
       bookmarks: null,
       lastReadWordPosition: null,
       lastReadPageByLayout: {},
+      longestStreak: 0,
     });
   });
 
