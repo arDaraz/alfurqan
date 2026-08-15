@@ -4,22 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Mushaf Al Furqan is a Qur'an reading and recitation practice app built with React Native (Expo SDK 55) targeting iOS and Android. It features authentic mushaf page rendering, ayah selection, bookmarking, and a bilingual Arabic/English interface with an Arabic-first RTL layout.
+Mushaf Al Furqan is a Qur'an reading and recitation practice app built with React Native (Expo SDK 57) targeting iOS and Android. It features authentic mushaf page rendering, ayah selection, bookmarking, and a bilingual Arabic/English interface with an Arabic-first RTL layout.
 
 ## Commands
 
 ```bash
-npm start              # Expo dev server (press i for iOS, a for Android)
-npm run ios            # Build + run on iOS simulator
-npm run android        # Build + run on Android emulator
-npm run web            # Start web dev server (limited — SQLite/pager don't work on web)
-npm test               # Jest test suite
-npm test -- --testPathPattern="theme" # Run a single test file
-npm run lint           # ESLint via expo-lint
-npx tsc --noEmit       # TypeScript strict check
-npm run seed           # Rebuild quran.db from JSON sources
-npm run seed:mushaf    # Populate mushaf_words table
+npm start                    # Metro for an already-installed development build
+npm run dev:port             # Show the PID/path that owns canonical port 8081
+npm run dev:stop             # Stop Metro only when this checkout owns port 8081
+npm run ios                  # Build, install, and run on the iOS Simulator
+npm run ios:device           # Build, install, and run on a connected iPhone
+npm run android              # Build, install, and run on an Android target
+npm run ios:rebuild          # Regenerate iOS native files and perform a clean build
+npm run ios:device:rebuild   # Regenerate and clean-build for a connected iPhone
+npm run android:rebuild      # Regenerate Android native files and build
+npm run native:sync          # Regenerate both ignored native projects without launching
+npm run web                  # Limited fallback; SQLite/pager do not work correctly
+npm test                     # Jest test suite
+npm test -- --runInBand tests/constants/theme.test.ts # Run one test file
+npm run lint                 # ESLint via Expo
+npx tsc --noEmit             # TypeScript strict check
+npx expo-doctor              # Expo dependency and configuration diagnostics
+npm run seed                 # Rebuild quran.db from JSON sources
+npm run seed:mushaf          # Populate mushaf_words table
 ```
+
+## Development Workflow
+
+- Follow `docs/DEVELOPMENT_SETUP.md` for the detailed, reproducible setup, authentication boundaries, Xcode runtime recovery, and verification procedure.
+- This project uses `expo-dev-client`; do not use Expo Go.
+- Use `npm run ios` for the first simulator run. It invokes Expo CLI, which generates native files when absent, compiles with Xcode, installs the app, and starts Metro.
+- After the native development build is installed, use `npm start` for ordinary TypeScript, UI, style, and state changes. Fast Refresh does not require an Xcode rebuild.
+- Every launch command uses port 8081. The project-local wrapper reuses this checkout's Metro, rejects a listener from another checkout, and never silently switches to 8082.
+- Worktrees share Metro port 8081 and Simulator devices. Before switching worktrees, run `npm run dev:stop` in the old worktree, then `npm run dev:port` in the new one. Reuse the installed development build only when native inputs match; otherwise run `npm run ios` and expect it to replace the same bundle ID on that device.
+- Use a separate named Simulator device when worktrees need isolated app binaries, MMKV state, or SQLite data. Separate devices still share the Mac's Metro port, so the default workflow supports one active worktree at a time.
+- Use `npm run ios:device` for a connected physical iPhone. Do not invoke `xcodebuild` directly or add a separate phone-build script.
+- Rebuild after an Expo SDK upgrade, native dependency change, `app.json` change, permission change, or config-plugin change.
+- The generated `ios/` and `android/` directories are ignored. `app.json` and Expo config plugins are their source of truth.
+- If Xcode reports that no destination matches because an iOS platform is missing, install the matching runtime in **Xcode > Settings > Components**, or run `xcodebuild -downloadPlatform iOS -architectureVariant arm64` on Apple Silicon.
 
 ## Architecture
 
@@ -101,7 +123,7 @@ The theme exposes ready-made scales — always use these instead of hardcoded va
 This is a **native mobile app**. Always verify UI changes on the iOS simulator, not in a web browser.
 
 **How to verify:**
-1. Run the app: `npm run ios` (or `expo start` then press `i`)
+1. Build and run the app with `npm run ios`; for later JS-only changes, keep it installed and run `npm start`
 2. Take a simulator screenshot: `xcrun simctl io booted screenshot /tmp/screen.png`
 3. Read the screenshot with the Read tool to visually inspect the result
 
@@ -112,7 +134,7 @@ Key things that **don't work on web** (do not use web for verification):
 
 ## Testing
 
-Jest with `jest-expo` preset. Tests use `@testing-library/react-native`. Run single tests with `npm test -- --testPathPattern="<pattern>"`. The `jest.setup.js` polyfills `globalThis.__ExpoImportMetaRegistry` for Expo SDK 55 compatibility.
+Jest with the `jest-expo` preset. Tests use `@testing-library/react-native`. Run a single file with `npm test -- --runInBand <path>`. The `jest.setup.js` polyfills Expo's import-meta registry for the test environment.
 
 ## Experiments
 

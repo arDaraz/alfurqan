@@ -117,7 +117,7 @@ function createStyles(colors: ReaderColors) {
       backgroundColor: 'transparent',
     },
     paintOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: colors.bg,
     },
   });
