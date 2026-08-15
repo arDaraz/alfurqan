@@ -1,118 +1,136 @@
-# Al Furqan Development Notes
+# Al Furqan Development
 
-## The Important Rule
+Al Furqan is an Expo development-build app. It uses native modules, so use the installed development build rather than Expo Go.
 
-This app uses native modules such as `expo-audio`, so the physical iPhone must run the installed `Al Furqan` development build.
+For the complete first-time setup, account/sign-in requirements, simulator runtime installation and recovery, physical iPhone steps, Android steps, and Expo SDK upgrade record, read [docs/DEVELOPMENT_SETUP.md](docs/DEVELOPMENT_SETUP.md).
 
-Do not use Expo Go for this project.
-Do not scan the QR with the iPhone Camera or Code Scanner.
-Do not press `s` in Metro, because that switches Metro to Expo Go mode.
+## Non-negotiable launch rules
 
-Open `Al Furqan` from the iPhone Home Screen after it is installed.
+Before any launch, run `npm run dev:port`. Port 8081 must either be available or owned by this exact checkout. If another worktree owns it, coordinate a handoff and run `npm run dev:stop` from that owning worktree. Never accept Expo's suggestion to use port 8082.
 
-## After Codex Changes
+Use only the project commands in this README. Do not use Expo Go, direct `npx expo start`, direct `xcodebuild` launch commands, or web rendering for native verification. The supported model is one active worktree/Metro server at a time; a separate Simulator isolates app binaries and data, but Metro port 8081 is still shared across the Mac.
 
-Use this checklist after every code change.
+## One-time setup
 
-### JS-only changes
-
-Use this for UI, copy, styles, stores, and TypeScript changes that do not add native modules:
+Install JavaScript dependencies:
 
 ```bash
-npm run dev
+npm install
 ```
 
-Then reload the app from the simulator or phone dev menu.
-
-### Native changes
-
-Use this when `package.json`, `app.json`, `ios/`, native modules, permissions, or CocoaPods changed. Also use it for errors like `Cannot find native module 'ExpoAudio'`.
-
-Physical iPhone:
+For iOS, install Xcode and a simulator runtime matching the selected Xcode version under **Xcode > Settings > Components**. On Apple Silicon, the equivalent command is:
 
 ```bash
-npm run phone:native
+xcodebuild -downloadPlatform iOS -architectureVariant arm64
 ```
 
-Simulator:
+Confirm the setup when needed:
 
 ```bash
-npm run sim:native
+xcodebuild -version
+xcrun simctl list runtimes
+npx expo-doctor
 ```
 
-`phone:native` now builds for the paired physical iPhone directly. It does not use Expo's device picker, which can accidentally select the simulator.
+## Recommended target: iOS Simulator
 
-## First Physical iPhone Install
-
-If iOS shows `Untrusted Developer`, the app was installed successfully but iOS is blocking the first launch.
-
-On the iPhone:
-
-1. Open `Settings`.
-2. Go to `General`.
-3. Open `VPN & Device Management`.
-4. Tap `Apple Development: ahmed.daraz@outlook.com (47NBYZ3BH6)`.
-5. Tap `Trust`.
-6. Open `Al Furqan` from the Home Screen.
-
-Then keep Metro running from this repo:
+For the first run, or after installing a native package:
 
 ```bash
-npm run dev
+npm run ios
 ```
 
-## Port 8081 Problems
+This generates the iOS project when needed, compiles the app with Xcode, installs it in the simulator, and starts Metro.
 
-If Expo says:
+If Expo reports that it cannot find a matching destination, the matching iOS simulator runtime is missing from Xcode; install it using the one-time setup above.
 
-```text
-Port 8081 is running this app in another window
-```
-
-Do not accept port `8082`. Stop the old Metro process and restart on `8081`:
+For normal TypeScript, UI, style, and state changes after the app is installed:
 
 ```bash
+npm start
+```
+
+Expo Fast Refresh updates the running app without another native build.
+
+All native launch commands and Metro use port `8081`. Check its owner with `npm run dev:port`. Stop Metro with `npm run dev:stop`; for safety, that command refuses to terminate a listener owned by another checkout.
+
+## Git worktrees
+
+Worktrees have separate source/dependency/native folders but share Mac port 8081 and the Simulator service. On one Simulator device, the last worktree to install bundle ID `com.ahmeddaraz.alfurqan` replaces the earlier binary and reuses that device's app data.
+
+Before changing worktrees:
+
+```bash
+# In the old worktree
 npm run dev:stop
-npm run dev
+
+# In the new worktree
+npm install
+npm run dev:port
+npm start              # press i to reuse a compatible installed native build
+# or: npm run ios      # rebuild when native dependencies/config differ
 ```
 
-One-command version:
+Never accept Expo's fallback to port 8082. For isolated binaries and app data, create a separate Simulator device for each worktree. The complete reuse, rebuild, isolation, and cleanup procedure is in [docs/DEVELOPMENT_SETUP.md](docs/DEVELOPMENT_SETUP.md#13-developing-with-git-worktrees).
+
+## Physical iPhone
+
+Connect and unlock the iPhone, enable Developer Mode, and run:
 
 ```bash
-npm run dev:restart
+npm run ios:device
 ```
 
-`dev:stop` stops Metro on both `8081` and `8082`, because accidentally starting a second server on `8082` can make the app connect to the wrong bundle.
+Expo asks which connected device to use, builds and installs the development app, and starts Metro. If iOS reports an untrusted developer, trust the development certificate under **Settings > General > VPN & Device Management**.
 
-## Expo Go Screen
+The Mac and iPhone must be able to reach each other while Metro is running.
 
-If the phone shows `Project is incompatible with this version of Expo Go`, you opened Expo Go instead of the development build.
+## Android
 
-Close Expo Go and open `Al Furqan` from the Home Screen. If `Al Furqan` is not installed, run:
+After installing Android Studio and starting an emulator or connecting an Android device, run:
 
 ```bash
-npm run phone:native
+npm run android
 ```
 
-## Useful NPM Tasks
+## When a native rebuild is required
+
+Rebuild after any of these changes:
+
+- Expo SDK upgrade
+- Native dependency installation or removal
+- `app.json` changes
+- Permissions or Expo config-plugin changes
+
+Use the command for the target:
 
 ```bash
-npm run dev            # Start Metro for the development build on LAN, port 8081
-npm run dev:port       # Show what is listening on port 8081
-npm run dev:stop       # Stop Metro on ports 8081 and 8082
-npm run dev:restart    # Stop Metro, then start it again on 8081
-npm run native:clean   # Remove Al Furqan native build output and DerivedData
-npm run phone:build    # Build the app for the paired physical iPhone
-npm run phone:install  # Install the last physical iPhone build
-npm run phone:launch   # Launch the app on the paired physical iPhone
-npm run phone:rebuild  # Clean, build, install, and launch on physical iPhone
-npm run phone:native   # Full physical iPhone repair path, then start Metro
-npm run sim:native     # Rebuild the simulator app, then start Metro
-npm test               # Run Jest tests
+npm run ios:rebuild
+npm run ios:device:rebuild
+npm run android:rebuild
 ```
 
-## Why Audio Needed A Rebuild
+To regenerate both native projects without launching either app:
 
-Metro can reload JavaScript into an installed app, but it cannot add native modules to an existing iPhone binary.
+```bash
+npm run native:sync
+```
 
-`expo-audio` adds the native `ExpoAudio` module. If the phone has an older binary, JavaScript can import the new code but iOS cannot find the native module. `npm run phone:native` rebuilds and reinstalls the phone binary so `ExpoAudio` exists on the device.
+The generated `ios/` and `android/` directories are intentionally ignored by Git. Expo config and config plugins are their source of truth.
+
+## Web limitations
+
+```bash
+npm run web
+```
+
+Web is only a limited fallback. The SQLite-backed data flow and native Mushaf pager must be verified on iOS or Android.
+
+## Other checks
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm test
+npx expo-doctor
+```
