@@ -4,6 +4,11 @@ import { createMMKV } from 'react-native-mmkv';
 import type { NightReadingMode } from '../constants/nightReading';
 import type { AppLanguage } from '../utils/locale';
 import {
+  DEFAULT_PRAYER_METHOD,
+  type MadhabId,
+  type PrayerMethodId,
+} from '../services/prayerTimes';
+import {
   DEFAULT_MUSHAF_LAYOUT_ID,
   isMushafLayoutId,
   type MushafLayoutId,
@@ -27,8 +32,33 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 export type CorrectionSensitivity = 'gentle' | 'standard' | 'strict';
 type LegacyMushafFont = 'uthmanic' | 'qcf-v1' | 'qcf-v4' | 'indopak-nastaleeq' | 'digital-khatt-indopak';
 
+export type HomeWidgetId =
+  | 'prayerTimes'
+  | 'qiblah'
+  | 'continueReading'
+  | 'streak'
+  | 'khatam'
+  | 'tasmee';
+
+/** Tasmīʿ stays off until the reader turns it on; the other five ship enabled. */
+export const DEFAULT_HOME_WIDGETS: Record<HomeWidgetId, boolean> = {
+  prayerTimes: true,
+  qiblah: true,
+  continueReading: true,
+  streak: true,
+  khatam: true,
+  tasmee: false,
+};
+
+export interface PrayerLocation {
+  latitude: number;
+  longitude: number;
+  /** Reverse-geocoded city, shown on the prayer band. Null when lookup failed. */
+  city: string | null;
+}
+
 export const DEFAULT_THEME_MODE: ThemeMode = 'light';
-const SETTINGS_STORE_VERSION = 2;
+const SETTINGS_STORE_VERSION = 3;
 
 interface SettingsState {
   language: AppLanguage;
@@ -42,7 +72,16 @@ interface SettingsState {
   correctionSensitivity: CorrectionSensitivity;
   mushafLayoutId: MushafLayoutId;
   nightReadingMode: NightReadingMode;
+  homeWidgets: Record<HomeWidgetId, boolean>;
+  prayerMethod: PrayerMethodId;
+  prayerMadhab: MadhabId;
+  /** Last resolved coordinates, kept so the prayer band renders offline. */
+  prayerLocation: PrayerLocation | null;
 
+  setHomeWidget: (id: HomeWidgetId, enabled: boolean) => void;
+  setPrayerMethod: (method: PrayerMethodId) => void;
+  setPrayerMadhab: (madhab: MadhabId) => void;
+  setPrayerLocation: (location: PrayerLocation | null) => void;
   setLanguage: (lang: AppLanguage) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setQuranFontScale: (scale: number) => void;
@@ -72,6 +111,8 @@ export function migrateSettingsState(
       ? 'indopak-15-line-hafs'
       : DEFAULT_MUSHAF_LAYOUT_ID;
   const { mushafFont: _legacyMushafFont, ...currentState } = state;
+  // A widget added after this state was written must land on its default, not undefined.
+  currentState.homeWidgets = { ...DEFAULT_HOME_WIDGETS, ...currentState.homeWidgets };
 
   if (
     version < SETTINGS_STORE_VERSION &&
@@ -106,7 +147,16 @@ export const useSettingsStore = create<SettingsState>()(
       correctionSensitivity: 'strict',
       mushafLayoutId: DEFAULT_MUSHAF_LAYOUT_ID,
       nightReadingMode: 'off',
+      homeWidgets: DEFAULT_HOME_WIDGETS,
+      prayerMethod: DEFAULT_PRAYER_METHOD,
+      prayerMadhab: 'shafi',
+      prayerLocation: null,
 
+      setHomeWidget: (id, enabled) =>
+        set((state) => ({ homeWidgets: { ...state.homeWidgets, [id]: enabled } })),
+      setPrayerMethod: (prayerMethod) => set({ prayerMethod }),
+      setPrayerMadhab: (prayerMadhab) => set({ prayerMadhab }),
+      setPrayerLocation: (prayerLocation) => set({ prayerLocation }),
       setLanguage: (language) => set({ language }),
       setThemeMode: (themeMode) => set({ themeMode, hasChosenThemeMode: true }),
       setQuranFontScale: (quranFontScale) => set({ quranFontScale }),

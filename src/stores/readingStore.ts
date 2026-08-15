@@ -32,6 +32,7 @@ interface ReadingState {
   lastReadAt: number | null;
   streakDays: number;
   streakLastReadDate: string | null;
+  longestStreak: number;
   hasCompletedOnboarding: boolean;
   bookmarks: Bookmark[];
   setLastRead: (
@@ -81,6 +82,32 @@ function nextStreak(previousDays: number, previousDate: string | null, today: st
   return diffDays === 1 ? previousDays + 1 : 1;
 }
 
+function daysBetween(fromKey: string, toKey: string): number {
+  const from = new Date(`${fromKey}T00:00:00`).getTime();
+  const to = new Date(`${toKey}T00:00:00`).getTime();
+  return Math.round((to - from) / 86_400_000);
+}
+
+/**
+ * Which of the last seven days (oldest first, today last) fall inside the
+ * current streak. Derived from the streak counter, so no per-day log is kept.
+ */
+export function weekActivity(
+  streakDays: number,
+  streakLastReadDate: string | null,
+  now: Date = new Date()
+): boolean[] {
+  const today = localDateKey(now);
+  if (streakLastReadDate === null || streakDays <= 0) return Array(7).fill(false);
+
+  const lastReadOffset = daysBetween(streakLastReadDate, today);
+  return Array.from({ length: 7 }, (_, i) => {
+    const offsetFromToday = 6 - i;
+    const offsetFromLastRead = offsetFromToday - lastReadOffset;
+    return offsetFromLastRead >= 0 && offsetFromLastRead < streakDays;
+  });
+}
+
 export function migrate(state: any, version: number): any {
   if (!state || typeof state !== 'object') return state;
   let migratedState = { ...state };
@@ -100,6 +127,13 @@ export function migrate(state: any, version: number): any {
           : {},
     };
   }
+  if (version < 3) {
+    // No history to reconstruct a real record from, so the current run is the best we know.
+    migratedState = {
+      ...migratedState,
+      longestStreak: migratedState.longestStreak ?? migratedState.streakDays ?? 0,
+    };
+  }
   return migratedState;
 }
 
@@ -115,6 +149,7 @@ export const useReadingStore = create<ReadingState>()(
       lastReadAt: null,
       streakDays: 0,
       streakLastReadDate: null,
+      longestStreak: 0,
       hasCompletedOnboarding: false,
       bookmarks: [],
       setLastRead: (
@@ -127,7 +162,8 @@ export const useReadingStore = create<ReadingState>()(
         wordPosition = null
       ) => {
         const today = localDateKey(now);
-        const { streakDays, streakLastReadDate, lastReadPageByLayout } = get();
+        const { streakDays, streakLastReadDate, longestStreak, lastReadPageByLayout } = get();
+        const nextStreakDays = nextStreak(streakDays, streakLastReadDate, today);
         set({
           lastReadSurah: surah,
           lastReadAyah: ayah,
@@ -136,8 +172,9 @@ export const useReadingStore = create<ReadingState>()(
           lastReadPage: page,
           lastReadPageByLayout: { ...lastReadPageByLayout, [layoutId]: page },
           lastReadAt: now.getTime(),
-          streakDays: nextStreak(streakDays, streakLastReadDate, today),
+          streakDays: nextStreakDays,
           streakLastReadDate: today,
+          longestStreak: Math.max(longestStreak, nextStreakDays),
         });
       },
       getCachedPage: (layoutId) => get().lastReadPageByLayout[layoutId] ?? null,
@@ -187,7 +224,7 @@ export const useReadingStore = create<ReadingState>()(
     {
       name: 'reading-store',
       storage: createJSONStorage(() => mmkvStorage),
-      version: 2,
+      version: 3,
       migrate,
     }
   )

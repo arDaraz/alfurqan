@@ -11,6 +11,7 @@ import { ReciterPickerSheet } from '../../components/quran/ReciterPickerSheet';
 import { getReciterById } from '../../data/reciters';
 import { useReciterStore } from '../../stores/reciterStore';
 
+import { HomeWidgetsGroup } from '../../components/settings/HomeWidgetsGroup';
 import { SettingsGroup } from '../../components/settings/SettingsGroup';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { Toggle } from '../../components/settings/Toggle';
@@ -133,6 +134,8 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <HomeWidgetsGroup />
+
         <SettingsGroup label={strings.settingsSectionReading}>
           <FontSizeRow
             label={strings.settingsQuranSize}
