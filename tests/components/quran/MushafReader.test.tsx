@@ -69,14 +69,6 @@ jest.mock('../../../src/components/quran/AyahPopup', () => {
   };
 });
 
-jest.mock('../../../src/components/quran/PageIndicator', () => ({
-  PageIndicator: () => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return <View testID="page-indicator" />;
-  },
-}));
-
 jest.mock('../../../src/hooks/useReaderColors', () => ({
   useReaderColors: () => ({
     colors: {

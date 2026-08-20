@@ -26,12 +26,6 @@ export interface Juz {
   endAyah: number;
 }
 
-export interface AyahRange {
-  surahNumber: number;
-  startAyah: number;
-  endAyah: number;
-}
-
 export interface LastReadPosition {
   surahNumber: number;
   ayahNumber: number;
