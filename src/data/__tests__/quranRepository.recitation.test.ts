@@ -6,61 +6,66 @@ jest.mock('../database', () => ({
   getDatabase: jest.fn().mockResolvedValue(mockDb),
 }));
 
-import { getTopAyahForPage } from '../quranRepository';
+import { getDatabase } from '../database';
+import { getMushafTopAyahForPage, getMushafPageForAyah } from '../quranRepository';
+import { DEFAULT_MUSHAF_LAYOUT_ID } from '../mushafLayouts';
 
-describe('getTopAyahForPage', () => {
+describe('getMushafTopAyahForPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getDatabase } = require('../database');
     (getDatabase as jest.Mock).mockResolvedValue(mockDb);
   });
 
-  it('returns the first distinct ayah ordered by line and word id', async () => {
+  it('returns the first ayah on the page with its word position', async () => {
     mockDb.getFirstAsync.mockResolvedValueOnce({
       surah_number: 2,
       ayah_number: 6,
+      word_position: 1,
     });
 
-    await expect(getTopAyahForPage(2)).resolves.toEqual({
+    await expect(
+      getMushafTopAyahForPage(DEFAULT_MUSHAF_LAYOUT_ID, 2)
+    ).resolves.toEqual({
       surahNumber: 2,
       ayahNumber: 6,
+      wordPosition: 1,
     });
-    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-      `SELECT surah_number, ayah_number
-     FROM mushaf_words
-     WHERE page_number = ?
-     GROUP BY surah_number, ayah_number
-     ORDER BY MIN(line_number), MIN(id)
-     LIMIT 1`,
-      [2]
-    );
   });
 
-  it('throws when a page has no ayah words', async () => {
+  it('throws when the page carries no Quran text', async () => {
     mockDb.getFirstAsync.mockResolvedValueOnce(null);
 
-    await expect(getTopAyahForPage(999)).rejects.toThrow('No ayah found for page 999');
+    await expect(
+      getMushafTopAyahForPage(DEFAULT_MUSHAF_LAYOUT_ID, 2)
+    ).rejects.toThrow(/contains no Quran text/i);
+  });
+
+  it('rejects a page outside the layout range', async () => {
+    await expect(
+      getMushafTopAyahForPage(DEFAULT_MUSHAF_LAYOUT_ID, 9999)
+    ).rejects.toThrow();
   });
 });
 
-describe('getPageForAyah', () => {
+describe('getMushafPageForAyah', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getDatabase } = require('../database');
     (getDatabase as jest.Mock).mockResolvedValue(mockDb);
   });
 
-  it('returns the mushaf page that contains the ayah', async () => {
-    mockDb.getFirstAsync.mockResolvedValueOnce({
-      page_number: 2,
-    });
-    const { getPageForAyah } = require('../quranRepository');
+  it('returns the page that contains the ayah', async () => {
+    mockDb.getFirstAsync.mockResolvedValueOnce({ page_number: 2 });
 
-    expect(getPageForAyah).toEqual(expect.any(Function));
-    await expect(getPageForAyah(2, 1)).resolves.toBe(2);
-    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-      'SELECT page_number FROM ayahs WHERE surah_number = ? AND ayah_number = ?',
-      [2, 1]
-    );
+    await expect(
+      getMushafPageForAyah(DEFAULT_MUSHAF_LAYOUT_ID, 2, 1)
+    ).resolves.toBe(2);
+  });
+
+  it('throws when no page maps to the ayah', async () => {
+    mockDb.getFirstAsync.mockResolvedValueOnce(null);
+
+    await expect(
+      getMushafPageForAyah(DEFAULT_MUSHAF_LAYOUT_ID, 2, 1)
+    ).rejects.toThrow(/no page maps/i);
   });
 });
