@@ -116,7 +116,7 @@ The app globally forces RTL via `I18nManager.forceRTL(true)` in `_layout.tsx`. U
 
 ## Styling
 
-NativeWind (Tailwind for React Native) via `className` props is the primary styling approach. Custom theme colors and spacing are extended in `tailwind.config.js` (mirrors `theme.ts` palette). Some components use inline `style` with `useTheme()` for runtime-resolved dark mode values.
+`StyleSheet.create` is the styling approach, paired with `useTheme()` for runtime-resolved light and dark values. The common pattern is a `createStyles(theme, isArabic)` factory at the bottom of the file, called from the component. Take every colour, spacing, radius, and type value from the theme tokens rather than writing a literal.
 
 Path alias: `@/*` maps to `src/*`, `@/assets/*` maps to `assets/*`.
 
