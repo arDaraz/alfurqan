@@ -58,7 +58,7 @@ export interface PrayerLocation {
 }
 
 export const DEFAULT_THEME_MODE: ThemeMode = 'light';
-const SETTINGS_STORE_VERSION = 3;
+const SETTINGS_STORE_VERSION = 4;
 
 interface SettingsState {
   language: AppLanguage;
@@ -66,9 +66,7 @@ interface SettingsState {
   hasChosenThemeMode: boolean;
   /** 0–1 slider, 0.58 ≈ 24px Quran. */
   quranFontScale: number;
-  showTashkeel: boolean;
   dailyReminder: boolean;
-  qariId: string;
   correctionSensitivity: CorrectionSensitivity;
   mushafLayoutId: MushafLayoutId;
   nightReadingMode: NightReadingMode;
@@ -85,9 +83,7 @@ interface SettingsState {
   setLanguage: (lang: AppLanguage) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setQuranFontScale: (scale: number) => void;
-  setShowTashkeel: (v: boolean) => void;
   setDailyReminder: (v: boolean) => void;
-  setQariId: (id: string) => void;
   setCorrectionSensitivity: (s: CorrectionSensitivity) => void;
   setMushafLayoutId: (id: MushafLayoutId) => void;
   setNightReadingMode: (mode: NightReadingMode) => void;
@@ -110,7 +106,12 @@ export function migrateSettingsState(
     : legacyRequestedIndopak
       ? 'indopak-15-line-hafs'
       : DEFAULT_MUSHAF_LAYOUT_ID;
-  const { mushafFont: _legacyMushafFont, ...currentState } = state;
+  const {
+    mushafFont: _legacyMushafFont,
+    showTashkeel: _legacyShowTashkeel,
+    qariId: _legacyQariId,
+    ...currentState
+  } = state as typeof state & { showTashkeel?: boolean; qariId?: string };
   // A widget added after this state was written must land on its default, not undefined.
   currentState.homeWidgets = { ...DEFAULT_HOME_WIDGETS, ...currentState.homeWidgets };
 
@@ -141,9 +142,7 @@ export const useSettingsStore = create<SettingsState>()(
       themeMode: DEFAULT_THEME_MODE,
       hasChosenThemeMode: false,
       quranFontScale: 0.58,
-      showTashkeel: true,
       dailyReminder: true,
-      qariId: 'mishary',
       correctionSensitivity: 'strict',
       mushafLayoutId: DEFAULT_MUSHAF_LAYOUT_ID,
       nightReadingMode: 'off',
@@ -160,9 +159,7 @@ export const useSettingsStore = create<SettingsState>()(
       setLanguage: (language) => set({ language }),
       setThemeMode: (themeMode) => set({ themeMode, hasChosenThemeMode: true }),
       setQuranFontScale: (quranFontScale) => set({ quranFontScale }),
-      setShowTashkeel: (showTashkeel) => set({ showTashkeel }),
       setDailyReminder: (dailyReminder) => set({ dailyReminder }),
-      setQariId: (qariId) => set({ qariId }),
       setCorrectionSensitivity: (correctionSensitivity) =>
         set({ correctionSensitivity }),
       setMushafLayoutId: (mushafLayoutId) => set({ mushafLayoutId }),
