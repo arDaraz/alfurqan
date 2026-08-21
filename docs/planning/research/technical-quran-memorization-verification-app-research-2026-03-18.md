@@ -12,6 +12,11 @@ web_research_enabled: true
 source_verification: true
 ---
 
+> **Superseded stack (noted 2026-08-21).** The Flutter, Hive, and BLoC recommendation below was not adopted.
+> The app was built with React Native and Expo, using `expo-sqlite` for the Quran data, `react-native-mmkv` for settings and progress, and Zustand for state.
+> The root `PRD.md` holds the current stack. Read every stack row below as a record of the 2026-03-18 research, not as guidance.
+> The rest of this research still stands, including the Tasmeea matching algorithm now implemented in `src/services/verification/tasmeeaMatcher.ts`.
+
 # Research Report: Technical
 
 **Date:** 2026-03-18

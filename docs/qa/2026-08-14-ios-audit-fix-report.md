@@ -4,11 +4,11 @@
 **Branch:** `feat/multi-mushaf-layouts`
 **Device used for the demos:** iPhone 15 Pro Simulator, iOS 17.5 (`CE305B18-C166-495A-9DA1-7F1500871355`)
 **Second device:** iPhone 15 Simulator, iOS 17.5 (`D7E685CA-2BD4-4CA0-BB19-73B6AD2BA417`), used for the Madani layout and the player
-**Demo screenshots:** `screenshots/2026-08-14-audit-fixes/`
+**Demo screenshots:** taken on the Simulator, not retained in the repository. Commit ecf00b7 removed every capture on 2026-08-21.
 
 ## Result
 
-All 20 confirmed issues are fixed. ISSUE-017 was already dispositioned by the audit as expected page geometry, so it is not treated as a defect here.
+All 20 confirmed issues are fixed. The audit already dispositioned the sparse pages 1-2 opening spread as expected page geometry, so it is not treated as a defect here. That note carries no issue number. The audit's numbering jumps from ISSUE-016 to ISSUE-018.
 
 - `npx tsc --noEmit` passes.
 - `npm test` passes.
@@ -20,33 +20,33 @@ Three extra defects were found while fixing and verifying. They are listed in [E
 
 Each fix was exercised on a real Simulator, not only by type checking or unit tests. Two kinds of evidence are used:
 
-- **Screenshot:** the app after the action, saved under `screenshots/2026-08-14-audit-fixes/`.
+- **Screenshot:** the app after the action, read on the Simulator. The captures are not retained in the repository.
 - **Accessibility tree:** the live element list read from the Simulator, which is the same source the audit used to report the accessibility defects.
 
 ## Issue index
 
 | ID | Severity | Fixed in | Demo |
 |---|---|---|---|
-| [ISSUE-001](#issue-001) | Medium | `MushafBottomToolbar.tsx`, `MushafScreenLayout.tsx`, `InfoSheet.tsx` | Screenshot |
-| [ISSUE-002](#issue-002) | Medium | `MushafScreenLayout.tsx`, `BookmarkSavedSnackbar.tsx`, `readingStore.ts` | Screenshot |
+| [ISSUE-001](#issue-001) | Medium | `MushafBottomToolbar.tsx`, `MushafScreenLayout.tsx`, `InfoSheet.tsx` | Simulator, capture not retained |
+| [ISSUE-002](#issue-002) | Medium | `MushafScreenLayout.tsx`, `BookmarkSavedSnackbar.tsx`, `readingStore.ts` | Simulator, capture not retained |
 | [ISSUE-003](#issue-003) | Medium | `recitationEngine.ts` | Accessibility tree |
-| [ISSUE-004](#issue-004) | Low | `PlayerSheet.tsx` | Screenshot |
-| [ISSUE-005](#issue-005) | Medium | `reciterStore.ts`, `ayahAudioCache.ts`, `PlayerSheet.tsx` | Screenshot |
-| [ISSUE-006](#issue-006) | Low | `BookmarksScreen.tsx` | Screenshot |
-| [ISSUE-007](#issue-007) | Medium | `BookmarkRow.tsx` | Screenshot |
-| [ISSUE-008](#issue-008) | Medium | `SurahListItem.tsx`, `HomeView.tsx` | Screenshot |
-| [ISSUE-009](#issue-009) | Medium | `JuzListItem.tsx`, `HomeView.tsx` | Screenshot |
+| [ISSUE-004](#issue-004) | Low | `PlayerSheet.tsx` | Simulator, capture not retained |
+| [ISSUE-005](#issue-005) | Medium | `reciterStore.ts`, `ayahAudioCache.ts`, `PlayerSheet.tsx` | Simulator, capture not retained |
+| [ISSUE-006](#issue-006) | Low | `BookmarksScreen.tsx` | Simulator, capture not retained |
+| [ISSUE-007](#issue-007) | Medium | `BookmarkRow.tsx` | Simulator, capture not retained |
+| [ISSUE-008](#issue-008) | Medium | `SurahListItem.tsx`, `HomeView.tsx` | Simulator, capture not retained |
+| [ISSUE-009](#issue-009) | Medium | `JuzListItem.tsx`, `HomeView.tsx` | Simulator, capture not retained |
 | [ISSUE-010](#issue-010) | High | `AyahResultRow.tsx` | Accessibility tree |
 | [ISSUE-011](#issue-011) | High | `FontSizeRow.tsx`, `Pill.tsx`, `settings.tsx` | Accessibility tree |
-| [ISSUE-012](#issue-012) | Medium | `settings.tsx`, `InfoSheet.tsx` | Screenshot |
-| [ISSUE-013](#issue-013) | High | `practice.tsx` | Screenshot |
-| [ISSUE-014](#issue-014) | High | `practice.tsx` | Screenshot |
-| [ISSUE-015](#issue-015) | High | `mushafHtml.ts`, `mushafHtmlLayout.ts` | Screenshot |
-| [ISSUE-016](#issue-016) | High | `mushafHtml.ts` | Screenshot |
-| [ISSUE-018](#issue-018) | High | `quranRepository.ts`, `SearchScreen.tsx` | Screenshot |
+| [ISSUE-012](#issue-012) | Medium | `settings.tsx`, `InfoSheet.tsx` | Simulator, capture not retained |
+| [ISSUE-013](#issue-013) | High | `practice.tsx` | Simulator, capture not retained |
+| [ISSUE-014](#issue-014) | High | `practice.tsx` | Simulator, capture not retained |
+| [ISSUE-015](#issue-015) | High | `mushafHtml.ts`, `mushafHtmlLayout.ts` | Simulator, capture not retained |
+| [ISSUE-016](#issue-016) | High | `mushafHtml.ts` | Simulator, capture not retained |
+| [ISSUE-018](#issue-018) | High | `quranRepository.ts`, `SearchScreen.tsx` | Simulator, capture not retained |
 | [ISSUE-019](#issue-019) | High | `OnboardingScreen.tsx`, `onboarding.tsx` | Accessibility tree |
-| [ISSUE-020](#issue-020) | High | `OnboardingScreen.tsx`, `onboarding.tsx` | Screenshot |
-| [ISSUE-021](#issue-021) | Medium | `MushafPage.tsx`, `mushafHtml.ts`, `mushafHtmlLayout.ts` | Screenshot |
+| [ISSUE-020](#issue-020) | High | `OnboardingScreen.tsx`, `onboarding.tsx` | Simulator, capture not retained |
+| [ISSUE-021](#issue-021) | Medium | `MushafPage.tsx`, `mushafHtml.ts`, `mushafHtmlLayout.ts` | Simulator, capture not retained |
 
 ---
 
@@ -59,6 +59,8 @@ Each fix was exercised on a real Simulator, not only by type checking or unit te
 **Fix:** The toolbar now owns its navigation. The microphone opens `/practice` and the List slot opens the Surah index at `/(tabs)`. The Info slot and the header's three-dot button both open a new page information sheet, `src/components/ui/InfoSheet.tsx`, which shows the surah, the juz, the page out of the layout's total, the selected Mushaf and its attribution. None of these values was on screen before.
 
 **Files:** `src/components/quran/MushafBottomToolbar.tsx`, `src/components/quran/MushafScreenLayout.tsx`, `src/components/quran/MushafReader.tsx`, `src/components/quran/ReaderHeader.tsx`, `src/components/ui/InfoSheet.tsx`, `src/constants/strings.ts`.
+
+_Superseded, 2026-08-21: commit 6fab23c changed the List slot to open `/(tabs)/search`. `/(tabs)` was the route this fix shipped._
 
 **Verification:** Pressing the toolbar Info button opens the sheet. Pressing the header three-dot button opens the same sheet.
 

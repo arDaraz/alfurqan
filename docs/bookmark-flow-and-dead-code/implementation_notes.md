@@ -1,6 +1,7 @@
 # Implementation notes
 
 Spec: `docs/bookmark-flow-and-dead-code/spec.md`
+Manual test report: `docs/bookmark-flow-and-dead-code/manual_test_report.md`
 Tracker: https://github.com/arDaraz/alfurqan/issues/7
 Branch: `bookmark-flow-and-dead-code`
 
@@ -30,6 +31,8 @@ Recorded from the design interview. Each was chosen by the repository owner.
 - **Deleting web support.** Considered because a single adapter is a hypothetical seam rather than a real one. The owner chose to keep web and unify the props type instead.
 - **Deleting the retired page lookup tests along with their functions.** Rejected because it would take page and juz resolution from thin coverage to none.
 - **Creating a second worktree for this work.** Rejected because the project documentation states the supported model is one active worktree on the shared Metro port at a time, so a second worktree would create the port conflict the documentation warns about. A branch in the existing checkout satisfies the requirement not to work on the default branch.
+
+  **Note added 21 August 2026.** The rule this rejection rests on is retired. The primary checkout keeps port 8081 and every linked worktree now gets its own stable port derived from repo plus branch, so several Metro servers can run at once. A second worktree would no longer create a port conflict. The current model is in `docs/DEVELOPMENT_SETUP.md` section 13.
 
 ## Findings during setup
 
@@ -68,6 +71,9 @@ Filled in as each step lands.
 | Remove the unreachable reader | Type check, tests, lint | Clean. 54 suites, 307 tests pass. |
 | Remove retired repository code | Type check, tests, lint | Clean. 54 suites, 300 tests pass. |
 | Remove settings, locale and audio dead code | Type check, tests, lint, launch and screenshot | Clean. 54 suites, 300 tests pass. Home screen renders identically and persisted reading position, streak and Qiblah survive the settings migration. |
+| Bookmark flow across every entry point | Manual test on the simulator, then re-verification of each fix | Recorded in `manual_test_report.md`. Seven reproducible defects found, all fixed and re-verified on the device. |
+
+Log closed 21 August 2026. The branch merged as pull request #8, merge commit `bfb6d3a`.
 
 ## Defects found and fixed while building the bookmark flow
 
@@ -132,3 +138,14 @@ The cause is the library's compiler plugin, which rewrote every element in the p
 Two things follow. Removing the library fixed a visual defect rather than causing one. And an unused dependency that rewrites every element in the project is not inert, so "nothing imports it" is not sufficient reason to consider it harmless. Everything else on the home screen renders identically before and after.
 
 The spec listed the non-hook language string accessor as having no callers. It has no production caller, but the strings test uses it, and it is the only way to read strings without rendering a React hook. It was kept. Removing it would have forced that test to render, which is a worse test for no gain.
+
+## Spec items not delivered
+
+Recorded 21 August 2026, after the merge, so the gap stays visible.
+
+**The "Reader adapters" section of the spec was not implemented.** That covers user stories 36 and 37.
+
+- Story 36, one shared props type for both reader adapters. Not delivered. `src/components/quran/MushafReader.tsx` line 34 and `src/components/quran/MushafReader.web.tsx` line 8 each still declare their own private `MushafReaderProps`. The two types differ, and nothing makes the compiler catch the divergence. The decision table above and the rejected alternative about deleting web support both assume this landed. It did not.
+- Story 37, correcting the web adapter's documentation. Not delivered. The docstring at `src/components/quran/MushafReader.web.tsx` lines 14 to 18 still says the placeholder loads the header and toolbar chrome for review. The component renders a divider, a title, a page indicator, and a caption. There is no chrome.
+
+**User story 35 lapsed rather than failed.** It asked that both contributor documentation files stay identical apart from their titles. `CLAUDE.md` was deleted after this work merged, in commit `e4fc8d0`, and `AGENTS.md` is now the only agent guide. There is no second file to keep in step, so the story no longer has a subject.

@@ -56,9 +56,9 @@ Separately, the code that no screen can reach is removed, and the contributor do
 32. As a contributor, I want persisted settings that nothing reads removed, so that the settings shape matches the settings that exist.
 33. As a contributor, I want the unused styling library removed from the build, so that the toolchain matches the code.
 34. As a contributor, I want the contributor documentation to name the styling approach the app actually uses, so that I do not start from a false premise.
-35. As a contributor, I want both contributor documentation files to stay identical apart from their titles, so that guidance does not diverge by tool.
-36. As a contributor, I want both reader adapters to satisfy one shared props type, so that the compiler catches divergence between platforms.
-37. As a contributor, I want the web reader adapter to describe what it renders, so that its documentation is not misleading.
+35. As a contributor, I want both contributor documentation files to stay identical apart from their titles, so that guidance does not diverge by tool. **Superseded 21 August 2026.** `CLAUDE.md` was deleted in commit `e4fc8d0` and `AGENTS.md` is now the only agent guide, so there is no second file to keep in step.
+36. As a contributor, I want both reader adapters to satisfy one shared props type, so that the compiler catches divergence between platforms. **Not delivered.** Each adapter still declares its own private `MushafReaderProps`.
+37. As a contributor, I want the web reader adapter to describe what it renders, so that its documentation is not misleading. **Not delivered.** The docstring still describes chrome the adapter does not render.
 38. As a maintainer, I want the settings store version raised when persisted fields are removed, so that existing installs migrate cleanly.
 39. As a maintainer, I want an existing install to keep its bookmarks across this change, so that the cleanup costs no reader their data.
 40. As a maintainer, I want the deletions to change no behaviour, so that a regression can only come from the bookmark work.
@@ -96,13 +96,15 @@ Removed in this order, each independently verifiable:
 2. The retired renderer adapters in the Qur'an repository, together with the retired page lookup functions and the exports that no caller reaches. The tests covering the retired page lookups are rewritten to cover the layout aware functions the app uses, which currently have no tests.
 3. The audio remote handler registration, whose body is a comment, together with its handler type and the call that constructs every handler for it. The empty search result module, the language string accessor with no callers, and the device language helper with no callers. The reciter and tashkeel settings fields that nothing reads, with the settings store version raised and a migration branch added.
 4. The unused styling library, last and on its own, because it touches the Babel and Metro configuration and therefore requires a native rebuild to prove. This includes its dependencies, its configuration file, its global stylesheet, its type declarations, its Babel preset and JSX source setting, its Metro wrapper, its Jest transform pattern, and the stylesheet import in the root layout.
-5. The contributor documentation, corrected to describe the stylesheet and theme hook approach the app actually uses. The two contributor documentation files stay identical apart from their titles.
+5. The contributor documentation, corrected to describe the stylesheet and theme hook approach the app actually uses. The two contributor documentation files stay identical apart from their titles. **Superseded 21 August 2026.** The documentation correction landed. The two-file rule did not survive: `CLAUDE.md` was deleted in commit `e4fc8d0` and `AGENTS.md` is now the only agent guide.
 
 ### Reader adapters
 
-- The native and web reader adapters share one exported props type. The web adapter accepts the full set and uses the properties it can honour on a platform with no pager.
-- The web adapter's documentation is corrected to describe what it renders. It currently claims to render playback and toolbar chrome that it does not render.
-- Web support is retained.
+**Not delivered. Noted 21 August 2026, after pull request #8 merged.** Nothing in this section was implemented. The text below is kept as written so the gap stays visible.
+
+- The native and web reader adapters share one exported props type. The web adapter accepts the full set and uses the properties it can honour on a platform with no pager. **Not delivered.** `src/components/quran/MushafReader.tsx` line 34 and `src/components/quran/MushafReader.web.tsx` line 8 each declare a separate private `MushafReaderProps`.
+- The web adapter's documentation is corrected to describe what it renders. It currently claims to render playback and toolbar chrome that it does not render. **Not delivered.** The docstring at `src/components/quran/MushafReader.web.tsx` lines 14 to 18 still makes that claim.
+- Web support is retained. Delivered.
 
 ## Testing Decisions
 
@@ -152,4 +154,6 @@ The styling library removal is the only step that requires a native rebuild. Cap
 
 Two user visible defects outside this scope were found in the same area and are recorded here so they are not lost. The settings toggle uses a physical margin for its knob and renders inverted when the app is in English. The font size row hardcodes the Qur'an font and right to left direction, so its English label renders in Arabic type and the wrong direction.
 
-Nothing enforces that the English and Arabic string sets stay in step. The type that would check it is cast away, and no test asserts key parity. The two sets match today at 138 top level keys each.
+**Both fixed 21 August 2026 in the same pull request, commit `6fab23c`.** The knob now uses a start relative margin. The font size row picks its font and direction from the app language. Both were re-verified on the simulator in `manual_test_report.md`.
+
+Nothing enforces that the English and Arabic string sets stay in step. The type that would check it is cast away, and no test asserts key parity. At the time of writing the two sets match at 138 top level keys each.

@@ -300,8 +300,14 @@ After the app launches:
 ```bash
 xcrun simctl list devices | grep Booted
 # Name the device. `booted` is ambiguous once a second Simulator runs.
-xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png   # worktree device
-xcrun simctl io "iPhone 17 Pro" screenshot /tmp/alfurqan-screen.png              # or the shared device
+
+# Primary checkout: name the shared device the line above reported.
+xcrun simctl io "iPhone 17 Pro" screenshot /tmp/alfurqan-screen.png
+
+# Linked worktree only: `wt new` names the device `alfurqan <branch>`, and the
+# worktree directory carries that branch name. In the primary checkout this
+# form builds the name "alfurqan alfurqan", which is not a real device.
+xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png
 ```
 
 Inspect the screenshot and confirm that Metro contains no red-screen or missing-native-module error. Then run the quality checks:
@@ -478,8 +484,8 @@ Create a separate Simulator device by hand (see “Use a separate Simulator devi
 | Working files and `node_modules` | Isolated by directory | Run `npm install` in every worktree. A dependency change in one does not update another's installation. |
 | Generated `ios/` and `android/` | Isolated by directory | Run native regeneration in the worktree whose config changed. Do not copy generated native folders between worktrees. |
 | Metro port | Isolated per worktree | The primary checkout uses 8081; each linked worktree gets a stable port derived by worktrunk from repo plus branch. Several Metro servers can run at once. |
-| iOS Simulator runtimes/devices | Shared across the Mac | All worktrees can boot the installed iOS 26.5 runtime and existing simulator devices. |
-| Installed app on one Simulator device | Shared by bundle ID | The last worktree that installs `com.ahmeddaraz.alfurqan` replaces the earlier worktree's app binary on that same Simulator device. |
+| iOS Simulator runtimes/devices | Shared across the Mac | All worktrees can boot whichever runtimes and Simulator devices this Mac has installed. Run `xcrun simctl list runtimes` to see them. |
+| Installed app on one Simulator device | Shared by bundle ID | The last worktree that installs `com.alfurqan.app` replaces the earlier worktree's app binary on that same Simulator device. |
 | App data on one Simulator device | Shared by bundle ID/container | State, MMKV preferences, and SQLite data can carry across worktree handoffs on that device. |
 | Xcode DerivedData | Machine-wide, but normally path-hashed | Builds usually remain separate, but do not assume one worktree's native output proves another worktree builds. |
 
@@ -507,14 +513,14 @@ The output includes this worktree's port plus the listener's PID, command, and w
 
 Each worktree has its own Metro port, so worktree B can start without stopping A. The handoff below is needed only when the two worktrees share one Simulator device or one installed native build. A new task must not assume that the currently running Simulator app or Metro process belongs to its worktree.
 
-In worktree A:
+Leave worktree A's Metro running. Stop it only when A's branch predates per-worktree ports. Such a branch pins Metro to 8081 in every worktree, so it takes the primary checkout's port, and `npm run dev:port` in a linked worktree watches a different port and reports nothing:
 
 ```bash
 cd /path/to/worktree-a
 npm run dev:stop
 ```
 
-If its branch predates the safe stop script, press `Ctrl+C` in the terminal that is running Metro. Use `npm run dev:port` from the updated checkout to identify the old PID/path, then stop it from the owning worktree. Do not kill an unrelated Node process by name.
+If that branch also predates the safe stop script, press `Ctrl+C` in the terminal that is running Metro. When no terminal is left, find the listener with `lsof -tiTCP:8081 -sTCP:LISTEN`, confirm the PID's working directory is that worktree, and stop it from there. Do not kill an unrelated Node process by name.
 
 Then in worktree B:
 

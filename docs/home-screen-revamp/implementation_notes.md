@@ -13,7 +13,8 @@ Streak two-up, then Continue Reading, then Khatam. Tasmīʿ is a widget too but 
 mock values.
 
 - `adhan@^4.4.4` — offline prayer-time and Qibla math. Pure JS, no native code.
-- `expo-location@~55.1.12` — coordinates, reverse geocode for the city name, and the compass.
+- `expo-location@~55.1.12` - coordinates, reverse geocode for the city name, and the compass. That
+  was the pin when this work landed. As of 2026-08-21 `package.json` pins `~57.0.10`.
 
 `expo-sensors` was installed first and then removed. `Location.watchHeadingAsync` already returns a
 true-north heading and handles device orientation, so a raw magnetometer read would have been more
@@ -63,6 +64,7 @@ New:
 - `src/hooks/usePrayerTimes.ts`
 - `src/hooks/useCompassHeading.ts`
 - `src/components/home/widgets/{WidgetCard,PrayerBand,QiblahWidget,StreakWidget,ContinueReadingWidget,KhatamWidget,TasmeeWidget}.tsx`
+- `src/components/home/widgets/NumeralText.tsx` (added later by follow-up commit 4e12868)
 - `src/components/settings/HomeWidgetsGroup.tsx`
 - `src/components/search/SurahBrowser.tsx`
 
@@ -74,6 +76,11 @@ Deleted: `src/components/home/GreetingCard.tsx`, `src/components/home/SearchBar.
 ## Verification
 
 - `npx tsc --noEmit` — clean.
-- `npm test` — see the run recorded below.
+- `npm test` - the run at the time was never written down. Re-run on `main` on 2026-08-21: 56 suites
+  and 305 tests, all passing.
 - `npm run lint` — no new warnings; every remaining warning predates this change.
-- iOS simulator — see below.
+- iOS simulator - the session notes were never written down. What it produced is on record: the
+  follow-up commit 4e12868 fixed three defects on this screen. The Resume pill did not render,
+  because `Pressable` ignores a function-form style. The Qiblah north marker did not follow the
+  compass heading. Digits inside Arabic sentences took ayah-marker ornaments, which `NumeralText`
+  now prevents.
