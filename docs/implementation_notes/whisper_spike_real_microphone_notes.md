@@ -181,14 +181,27 @@ two that writes the script the matcher needs.
 
 Recorded here because they bound what the measurements prove.
 
-- **The host microphone is unusable on this machine.** macOS denies microphone
-  access process-wide: `sox -d` records three seconds of pure silence, maximum
-  amplitude 0.000000, for the terminal as well as for the Simulator. Nothing
-  here can capture live audio until someone grants Microphone permission in
-  System Settings. The in-app path was verified up to that boundary: the iOS
-  permission prompt appears with our usage string, permission is granted, the
-  session switches to `allowsRecording: true`, and whisper.cpp opens a 16 kHz
-  mono input queue. Only the host input is silent.
+- **The iOS Simulator cannot capture audio here; the host microphone can.** An
+  earlier revision of this file claimed macOS denied the microphone
+  process-wide. That was wrong, and it was wrong because only the default input
+  device was tested. Testing all three inputs shows the built-in MacBook
+  microphone and the Krisp virtual device record silence at -91 dB, while the
+  `4K SlimFit Cam` USB input records real signal at -4.3 dB, 0.59 peak amplitude.
+
+  With that device set as the system input, the Simulator still captures nothing.
+  `AudioQueueStartWithFlags` returns -66628 on every attempt and the converter
+  reports `AudioConverterFillComplexBuffer returned -50` with zero bytes. That
+  does not change when the input device changes, when the simulator is shut down
+  and rebooted, or when the device runs under `Simulator.app` rather than
+  headless. `Simulator` never appears in System Settings > Privacy & Security >
+  Microphone, so it never asks for the permission in the first place.
+
+  Read that as the Simulator not offering audio input in this environment, not as
+  a defect in the app. Everything the app controls works: the iOS permission
+  prompt appears with our usage string, permission is granted, the session
+  switches to `allowsRecording: true`, and whisper.cpp opens a 16 kHz mono input
+  queue. **The live microphone path needs a real iPhone**, which is the same
+  hardware the device-matrix criteria need.
 - **The measurements therefore come from a recorded WAV** fed through the same
   `RealtimeTranscriber`, the same VAD, and the same decode path. Everything
   after audio capture is identical to the microphone path.
