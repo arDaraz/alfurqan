@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tajweed Assessment Plan</title>
+<style>
+:root {
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --fg: #202228;
+  --muted: #595D69;
+  --border: #C3C6CC;
+  --border-soft: #E1E3E7;
+  --accent: #2947A5;
+  --accent-soft: #EDF1FB;
+  --row-hover: #F2F3F5;
+  --ok: #2F6B44;
+  --ok-bg: #EAF4EE;
+  --warn: #8A5A12;
+  --warn-bg: #FBF3E4;
+  --bad: #A33327;
+  --bad-bg: #FBECEA;
+  --code-bg: #F2F3F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191F;
+    --surface: #202228;
+    --fg: #E7E9ED;
+    --muted: #A0A4AD;
+    --border: #3A3D46;
+    --border-soft: #2C2F37;
+    --accent: #8CA3E4;
+    --accent-soft: #1C2E6A;
+    --row-hover: #262930;
+    --ok: #94D3AC;
+    --ok-bg: #1B3226;
+    --warn: #E6C07A;
+    --warn-bg: #362A16;
+    --bad: #F0A79C;
+    --bad-bg: #3A1F1B;
+    --code-bg: #2A2D35;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+}
+/* The main column width follows the window, freeing space for wide content when the review rail collapses. */
+main { max-width: clamp(880px, 100% - 320px, 1400px); margin: 0 auto; padding: 40px 20px 80px; }
+/* Prose keeps an 840px measure so long lines stay readable in a wide window. */
+main > * { max-width: 840px; }
+/* Tables, code, notes, headings, and the footer skip the 840px prose cap and span the full column. */
+main > :is(h1, h2, h3, footer, .scroll, pre, table, .cards, svg, img),
+main > :has(.scroll, pre, table, .cards, svg, img) { max-width: none; }
+h1 { font-size: 30px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 22px; margin: 48px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-soft); }
+h3 { font-size: 17px; margin: 28px 0 8px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); }
+.lede { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
+code, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+
+/* Wide content scrolls inside a .scroll wrapper or pre block, so the page never scrolls sideways. */
+.scroll { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--surface); }
+pre { overflow-x: auto; background: var(--code-bg); padding: 14px 16px; border-radius: 10px; margin: 0 0 20px; }
+pre code { background: none; padding: 0; }
+img, svg { max-width: 100%; height: auto; }
+
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+caption { text-align: left; padding: 12px 14px 0; color: var(--muted); font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: top; font-size: 14.5px; }
+th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--row-hover); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-ok { background: var(--ok-bg); color: var(--ok); }
+.b-warn { background: var(--warn-bg); color: var(--warn); }
+.b-bad { background: var(--bad-bg); color: var(--bad); }
+.note { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 0 0 20px; font-size: 15px; }
+.card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 10px; padding: 16px 18px; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+/* min-width: 0 lets a card shrink below its content so internal .scroll or pre blocks handle overflow. */
+.cards > * { min-width: 0; }
+@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+
+/* Decision checklists live in fieldsets, not in prose asking the reader to reply. */
+fieldset { border: 1px solid var(--border-soft); border-radius: 10px; background: var(--surface); padding: 14px 18px 16px; margin: 0 0 20px; }
+legend { font-weight: 600; padding: 0 8px; font-size: 15px; }
+.choice { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
+.choice input { margin-top: 5px; flex: none; width: 16px; height: 16px; accent-color: var(--accent); }
+.choice label { cursor: pointer; }
+.why { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+input[type="text"], input[type="number"], textarea, select {
+  font: inherit; color: inherit; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; max-width: 100%;
+}
+button { font: inherit; color: #fff; background: var(--accent); border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border-soft); color: var(--muted); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<main>
+<!-- arev:content -->
+<h1>Tajweed Assessment Plan</h1>
+<p class="lede">Technical implementation plan for tajweed (pronunciation) assessment in the alfurqan app. Split out of the Memorization Engine Plan because the two are separate engines: memorization checking is text alignment, tajweed assessment is acoustic analysis. Everything here depends on the memorization engine shipping first.</p>
+
+<h2>Phase 3: Tajweed assessment</h2>
+<p>Goal: after a session, show which expected tajweed rules were likely applied and which need review, without overclaiming. Separate engine and data, running only on words Phase 2 confirmed as textually correct. A word that is not text-aligned is <em>not evaluated</em>, never <em>wrong tajweed</em>.</p>
+
+<pre class="mermaid" id="phase3-pipeline">
+flowchart LR
+  AU[Session audio, opt-in] --> FA[Forced alignment]
+  CW[Confirmed words] --> FA
+  RI[Rule instances] --> DET[Rule detectors]
+  FA --> DET
+  DET --> CF[Confidence filter]
+  CF --> RPT[After-session report]
+</pre>
+
+<h3>3.1 Rule reference data</h3>
+<ul>
+  <li>Seed table <code>tajweed_rule_instances(id, word_key, rule_type, char_start, char_end, params_json)</code> from a tajweed-annotated Uthmani source for Hafs. <code>params_json</code> holds rule parameters such as the expected madd length in harakat.</li>
+  <li>Seed-time validation cross-checks each instance's characters against <code>quran_words.text_uthmani</code>.</li>
+  <li>All rules are seeded. A separate in-code registry declares which rule types the current detector version supports, so unsupported rules are never shown as failed.</li>
+</ul>
+
+<h3>3.2 Displaying expected rules</h3>
+<ul>
+  <li>Word inspector first: tap a word (or a flagged word in the report) to see its rule instances with names and short explanations. No audio work needed, and it is immediately useful for study.</li>
+  <li>Glyph recoloring in the QCF layout is deferred. Span-level coloring in the IndoPak Unicode layout can come later from <code>char_start</code>/<code>char_end</code>.</li>
+</ul>
+
+<h3>3.3 Assessment pipeline (after-session only)</h3>
+<ul>
+  <li>With tajweed enabled, keep per-ayah audio (opt-in) plus whisper word timestamps from the Phase 2 session.</li>
+  <li><strong>Segmentation spike:</strong> whisper word timestamps are too coarse for phonemes. Evaluate a small quantized CTC phoneme model through ONNX Runtime for forced alignment, with DTW over whisper token timestamps as the cheap first cut. Phoneme timing quality decides everything downstream.</li>
+  <li>One detector module per rule family, each with its own confidence and its own precision gate.</li>
+</ul>
+<div class="scroll"><table>
+<thead><tr><th>Rule family</th><th>Approach</th><th>Release</th></tr></thead>
+<tbody>
+<tr><td>Madd (elongation)</td><td>Vowel duration against the user's own baseline harakah duration, calibrated from their correct short vowels in the same session. Mostly DSP, no trained model, and speed-independent by construction.</td><td>Alpha, first</td></tr>
+<tr><td>Ghunnah</td><td>Nasalization classifier around noon and meem contexts. Needs labeled data and a small model. Ships only if precision on the validation set is acceptable.</td><td>Second</td></tr>
+<tr><td>Qalqalah</td><td>Burst and release detection at the five letters in sukoon positions.</td><td>Third</td></tr>
+<tr><td>Makharij, sifat</td><td>Phoneme-level mispronunciation model.</td><td>Out of scope until validated</td></tr>
+</tbody>
+</table></div>
+<ul>
+  <li><strong>Output states per rule instance:</strong> <code>passed</code>, <code>possible issue</code>, <code>not evaluated</code>, <code>low confidence</code>, <code>unsupported</code>. Feedback copy never claims certainty ("possible short elongation, review this word").</li>
+  <li>Scores count only evaluated, supported instances in the denominator.</li>
+</ul>
+
+<h3>3.4 Teacher validation loop</h3>
+<p>Gate before any rule ships:</p>
+<ul>
+  <li>Export flagged and passed segments (audio clip, word, rule, verdict) as a review bundle.</li>
+  <li>Qualified teachers label each verdict correct or wrong.</li>
+  <li>Per-rule precision decides release, and thresholds are tuned against this set. In-app "this feedback was wrong" disputes feed the same loop.</li>
+</ul>
+
+<h3>Phase 3 order of work</h3>
+<ol>
+  <li>Rule data seed plus word inspector UI.</li>
+  <li>Segmentation spike: forced alignment quality on device.</li>
+  <li>Madd detector, after-session report, segment replay.</li>
+  <li>Teacher validation tooling, then ghunnah and qalqalah behind the supported-rules registry.</li>
+</ol>
+
+<h3>Phase 3 acceptance criteria</h3>
+<div class="card">
+  <div class="choice"><input type="checkbox" id="p3-aligned"><label for="p3-aligned">Tajweed results appear only for words that were text-confirmed in the session.</label></div>
+  <div class="choice"><input type="checkbox" id="p3-inspector"><label for="p3-inspector">Tapping a word shows its expected tajweed rules with a short explanation.</label></div>
+  <div class="choice"><input type="checkbox" id="p3-states"><label for="p3-states">Every rule instance reports one of: passed, possible issue, not evaluated, low confidence, unsupported.</label></div>
+  <div class="choice"><input type="checkbox" id="p3-replay"><label for="p3-replay">The user can replay the audio segment behind any flagged rule.</label></div>
+  <div class="choice"><input type="checkbox" id="p3-score"><label for="p3-score">Rule scores exclude unsupported and low-confidence instances from the denominator.</label></div>
+  <div class="choice"><input type="checkbox" id="p3-teacher"><label for="p3-teacher">A rule ships only after its precision passes the teacher-labeled validation set.</label></div>
+</div>
+
+
+<h2>Risks</h2>
+<div class="scroll"><table>
+<thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Tajweed engine overclaims</td><td><span class="badge b-bad">high</span></td><td>After-session only, conservative copy, per-rule precision gate with teacher labels.</td></tr>
+<tr><td>Phoneme timing too coarse on device</td><td><span class="badge b-bad">high</span></td><td>The segmentation spike is the gate: no detector ships on timing the spike cannot prove.</td></tr>
+<tr><td>Labeled data for ghunnah and qalqalah</td><td><span class="badge b-warn">medium</span></td><td>Madd ships first because it needs no trained model. Classifier rules wait for the teacher-labeled set.</td></tr>
+</tbody>
+</table></div>
+
+<footer>Plan derived from the alfurqan source tree on 2026-08-21. Depends on the memorization engine plan.</footer>
+<!-- /arev:content -->
+</main>
+</body>
+</html>

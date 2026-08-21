@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memorization Engine Plan</title>
+<style>
+:root {
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --fg: #202228;
+  --muted: #595D69;
+  --border: #C3C6CC;
+  --border-soft: #E1E3E7;
+  --accent: #2947A5;
+  --accent-soft: #EDF1FB;
+  --row-hover: #F2F3F5;
+  --ok: #2F6B44;
+  --ok-bg: #EAF4EE;
+  --warn: #8A5A12;
+  --warn-bg: #FBF3E4;
+  --bad: #A33327;
+  --bad-bg: #FBECEA;
+  --code-bg: #F2F3F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191F;
+    --surface: #202228;
+    --fg: #E7E9ED;
+    --muted: #A0A4AD;
+    --border: #3A3D46;
+    --border-soft: #2C2F37;
+    --accent: #8CA3E4;
+    --accent-soft: #1C2E6A;
+    --row-hover: #262930;
+    --ok: #94D3AC;
+    --ok-bg: #1B3226;
+    --warn: #E6C07A;
+    --warn-bg: #362A16;
+    --bad: #F0A79C;
+    --bad-bg: #3A1F1B;
+    --code-bg: #2A2D35;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+}
+/* The main column width follows the window, freeing space for wide content when the review rail collapses. */
+main { max-width: clamp(880px, 100% - 320px, 1400px); margin: 0 auto; padding: 40px 20px 80px; }
+/* Prose keeps an 840px measure so long lines stay readable in a wide window. */
+main > * { max-width: 840px; }
+/* Tables, code, notes, headings, and the footer skip the 840px prose cap and span the full column. */
+main > :is(h1, h2, h3, footer, .scroll, pre, table, .cards, svg, img),
+main > :has(.scroll, pre, table, .cards, svg, img) { max-width: none; }
+h1 { font-size: 30px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 22px; margin: 48px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-soft); }
+h3 { font-size: 17px; margin: 28px 0 8px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); }
+.lede { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
+code, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+
+/* Wide content scrolls inside a .scroll wrapper or pre block, so the page never scrolls sideways. */
+.scroll { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--surface); }
+pre { overflow-x: auto; background: var(--code-bg); padding: 14px 16px; border-radius: 10px; margin: 0 0 20px; }
+pre code { background: none; padding: 0; }
+img, svg { max-width: 100%; height: auto; }
+
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+caption { text-align: left; padding: 12px 14px 0; color: var(--muted); font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: top; font-size: 14.5px; }
+th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--row-hover); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-ok { background: var(--ok-bg); color: var(--ok); }
+.b-warn { background: var(--warn-bg); color: var(--warn); }
+.b-bad { background: var(--bad-bg); color: var(--bad); }
+.note { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 0 0 20px; font-size: 15px; }
+.card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 10px; padding: 16px 18px; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+/* min-width: 0 lets a card shrink below its content so internal .scroll or pre blocks handle overflow. */
+.cards > * { min-width: 0; }
+@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+
+/* Decision checklists live in fieldsets, not in prose asking the reader to reply. */
+fieldset { border: 1px solid var(--border-soft); border-radius: 10px; background: var(--surface); padding: 14px 18px 16px; margin: 0 0 20px; }
+legend { font-weight: 600; padding: 0 8px; font-size: 15px; }
+.choice { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
+.choice input { margin-top: 5px; flex: none; width: 16px; height: 16px; accent-color: var(--accent); }
+.choice label { cursor: pointer; }
+.why { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+input[type="text"], input[type="number"], textarea, select {
+  font: inherit; color: inherit; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; max-width: 100%;
+}
+button { font: inherit; color: #fff; background: var(--accent); border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border-soft); color: var(--muted); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<main>
+<!-- arev:content -->
+<h1>Memorization Engine Plan</h1>
+<p class="lede">Technical implementation plan for the memorization engine (live recitation checking) in the alfurqan app. Grounded only in the current source code: the verification services, the playback engine, the mushaf renderer, and the seed scripts. Tajweed assessment lives in its own plan, the Tajweed Assessment Plan.</p>
+
+<h2>Verified code baseline</h2>
+<p>What the codebase already provides, and the gaps the plan must fill.</p>
+<div class="scroll"><table>
+<thead><tr><th>Area</th><th>State</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Word identity</td><td><span class="badge b-ok">exists</span></td><td>Every word in both layouts carries the stable key <code>surah:ayah:word_position</code>. The WebView renderer emits it as <code>data-wk</code> on each word span.</td></tr>
+<tr><td>Highlight channel</td><td><span class="badge b-ok">exists</span></td><td><code>window.setPlayingAyah</code> plus <code>injectJavaScript</code> already drive ayah-level highlight from a service. Word-level states reuse the same channel.</td></tr>
+<tr><td>Text normalizer</td><td><span class="badge b-ok">exists</span></td><td><code>quranTextNormalizer.ts</code> strips tashkeel, dagger alef, annotation marks, and unifies alef variants. Unit tested.</td></tr>
+<tr><td>Matcher seed</td><td><span class="badge b-warn">partial</span></td><td><code>tasmeeaMatcher.ts</code> classifies wrong, skipped, and repeated words, but only with exact token equality and one-step lookahead. Real ASR output needs fuzzy matching and a sliding window.</td></tr>
+<tr><td>Unicode word text</td><td><span class="badge b-warn">partial</span></td><td>The IndoPak pack stores per-word <code>semantic_text</code>. The default Madani table (<code>mushaf_words</code>) stores only QCF glyph codes. Full Uthmani text exists only per ayah.</td></tr>
+<tr><td>Mic capture + ASR</td><td><span class="badge b-bad">missing</span></td><td>No microphone module and no speech recognition anywhere. <code>expo-audio</code> handles playback only.</td></tr>
+<tr><td>Session persistence</td><td><span class="badge b-bad">missing</span></td><td>No tables or stores for recitation sessions, events, or accuracy.</td></tr>
+<tr><td>Engine naming</td><td><span class="badge b-warn">collision</span></td><td><code>RecitationEngine</code> is the audio playback engine. The listening engine must be a separate service (<code>PracticeEngine</code>).</td></tr>
+</tbody>
+</table></div>
+
+<div class="note">Core rule of the whole plan: evaluation compares normalized Unicode words keyed by <code>surah:ayah:position</code>. Page fonts and glyph codes (<code>codeV2</code>) stay a rendering concern and never enter the matcher. The core engine also owns feedback: every committed error event drives the visual state and the haptic pulse from the same confidence policy, so haptics are an engine output, not a UI afterthought.</div>
+
+<h2>Scope</h2>
+<div class="scroll"><table>
+<thead><tr><th>In scope</th><th>Out of scope</th></tr></thead>
+<tbody>
+<tr><td>On-device word-level recitation checking for a surah the user picks</td><td>Cloud or server-side recognition. Out: privacy default is local processing, and no backend exists.</td></tr>
+<tr><td>Word highlighting in both mushaf layouts through the existing canonical key</td><td>Tajweed assessment of any kind. Out: separate engine, covered by the Tajweed Assessment Plan.</td></tr>
+<tr><td>Haptic and visual correction, session accuracy, a session report, and mistake replay when audio storage is on</td><td>Certification or grading of a reciter. Out: the product gives assistive feedback, and a teacher stays the authority.</td></tr>
+</tbody>
+</table></div>
+
+<h2>Phase 2: Memorization engine</h2>
+<p>Goal: the user selects a surah to recite and practice it. The app follows word by word, flags wrong, skipped, repeated, and reordered words, highlights the current word in the active layout, gives haptic feedback, and reports session accuracy. The engine internally works on any word range, so ayah-range and page scopes can ship later without rework, but the product surface for this phase is surah selection.</p>
+
+<pre class="mermaid" id="phase2-pipeline">
+flowchart LR
+  MIC[Microphone] --> WR[whisper.rn ASR + VAD]
+  WR --> SEG[Final segments]
+  SEG --> NORM[Normalize + tokenize]
+  NORM --> AL[Alignment engine]
+  AL --> EV[Session events]
+  EV --> ST[practiceStore]
+  ST --> HI[Word highlight]
+  ST --> HA[Haptics]
+  ST --> DB[SQLite session log]
+</pre>
+
+<h3>2.1 Reference word data</h3>
+<p>Goal: one layout-independent table of per-word Uthmani text with precomputed normalized form.</p>
+<ul>
+  <li>New seed table <code>quran_words(surah_number, ayah_number, word_position, text_uthmani, text_normalized)</code>, sourced from the same upstream as the ayah text.</li>
+  <li><code>text_normalized</code> is computed at seed time with the existing <code>normalizeQuranText</code>, so runtime never normalizes reference text.</li>
+  <li>Seed-time validation: per ayah, the word count must match the max word position with <code>char_type='word'</code> in both layout tables. A mismatch fails the seed, not the runtime.</li>
+  <li>New repository function <code>getExpectedWords(scope)</code> returning <code>{ key, textUthmani, textNormalized }[]</code>. Surah scope is what this phase ships; the function also accepts an ayah range or page so later phases need no rework.</li>
+</ul>
+<p>Verify: seed passes validation for all 6,236 ayahs, and a unit test proves the scope loader joins cleanly against both layouts.</p>
+
+<h3>2.2 Audio capture and ASR</h3>
+<p>Goal: streaming Arabic transcription on device with one native dependency.</p>
+<ul>
+  <li><code>whisper.rn</code> (whisper.cpp binding). Its realtime transcriber covers mic capture, voice activity detection, and streaming transcription in one module. Needs prebuild, an iOS mic permission string, and Android <code>RECORD_AUDIO</code>.</li>
+  <li>Model strategy: bundle a small quantized model, download a larger one on demand, copying the download pattern from <code>ayahAudioCache</code>.</li>
+  <li>16 kHz mono. VAD silence events double as the long-pause detector.</li>
+  <li>Rejected: OS speech recognizers. Their language models target modern Arabic, cannot be constrained to Quranic vocabulary, and some routes leave the device.</li>
+  <li>Audio session rule: listening and playback are mutually exclusive. Starting a session stops <code>RecitationEngine</code> and switches the audio mode to record, and reverses that on stop.</li>
+</ul>
+<p>Verify: the go/no-go spike (milestone 1) logs latency and memory on a real iPhone and a mid-range Android against a hardcoded Al-Fatiha scope.</p>
+
+<h3>2.3 Alignment engine</h3>
+<p>Goal: turn noisy transcript tokens into confident word-level decisions. Pure TypeScript, extending the existing matcher, fully unit-testable.</p>
+<ul>
+  <li><strong>Fuzzy equality.</strong> Replace exact match with the existing Levenshtein ratio (<code>tokenConfidence</code>) at a configurable threshold near 0.75.</li>
+  <li><strong>Sliding window.</strong> Compare each observed token against <code>expected[i - backtrack .. i + forward]</code>. The best-scoring window position decides the classification.</li>
+  <li><strong>Stability gating, two speeds.</strong> Whisper partials mutate, so the engine runs two decision lanes. The fast lane advances the current-word highlight from streaming partials, so the pointer keeps pace with fast recitation at sub-second latency. The slow lane commits error flags only from final segments, and an error must survive the next segment before it fires haptics (two-strike rule). Until then the word shows the <code>uncertain</code> state. Target: error flags land within about 1.5 seconds at a normal pace; the spike measures the real number and tunes segment length against it.</li>
+  <li><strong>Pause tolerance.</strong> The user may pause or hesitate between words. Silence is never an error: on a VAD silence event the engine holds the pointer and waits for the voice to return, and only past a long configurable threshold does it give a gentle optional nudge.</li>
+  <li><strong>Multi-word repetition.</strong> Match runs of tokens, not single tokens, so a repeated phrase is one event.</li>
+  <li>Every event carries a confidence so the feedback layer can suppress weak corrections.</li>
+</ul>
+<pre class="mermaid" id="aligner-decisions">
+flowchart TD
+  T[Observed token] --> W{Match in window?}
+  W -->|at pointer| OK[Correct, advance]
+  W -->|elsewhere| POS{Ahead or behind?}
+  POS -->|ahead| SK[Skipped words, jump]
+  POS -->|behind| RP[Repetition]
+  W -->|no match| SIM{Similar to expected?}
+  SIM -->|yes| SUB[Substitution]
+  SIM -->|no| ADD[Addition, hold pointer]
+</pre>
+<p>Verify: fixture tests replay recorded transcripts of correct recitation, a skip, a repeat, and a substitution, and assert the emitted event sequence. The ASR itself is the only part that needs a device.</p>
+
+<h3>2.4 Session engine and state</h3>
+<p>Goal: one service owns the session lifecycle, one store feeds the UI.</p>
+<ul>
+  <li>New service <code>PracticeEngine</code>, parallel to the playback <code>RecitationEngine</code>: loads scope words, owns the whisper session, feeds finals to the matcher, applies the confidence policy, drives the store and the WebView.</li>
+  <li>New transient Zustand store <code>practiceStore</code>: session status, current word key, per-word state map, event list, elapsed time. Same pattern as <code>recitationStore</code>.</li>
+  <li>Persistence in the existing SQLite database: <code>practice_sessions</code> and <code>practice_events</code>. Raw audio is stored only when the user opts in.</li>
+</ul>
+<details><summary>Session schema draft</summary>
+<pre><code>practice_sessions(id, scope_type, scope_start_key, scope_end_key,
+                  started_at, ended_at, asr_model_version, accuracy)
+
+practice_events(id, session_id, timestamp_ms, event_type,
+                word_key, observed_text, confidence)
+
+event_type: word_correct | substituted | skipped | repeated
+          | added | jump | pause | uncertain</code></pre>
+</details>
+<p>Verify: a full session on the practice screen survives start, pause, stop, and app background without leaking the mic or the audio session.</p>
+
+<h3>2.5 Highlighting in the active layout</h3>
+<p>Goal: word states render identically in the Madani glyph layout and the IndoPak Unicode layout.</p>
+<ul>
+  <li>Add <code>window.setPracticeStates(states)</code> to <code>mushafHtml.ts</code> next to <code>setPlayingAyah</code>, keyed by <code>data-wk</code>: <code>current</code>, <code>correct</code>, <code>wrong</code>, <code>skipped</code>, <code>uncertain</code>.</li>
+  <li>Both renderers emit the same spans, so one API covers both layouts by construction.</li>
+  <li>The engine injects diffs (changed keys only) and throttles to one injection per matcher decision, never per partial.</li>
+</ul>
+<p>Verify: visual check on the iOS simulator in both layouts, same session, same states.</p>
+
+<h3>2.6 Feedback, accuracy, and report</h3>
+<ul>
+  <li>Haptics via <code>expo-haptics</code>: substitution medium, omission double light, jump heavy, pause a light periodic nudge, uncertain nothing. Fired by the engine only on committed errors. Visual state is always the fallback.</li>
+  <li>Global app settings: a haptics on/off toggle plus a haptic intensity control (light, medium, strong) that scales every pattern.</li>
+  <li>State legend: a short first-session explainer teaches the word colors (current, correct, wrong, skipped, uncertain), and a legend stays reachable from the practice screen during any session.</li>
+  <li>Accuracy = correct / (correct + substituted + skipped) over the attempted range, computed from the event log at session end.</li>
+  <li>Session report screen lists errors by ayah and word with deep links to the word's page.</li>
+  <li>Self-review replay: when audio storage is on, the saved session keeps per-ayah recordings, and the report plays back the user's own recitation at each mistake so they can hear where they fell down.</li>
+</ul>
+
+<h3>Phase 2 order of work</h3>
+<ol>
+  <li><strong>Spike (go/no-go):</strong> whisper.rn in the dev build, latency and memory measured on real devices. The spike pins one fixed test surah internally only because the surah picker does not exist yet; the shipped feature (milestone 4) lets the user pick any surah.</li>
+  <li><code>quran_words</code> seed, validation, scope loader.</li>
+  <li>Matcher upgrade with fixture tests.</li>
+  <li><code>PracticeEngine</code>, store, surah picker, practice screen wiring, WebView word states.</li>
+  <li>Haptics, legend, session report with replay, persistence, accuracy.</li>
+</ol>
+
+<h3>Phase 2 acceptance criteria</h3>
+<div class="card">
+  <div class="choice"><input type="checkbox" id="p2-scope"><label for="p2-scope">User can pick any surah and start a practice session for it.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-follow"><label for="p2-follow">The current-word highlight stays in sync with the recitation in both mushaf layouts, keeping pace even when the user recites fast.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-pause"><label for="p2-pause">The user can pause or delay between words: the app waits silently, never flags the pause as an error, and resumes following when the voice returns.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-errors"><label for="p2-errors">A wrong, skipped, repeated, or reordered word is flagged visually within about 1.5 seconds at a normal pace.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-uncertain"><label for="p2-uncertain">A low-confidence recognition shows the uncertain state and triggers no haptic and no error mark.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-legend"><label for="p2-legend">The word-state colors are explained to the user: a first-session explainer plus a legend reachable during any session.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-haptics"><label for="p2-haptics">Haptic feedback fires on committed errors, and settings offer an on/off toggle and an intensity control.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-report"><label for="p2-report">Ending a session shows accuracy and an error list, and the session persists locally.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-replay"><label for="p2-replay">With audio storage on, the user can replay their own recitation at each mistake from the saved session report.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-offline"><label for="p2-offline">The whole flow works with no network connection after the model is on the device.</label></div>
+  <div class="choice"><input type="checkbox" id="p2-playback"><label for="p2-playback">Starting a session stops reciter playback, and stopping the session restores normal playback.</label></div>
+</div>
+
+<h2>Risks</h2>
+<div class="scroll"><table>
+<thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>False corrections destroy user trust</td><td><span class="badge b-bad">high</span></td><td>Fuzzy threshold, two-strike gating, uncertain state, haptics only on committed errors.</td></tr>
+<tr><td>ASR latency or memory on low-end Android</td><td><span class="badge b-bad">high</span></td><td>Milestone 1 is a measured go/no-go spike before any product work.</td></tr>
+<tr><td>Audio session conflict with playback</td><td><span class="badge b-warn">medium</span></td><td>Explicit handoff: session start stops playback and switches mode, session stop reverses it.</td></tr>
+<tr><td>Model size and download failures</td><td><span class="badge b-warn">medium</span></td><td>Bundle a small model, reuse the existing audio cache download pattern for larger ones.</td></tr>
+<tr><td>WebView highlight jank</td><td><span class="badge b-warn">medium</span></td><td>Diff-only state injection, throttled to matcher decisions.</td></tr>
+</tbody>
+</table></div>
+
+<h2>Open questions</h2>
+
+<fieldset>
+<legend>Which speech-recognition model should the app use?</legend>
+<p style="margin:4px 0 10px; font-size:14px; color:var(--muted)">Two kinds of Whisper model can run on the phone. The <strong>general model</strong> is the standard one trained on everyday speech in many languages. The <strong>Quran model</strong> is the same engine retrained by others on Quran recitation, so it should hear recitation better, but that claim is unproven on our devices. "Test both first" means milestone 1 builds one small throwaway test screen, runs the same recitations through both models on a real iPhone and a real Android, and the measured accuracy and speed decide which model ships.</p>
+<div class="choice"><input type="radio" name="q-model" id="q-model-spike" checked><label for="q-model-spike">Test both first, then ship the winner. <span class="why">Recommended. Model choice is the biggest accuracy lever, and only a real-device test settles it.</span></label></div>
+<div class="choice"><input type="radio" name="q-model" id="q-model-quran"><label for="q-model-quran">Skip the test and ship the Quran-retrained model.</label></div>
+<div class="choice"><input type="radio" name="q-model" id="q-model-stock"><label for="q-model-stock">Skip the test and ship the general model.</label></div>
+</fieldset>
+
+<fieldset>
+<legend>Source for per-word Uthmani text in <code>quran_words</code></legend>
+<div class="choice"><input type="radio" name="q-words" id="q-words-upstream" checked><label for="q-words-upstream">Fetch per-word text from the same upstream API used by the existing seed scripts. <span class="why">Recommended. Word positions come pre-segmented by the same source that defined them, so the canonical keys line up.</span></label></div>
+<div class="choice"><input type="radio" name="q-words" id="q-words-split"><label for="q-words-split">Split the existing <code>ayahs.text_uthmani</code> on whitespace and validate counts against the layout tables.</label></div>
+</fieldset>
+
+<fieldset>
+<legend>Phase 2 UI surface</legend>
+<div class="choice"><input type="radio" name="q-ui" id="q-ui-practice" checked><label for="q-ui-practice">Wire the engine into the existing practice screen. <span class="why">Recommended. The screen and its states already exist as UI.</span></label></div>
+<div class="choice"><input type="radio" name="q-ui" id="q-ui-reader"><label for="q-ui-reader">Build the session UI into the reader itself and retire the practice screen.</label></div>
+</fieldset>
+
+<fieldset>
+<legend>Session audio retention default</legend>
+<div class="choice"><input type="radio" name="q-audio" id="q-audio-optin" checked><label for="q-audio-optin">Off by default, opt-in per user. Tajweed assessment and replay require opting in. <span class="why">Recommended. Privacy-safe default; tajweed simply reports "not evaluated" without audio.</span></label></div>
+<div class="choice"><input type="radio" name="q-audio" id="q-audio-on"><label for="q-audio-on">Keep per-ayah audio for every session by default, with auto-deletion after N days.</label></div>
+</fieldset>
+
+<footer>Plan derived from the alfurqan source tree on 2026-08-21. Repo markdown documents were deliberately excluded as input.</footer>
+<!-- /arev:content -->
+</main>
+</body>
+</html>
