@@ -1,0 +1,85 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "react-native": [
+        ".design-sync/shims/react-native.ts"
+      ],
+      "react-native-svg": [
+        "node_modules/react-native-svg/lib/module/elements.web.js"
+      ],
+      "react-native-mmkv": [
+        ".design-sync/shims/react-native-mmkv.ts"
+      ],
+      "@expo/vector-icons": [
+        ".design-sync/shims/expo-vector-icons.tsx"
+      ],
+      "expo-router": [
+        ".design-sync/shims/expo-router.tsx"
+      ],
+      "../../assets/db/quran.db": [
+        ".design-sync/shims/quran-db-asset.ts"
+      ],
+      "react-native/Libraries/Core/setUpXHR": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/Pressability/PressabilityDebug": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/ReactNative/AppContainer": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/ReactNative/ReactFabricPublicInstance/ReactFabricPublicInstance": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/Renderer/shims/ReactFabric": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/Renderer/shims/ReactNativeViewConfigRegistry": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/Types/CodegenTypes": [
+        ".design-sync/shims/rn-internal.ts"
+      ],
+      "react-native/Libraries/Utilities/codegenNativeComponent": [
+        ".design-sync/shims/codegen-native-component.tsx"
+      ],
+      "react-native/Libraries/Utilities/codegenNativeCommands": [
+        ".design-sync/shims/codegen-native-commands.ts"
+      ],
+      "expo-sqlite": [
+        ".design-sync/shims/expo-sqlite.ts"
+      ],
+      "./webUtils": [
+        "node_modules/react-native-reanimated/lib/module/ReanimatedModule/js-reanimated/webUtils.web.js"
+      ],
+      "expo-location": [
+        ".design-sync/shims/expo-location.ts"
+      ],
+      "react-native-safe-area-context": [
+        ".design-sync/shims/react-native-safe-area-context.tsx"
+      ],
+      "./NativeLinearGradient": [
+        "node_modules/expo-linear-gradient/build/NativeLinearGradient.web.js"
+      ],
+      "./MushafReader": [
+        "src/components/quran/MushafReader.web.tsx"
+      ],
+      "./exports/findNodeHandle": [
+        ".design-sync/shims/find-node-handle.ts"
+      ],
+      "../findNodeHandle": [
+        "node_modules/react-native-gesture-handler/lib/module/findNodeHandle.web.js"
+      ],
+      "../../findNodeHandle": [
+        "node_modules/react-native-gesture-handler/lib/module/findNodeHandle.web.js"
+      ],
+      "../../../findNodeHandle": [
+        "node_modules/react-native-gesture-handler/lib/module/findNodeHandle.web.js"
+      ],
+      "./createCSSStyleSheet": [
+        ".design-sync/shims/create-css-stylesheet.ts"
+      ]
+    }
+  }
+}
