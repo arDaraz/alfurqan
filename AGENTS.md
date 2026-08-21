@@ -10,8 +10,8 @@ Mushaf Al Furqan is a Qur'an reading and recitation practice app built with Reac
 
 ```bash
 npm start                    # Metro for an already-installed development build
-npm run dev:port             # Show the PID/path that owns canonical port 8081
-npm run dev:stop             # Stop Metro only when this checkout owns port 8081
+npm run dev:port             # Show this worktree's Metro port and who owns it
+npm run dev:stop             # Stop Metro only when this checkout owns its port
 npm run ios                  # Build, install, and run on the iOS Simulator
 npm run ios:device           # Build, install, and run on a connected iPhone
 npm run android              # Build, install, and run on an Android target
@@ -35,9 +35,8 @@ npm run seed:mushaf          # Populate mushaf_words table
 - This project uses `expo-dev-client`; do not use Expo Go.
 - Use `npm run ios` for the first simulator run. It invokes Expo CLI, which generates native files when absent, compiles with Xcode, installs the app, and starts Metro.
 - After the native development build is installed, use `npm start` for ordinary TypeScript, UI, style, and state changes. Fast Refresh does not require an Xcode rebuild.
-- Every launch command uses port 8081. The project-local wrapper reuses this checkout's Metro, rejects a listener from another checkout, and never silently switches to 8082.
-- Worktrees share Metro port 8081 and Simulator devices. Before switching worktrees, run `npm run dev:stop` in the old worktree, then `npm run dev:port` in the new one. Reuse the installed development build only when native inputs match; otherwise run `npm run ios` and expect it to replace the same bundle ID on that device.
-- Use a separate named Simulator device when worktrees need isolated app binaries, MMKV state, or SQLite data. Separate devices still share the Mac's Metro port, so the default workflow supports one active worktree at a time.
+- Each worktree has its own Metro port (`npm run dev:port` prints it) and its own Simulator device named `alfurqan <branch>`; `wt new <issue-number>` creates both, and several worktrees can run at once. Port derivation, overrides, and the worktree lifecycle: `docs/DEVELOPMENT_SETUP.md` sections 5 and 13.
+- Reuse the installed development build only when native inputs match; otherwise run `npm run ios`.
 - Use `npm run ios:device` for a connected physical iPhone. Do not invoke `xcodebuild` directly or add a separate phone-build script.
 - Rebuild after an Expo SDK upgrade, native dependency change, `app.json` change, permission change, or config-plugin change.
 - The generated `ios/` and `android/` directories are ignored. `app.json` and Expo config plugins are their source of truth.
@@ -50,17 +49,17 @@ Every agent must use this protocol before launching or verifying the app. Do not
 1. Confirm the checkout and branch with `pwd` and `git status -sb`.
 2. Run `npm install` in this worktree when `node_modules` is absent or `package-lock.json` changed.
 3. Run `npm run dev:port` **before** `npm start`, `npm run ios`, or `npm run android`.
-4. If port 8081 belongs to another worktree, stop. Do not accept port 8082 and do not kill a generic Node process. Coordinate the handoff, then run `npm run dev:stop` from the worktree reported as the owner.
+4. If the reported port belongs to another checkout, stop. Do not kill a generic Node process. Set `ALFURQAN_METRO_PORT` to move this one, or run `npm run dev:stop` from the worktree reported as the owner.
 5. Choose exactly one launch path:
    - Native inputs unchanged and compatible development build already installed: `npm start`, then press `i` for iOS.
    - First run or native inputs changed: `npm run ios`.
    - Connected physical iPhone: `npm run ios:device`.
    - Android emulator/device: `npm run android`.
-6. Verify that `npm run dev:port` reports the **current worktree path**, confirm the intended Simulator/device, and visually inspect the native app. For iOS, capture a screenshot with `xcrun simctl io booted screenshot /tmp/alfurqan-screen.png`.
+6. Verify that `npm run dev:port` reports the **current worktree path**, confirm the intended Simulator/device, and visually inspect the native app. For iOS, capture a screenshot from this worktree's own device with `xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png`. Never use `booted`, which is ambiguous once a second Simulator runs.
 
-Agents must not use Expo Go, direct `npx expo start`, automatic port fallback, direct `xcodebuild` launch commands, or a web browser as substitutes for this workflow. If a launch command or port policy changes, update `README.md`, `AGENTS.md`, `CLAUDE.md`, and `docs/DEVELOPMENT_SETUP.md` together.
+Agents must not use Expo Go, direct `npx expo start`, automatic port fallback, direct `xcodebuild` launch commands, or a web browser as substitutes for this workflow.
 
-The supported coordination model is **one active worktree/Metro server on port 8081 at a time**. Separate Simulator devices isolate the native binary and app data but do not remove the shared Metro-port conflict. See the worktree decision table and handoff procedure in `docs/DEVELOPMENT_SETUP.md#13-developing-with-git-worktrees`.
+`docs/DEVELOPMENT_SETUP.md` owns the workflow content: procedures, port mechanics, worktree lifecycle, and their rationale. Change it there first, then check that the protocol steps above and the pointers in this file and `README.md` still hold. Do not restate its explanations here.
 
 ## Architecture
 
@@ -145,7 +144,7 @@ This is a **native mobile app**. Always verify UI changes on the iOS simulator, 
 
 **How to verify:**
 1. Launch through the Mandatory Agent Launch Protocol above: `npm run dev:port` first, then `npm run ios` (first run or native changes) or `npm start` (JS-only changes)
-2. Take a simulator screenshot: `xcrun simctl io booted screenshot /tmp/alfurqan-screen.png`
+2. Take a screenshot of this worktree's device: `xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png`
 3. Read the screenshot with the Read tool to visually inspect the result
 
 **Screenshots and recordings never enter the repository.** Write them to a

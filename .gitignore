@@ -70,3 +70,6 @@ app-example
 # SQLite sidecar files the running app creates next to the bundled database
 *.db-shm
 *.db-wal
+
+# Simulator device id written per worktree by the wt post-start hook
+.simulator-udid

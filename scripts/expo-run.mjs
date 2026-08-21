@@ -2,7 +2,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { join } from 'node:path';
 
-const DEV_PORT = 8081;
+const PRIMARY_PORT = 8081;
 const projectRoot = realpathSync(process.cwd());
 const [action, ...expoArgs] = process.argv.slice(2);
 
@@ -16,6 +16,39 @@ function run(command, args) {
     return '';
   }
 }
+
+// The primary checkout keeps 8081 so the single-worktree workflow is unchanged.
+// A linked worktree gets its port from worktrunk, which lets several worktrees
+// serve Metro at once. Worktrunk owns the number so that every tool expanding a
+// worktrunk template reports the same port as this script.
+function devPort() {
+  const requested = process.env.ALFURQAN_METRO_PORT;
+  if (requested) {
+    const override = Number(requested);
+    if (!Number.isInteger(override) || override < 1024 || override > 65535) {
+      console.error(`ALFURQAN_METRO_PORT must be a port from 1024 to 65535. Got "${requested}".`);
+      process.exit(2);
+    }
+    return override;
+  }
+
+  const gitDir = run('git', ['rev-parse', '--absolute-git-dir']);
+  const commonDir = run('git', ['rev-parse', '--path-format=absolute', '--git-common-dir']);
+  if (gitDir !== '' && gitDir === commonDir) return PRIMARY_PORT;
+
+  // Strip the colour codes first. A reset sequence carries a digit of its own,
+  // so matching digits on the raw output can read the escape instead of the port.
+  const printed = run('wt', ['metro-port']).replace(/\[[0-9;]*m/g, '');
+  const port = Number(printed.match(/\d+/)?.[0]);
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+    console.error('Could not read this worktree\'s Metro port from `wt metro-port`.');
+    console.error('Create worktrees with `wt new <github-issue-number>`, or set ALFURQAN_METRO_PORT.');
+    process.exit(2);
+  }
+  return port;
+}
+
+const DEV_PORT = devPort();
 
 function listenerPids() {
   return run('lsof', [`-tiTCP:${DEV_PORT}`, '-sTCP:LISTEN'])
@@ -61,6 +94,8 @@ const local = active.filter((listener) => listener.cwd === projectRoot);
 const foreign = active.filter((listener) => listener.cwd !== projectRoot);
 
 if (action === 'status') {
+  console.log(`Worktree ${projectRoot}`);
+  console.log(`Metro port ${DEV_PORT}`);
   if (active.length === 0) {
     console.log(`Port ${DEV_PORT} is available.`);
   } else {
@@ -99,6 +134,7 @@ if (foreign.length > 0) {
   console.error(`Cannot launch Al Furqan: port ${DEV_PORT} belongs to another checkout.`);
   foreign.forEach(printListener);
   console.error('Stop that Metro server from its own project directory, then retry.');
+  console.error('Two worktrees can hash to one port. Set ALFURQAN_METRO_PORT to move this one.');
   process.exit(1);
 }
 
@@ -109,7 +145,13 @@ if (action === 'start' && local.length > 0) {
 }
 
 const expoBin = join(projectRoot, 'node_modules', '.bin', 'expo');
-const child = spawn(expoBin, [action, ...expoArgs], {
+// The wrapper owns the port so no npm script can pin one that contradicts it.
+// Expo accepts -p, --port and --port=N, and passing a second one makes it fail.
+const hasPortFlag = expoArgs.some(
+  (arg) => arg === '-p' || arg === '--port' || arg.startsWith('--port=')
+);
+const portArgs = hasPortFlag ? [] : ['--port', String(DEV_PORT)];
+const child = spawn(expoBin, [action, ...expoArgs, ...portArgs], {
   cwd: projectRoot,
   env: process.env,
   stdio: 'inherit',
