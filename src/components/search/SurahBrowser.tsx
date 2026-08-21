@@ -49,7 +49,7 @@ export function SurahBrowser() {
   }, [surahRetry, juzRetry]);
 
   const error = surahsError || juzError;
-  if (error) return <ErrorState message={error} onRetry={handleRetry} />;
+  if (error) return <ErrorState onRetry={handleRetry} />;
 
   if (surahsLoading || juzLoading) {
     return (

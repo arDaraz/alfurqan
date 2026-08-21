@@ -22,5 +22,5 @@ export default function JuzScreen() {
     return { page, surahName: surah?.nameArabic ?? '', location };
   }, [juzNumber, layoutId]);
 
-  return <MushafScreenLayout loadInitialPage={loadInitialPage} errorMessage="Failed to load juz" />;
+  return <MushafScreenLayout loadInitialPage={loadInitialPage} />;
 }

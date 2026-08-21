@@ -5,16 +5,16 @@ import type { Juz } from '../data/types';
 export function useJuzList() {
   const [juzList, setJuzList] = useState<Juz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setError(false);
       const data = await getJuzList();
       setJuzList(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load juz list');
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
