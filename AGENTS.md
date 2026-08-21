@@ -177,8 +177,8 @@ Issues live as GitHub issues in `arDaraz/alfurqan`, managed with the `gh` CLI. S
 
 ### Triage labels
 
-The five default triage labels, each label string equal to its role name. See `docs/agents/triage-labels.md`.
+Five canonical triage roles, each label string equal to its role name. Only `wontfix` exists in the tracker so far; the others must be created before first use. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. Neither exists yet, and that is fine: the `/domain-modeling` skill creates them when a term or decision is actually resolved. See `docs/agents/domain.md`.

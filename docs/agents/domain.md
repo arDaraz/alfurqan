@@ -9,7 +9,9 @@ How the engineering skills should consume this repo's domain documentation when 
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
-## File structure
+## Target file structure
+
+Where these files go once they exist. Nothing below is in the repo yet.
 
 ```
 /
@@ -30,4 +32,4 @@ If the concept you need isn't in the glossary yet, that's a signal — either yo
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
-> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+> _Contradicts ADR-<number> (<the decision it records>) - but worth reopening because…_

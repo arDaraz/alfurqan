@@ -10,6 +10,8 @@
 
 ## Executive result
 
+**Status note, 2026-08-21:** all 20 confirmed issues below were fixed and the fixes are on `main`. See [`2026-08-14-ios-audit-fix-report.md`](2026-08-14-ios-audit-fix-report.md).
+
 All eight route-level pages were opened and every unique reachable control family was exercised. The audit also covered the bookmark and reciter sheets, Mushaf layout picker, mini player, full player, snackbar/Undo flow, both shipped Mushaf layouts, Surah and Juz entry points, and representative high-risk Mushaf pages.
 
 - **20 confirmed issues:** 9 high, 9 medium, 2 low.
@@ -160,26 +162,26 @@ _Expected IndoPak opening-page geometry_
 
 | ID | Severity | Page | Issue | Evidence |
 |---|---|---|---|---|
-| ISSUE-001 | Medium | Reader | Header More and bottom Info/List/Practice are inert | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-001-reader-more-no-op.png) |
-| ISSUE-002 | Medium | Reader/bookmarks | Undo leaves bookmark toolbar state selected | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-002-bookmark-undo-stale-selected.png) |
-| ISSUE-003 | Medium | Mini player | Pause does not pause/change state | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-003-mini-player-pause-no-op.png) |
-| ISSUE-004 | Low | Full player | Information button is inert | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-004-player-information-no-op.png) |
-| ISSUE-005 | Medium | Full player | Active download cannot be cancelled | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-005-download-cancel-stays-active.png) |
-| ISSUE-006 | Low | Bookmarks | Overflow button is inert | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-006-bookmarks-options-no-op.png) |
-| ISSUE-007 | Medium | Bookmarks | Swipe-to-delete opens the reader | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-007-bookmark-swipe-opens-reader.png) |
-| ISSUE-008 | Medium | Home/Surahs | Standard tap selects row but does not open it | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-008-surah-single-tap-only-selects.png) |
-| ISSUE-009 | Medium | Home/Juz | Standard tap selects row but does not open it | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-009-home-list-rows-single-tap-no-navigation.png) |
-| ISSUE-010 | High | Search | Result action buttons are missing from accessibility | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-010-search-result-actions-not-accessible.png) |
-| ISSUE-011 | High | Settings | Font slider and sensitivity control are not semantically accessible | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-011-settings-slider-and-sensitivity-not-accessible.png) |
-| ISSUE-012 | Medium | Settings | About row is obscured and inert | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-012-about-row-obscured-and-inert.png) |
-| ISSUE-013 | High | Practice | Red word, Skip, and side controls are inert | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-013-practice-inert-controls.png) |
-| ISSUE-014 | High | Practice | Microphone closes modal instead of recording | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-014-practice-mic-closes-modal.png) |
-| ISSUE-015 | High | Reader | Ayah selection never presents the action popup | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-015-ayah-long-press-no-popup.png) |
-| ISSUE-016 | High | Reader | Horizontal page gesture selects text/does not page | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-016-horizontal-swipe-selects-ayah-instead-of-paging.png) |
-| ISSUE-018 | High | Search/layout mapping | Search displays page 604 for an IndoPak page-610 result | [Search](screenshots/2026-08-14-full-app-audit/ISSUE-018-search-page-number-ignores-selected-layout.png), [reader](screenshots/2026-08-14-full-app-audit/ISSUE-018-reader-opens-page610-support.png) |
-| ISSUE-019 | High | Onboarding/accessibility | Offscreen slides and CTA are exposed on slide 1 | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-019-onboarding-exposes-offscreen-slides-to-accessibility.png) |
-| ISSUE-020 | High | Onboarding | Swipe does not advance beyond slide 1 | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-020-onboarding-swipe-does-not-advance.png) |
-| ISSUE-021 | Medium | Reader/first use | Initial reader content is blank for several seconds with no loading state | [Screenshot](screenshots/2026-08-14-full-app-audit/ISSUE-021-first-reader-load-shows-blank-page.png) |
+| ISSUE-001 | Medium | Reader | Header More and bottom Info/List/Practice are inert | Simulator, capture not retained |
+| ISSUE-002 | Medium | Reader/bookmarks | Undo leaves bookmark toolbar state selected | Simulator, capture not retained |
+| ISSUE-003 | Medium | Mini player | Pause does not pause/change state | Simulator, capture not retained |
+| ISSUE-004 | Low | Full player | Information button is inert | Simulator, capture not retained |
+| ISSUE-005 | Medium | Full player | Active download cannot be cancelled | Simulator, capture not retained |
+| ISSUE-006 | Low | Bookmarks | Overflow button is inert | Simulator, capture not retained |
+| ISSUE-007 | Medium | Bookmarks | Swipe-to-delete opens the reader | Simulator, capture not retained |
+| ISSUE-008 | Medium | Home/Surahs | Standard tap selects row but does not open it | Simulator, capture not retained |
+| ISSUE-009 | Medium | Home/Juz | Standard tap selects row but does not open it | Simulator, capture not retained |
+| ISSUE-010 | High | Search | Result action buttons are missing from accessibility | Simulator, capture not retained |
+| ISSUE-011 | High | Settings | Font slider and sensitivity control are not semantically accessible | Simulator, capture not retained |
+| ISSUE-012 | Medium | Settings | About row is obscured and inert | Simulator, capture not retained |
+| ISSUE-013 | High | Practice | Red word, Skip, and side controls are inert | Simulator, capture not retained |
+| ISSUE-014 | High | Practice | Microphone closes modal instead of recording | Simulator, capture not retained |
+| ISSUE-015 | High | Reader | Ayah selection never presents the action popup | Simulator, capture not retained |
+| ISSUE-016 | High | Reader | Horizontal page gesture selects text/does not page | Simulator, capture not retained |
+| ISSUE-018 | High | Search/layout mapping | Search displays page 604 for an IndoPak page-610 result | Simulator, search and reader captures not retained |
+| ISSUE-019 | High | Onboarding/accessibility | Offscreen slides and CTA are exposed on slide 1 | Simulator, capture not retained |
+| ISSUE-020 | High | Onboarding | Swipe does not advance beyond slide 1 | Simulator, capture not retained |
+| ISSUE-021 | Medium | Reader/first use | Initial reader content is blank for several seconds with no loading state | Simulator, capture not retained |
 
 ## Detailed issues and reproduction steps
 
