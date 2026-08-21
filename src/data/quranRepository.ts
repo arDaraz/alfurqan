@@ -737,10 +737,9 @@ export function __resetAyahSearchCacheForTests(): void {
 const ayahPreviewCache = new Map<string, string>();
 const PREVIEW_CHAR_LIMIT = 80;
 
-// Arabic combining diacritics (tashkeel): U+064B–U+0670 (tanwin/harakat/tatweel range),
-// U+0671 shadda+vowel combos handled via the ranges below, and U+06D6–U+06ED (Quranic
-// annotation marks). The regex covers U+064B–U+0670 and U+06D6–U+06ED.
-const ARABIC_COMBINING_RE = /[ً-ٰۖ-ۭ]/;
+// Arabic combining diacritics: the tanwin, harakat and tatweel range, plus the
+// Quranic annotation marks.
+const ARABIC_COMBINING_RE = /[\u064B-\u0670\u06D6-\u06ED]/;
 
 /**
  * Truncates `text` to `limit` UTF-16 code units without leaving an orphaned
@@ -763,7 +762,7 @@ function safeTruncate(text: string, limit: number): string {
     cut--;
   }
   // Also remove any combining marks that are now trailing inside the slice.
-  const sliced = text.slice(0, cut).replace(/[ً-ٰۖ-ۭ]+$/, '');
+  const sliced = text.slice(0, cut).replace(/[\u064B-\u0670\u06D6-\u06ED]+$/, '');
   return `${sliced}…`;
 }
 
