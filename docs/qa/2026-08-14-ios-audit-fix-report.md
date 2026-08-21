@@ -62,9 +62,9 @@ Each fix was exercised on a real Simulator, not only by type checking or unit te
 
 **Verification:** Pressing the toolbar Info button opens the sheet. Pressing the header three-dot button opens the same sheet.
 
-![Reader info sheet from the bottom toolbar](screenshots/2026-08-14-audit-fixes/ISSUE-001-after-reader-info-sheet.png)
+_Reader info sheet from the bottom toolbar_
 
-![The same sheet from the header three-dot button](screenshots/2026-08-14-audit-fixes/ISSUE-001-after-header-more-opens-info.png)
+_The same sheet from the header three-dot button_
 
 ---
 
@@ -80,9 +80,9 @@ Each fix was exercised on a real Simulator, not only by type checking or unit te
 
 **Verification:** Saving and then undoing shows the confirmation with the restored state, and the toolbar icon returns to its outline form. Two new cases were added to `MushafScreenLayout.bookmarkUndo.test.tsx`: the audit's own case where the page was not bookmarked before, and the timestamp restore.
 
-![Saved snackbar with the Undo action](screenshots/2026-08-14-audit-fixes/ISSUE-002-01-saved-snackbar.png)
+_Saved snackbar with the Undo action_
 
-![Undo confirms the restored state and drops its own button](screenshots/2026-08-14-audit-fixes/ISSUE-002-02-after-undo.png)
+_Undo confirms the restored state and drops its own button_
 
 ---
 
@@ -106,7 +106,7 @@ after tap 2     AXButton | تشغيل        (Play, playback paused again)
 
 A new case in `recitationEngine.test.ts` covers the loading branch: pause during loading reports `paused`, resume returns to `loading`, and the finished load plays.
 
-![Mini player after pause](screenshots/2026-08-14-audit-fixes/ISSUE-003-after-miniplayer-pause.png)
+_Mini player after pause_
 
 ---
 
@@ -154,9 +154,9 @@ A full download and cancel cycle on the device was not run. It needs a live netw
 
 **Verification:** Pressing the overflow button flips the list between "الأحدث أولًا" and "الأقدم أولًا".
 
-![Newest first](screenshots/2026-08-14-audit-fixes/ISSUE-006-before-sort-newest.png)
+_Newest first_
 
-![Oldest first after pressing the overflow button](screenshots/2026-08-14-audit-fixes/ISSUE-006-after-sort-oldest.png)
+_Oldest first after pressing the overflow button_
 
 ---
 
@@ -172,7 +172,7 @@ A full download and cancel cycle on the device was not run. It needs a live netw
 
 **Verification:** A horizontal drag on a bookmark row reveals the Delete action and does not navigate.
 
-![Swipe reveals Delete](screenshots/2026-08-14-audit-fixes/ISSUE-007-after-swipe-reveals-delete.png)
+_Swipe reveals Delete_
 
 ---
 
@@ -188,7 +188,7 @@ A full download and cancel cycle on the device was not run. It needs a live netw
 
 **Verification:** One tap on Al-Fatiha opens the reader.
 
-![Al-Fatiha opened by a single tap](screenshots/2026-08-14-audit-fixes/ISSUE-008-after-surah-single-tap-opens-reader.png)
+_Al-Fatiha opened by a single tap_
 
 ---
 
@@ -204,7 +204,7 @@ A full download and cancel cycle on the device was not run. It needs a live netw
 
 **Verification:** One tap on a Juz row opens the Juz reader.
 
-![Juz opened by a single tap](screenshots/2026-08-14-audit-fixes/ISSUE-009-after-juz-single-tap-opens.png)
+_Juz opened by a single tap_
 
 ---
 
@@ -245,7 +245,7 @@ Full capture: [`ISSUE-010-after-accessibility-tree.txt`](screenshots/2026-08-14-
 
 The live accessibility read for the Settings screen is missing. The macOS accessibility bridge stopped returning the Simulator's element list after a few dozen queries in this session, and it did not recover for that screen. The same read did succeed on Search, Bookmarks, Practice and the reader, which is where the other accessibility evidence in this report comes from.
 
-![Settings with the font size slider](screenshots/2026-08-14-audit-fixes/ISSUE-011-after-settings-slider.png)
+_Settings with the font size slider_
 
 ---
 
@@ -261,9 +261,9 @@ The live accessibility read for the Settings screen is missing. The macOS access
 
 **Verification:** At the bottom of Settings the About row is fully visible and clear of the floating button, and pressing it opens the sheet.
 
-![About row clear of the tab bar](screenshots/2026-08-14-audit-fixes/ISSUE-012-after-about-row-clear-of-tabbar.png)
+_About row clear of the tab bar_
 
-![About sheet](screenshots/2026-08-14-audit-fixes/ISSUE-012-after-about-opens.png)
+_About sheet_
 
 ---
 
@@ -288,7 +288,7 @@ AXGroup  | إعادة الاستماع                 | actions=AXPress   (side
 
 Pressing Skip replaces the correction with its confirmation, which the screenshot below shows.
 
-![Practice after Skip, with both side controls live](screenshots/2026-08-14-audit-fixes/ISSUE-013-after-skip-and-controls.png)
+_Practice after Skip, with both side controls live_
 
 ---
 
@@ -306,9 +306,9 @@ Audio capture and live verification are still not wired. The button carries a `p
 
 **Verification:** The accessibility tree publishes the control as `AXButton | ابدأ الاستماع`, not as a way out of the screen. Pressing it turns the button red, starts the pulse ring and switches the label to "يستمع", and Practice stays open.
 
-![Practice before the microphone is pressed](screenshots/2026-08-14-audit-fixes/ISSUE-014-before-mic-idle.png)
+_Practice before the microphone is pressed_
 
-![Practice listening, still on the same screen](screenshots/2026-08-14-audit-fixes/ISSUE-014-after-mic-listening.png)
+_Practice listening, still on the same screen_
 
 ---
 
@@ -324,11 +324,11 @@ Audio capture and live verification are still not wired. The button carries a `p
 
 **Verification:** Tapping an ayah highlights it and opens the popup with Play, Tafsir, Bookmark, Copy, Share, Word and Close. Confirmed on both layouts.
 
-![Tap on an IndoPak ayah opens the popup](screenshots/2026-08-14-audit-fixes/ISSUE-015-after-ayah-tap-opens-popup.png)
+_Tap on an IndoPak ayah opens the popup_
 
 The Madani layout was checked on the second Simulator and behaves the same. Its page information sheet also reads page ١ of ٦٠٤, against IndoPak's ٦١٠, which is the layout-aware page count from ISSUE-001 and ISSUE-018.
 
-![Page info on the Madani layout](screenshots/2026-08-14-audit-fixes/ISSUE-001-after-info-sheet-madani.png)
+_Page info on the Madani layout_
 
 ---
 
@@ -344,9 +344,9 @@ The Madani layout was checked on the second Simulator and behaves the same. Its 
 
 **Verification:** A horizontal swipe straight across the Qur'anic text turns the page and selects nothing. The header moves from Al-Fatiha page ١ to Al-Baqarah page ٢.
 
-![Before the swipe](screenshots/2026-08-14-audit-fixes/ISSUE-016-before-swipe-page1.png)
+_Before the swipe_
 
-![After the swipe](screenshots/2026-08-14-audit-fixes/ISSUE-016-after-swipe-turns-page.png)
+_After the swipe_
 
 ---
 
@@ -362,7 +362,7 @@ The Madani layout was checked on the second Simulator and behaves the same. Its 
 
 **Verification:** With IndoPak selected, the An-Nas result now reads page ٦١٠, which matches the page the reader opens. The accessibility label of the card says the same.
 
-![Search result shows the IndoPak page](screenshots/2026-08-14-audit-fixes/ISSUE-018-after-search-indopak-page.png)
+_Search result shows the IndoPak page_
 
 ---
 
@@ -396,13 +396,13 @@ A second fault showed up only on the device. Under `forceRTL` the slides are lai
 
 **Verification:** On a clean install, onboarding walks slide 1 to slide 2 to slide 3 with the Next button, and Get Started lands on Home. The dot indicator matches the slide at every step. `tests/components/onboarding/OnboardingPaging.test.ts` pins the mirrored offsets.
 
-![Slide 1 with the Next button](screenshots/2026-08-14-audit-fixes/ISSUE-020-01-onboarding-slide1.png)
+_Slide 1 with the Next button_
 
-![Slide 2](screenshots/2026-08-14-audit-fixes/ISSUE-020-02-onboarding-slide2.png)
+_Slide 2_
 
-![Slide 3 with Get Started](screenshots/2026-08-14-audit-fixes/ISSUE-020-03-onboarding-slide3.png)
+_Slide 3 with Get Started_
 
-![Home after Get Started](screenshots/2026-08-14-audit-fixes/ISSUE-020-04-onboarding-complete.png)
+_Home after Get Started_
 
 ---
 
@@ -418,7 +418,7 @@ A second fault showed up only on the device. Under `forceRTL` the slides are lai
 
 **Verification:** Opening a surah shows the loading skeleton over the page area, and the Qur'anic text replaces it when the page is laid out. The viewport is never blank.
 
-![Skeleton while the page font decodes](screenshots/2026-08-14-audit-fixes/ISSUE-021-after-reader-loading-skeleton.png)
+_Skeleton while the page font decodes_
 
 ---
 

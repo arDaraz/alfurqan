@@ -146,6 +146,15 @@ This is a **native mobile app**. Always verify UI changes on the iOS simulator, 
 2. Take a simulator screenshot: `xcrun simctl io booted screenshot /tmp/screen.png`
 3. Read the screenshot with the Read tool to visually inspect the result
 
+**Screenshots and recordings never enter the repository.** Write them to a
+scratch directory outside the working tree, or to `/tmp`, and reference them by
+absolute path while the task is open. A report records what was seen in words,
+because the words survive and the file does not. Images and video are ignored by
+`.gitignore` everywhere except `assets/` and `.github/`, so committing one takes
+`git add -f`. If that seems necessary, it is a decision to raise, not a step to
+take: this repository already accumulated 71 stray captures across four invented
+folders that way.
+
 Key things that **don't work on web** (do not use web for verification):
 - `expo-sqlite` hooks never resolve (home screen hangs forever)
 - `react-native-pager-view` (mushaf reader) is native-only

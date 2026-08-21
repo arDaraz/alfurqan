@@ -154,7 +154,7 @@ Legend: **Pass** = visible state/navigation changed as expected; **Fail** = conf
 
 The captured page-2 image initially looked suspicious because of the empty upper rows. Database inspection showed 15 authoritative line records: the opening spread intentionally contains seven text lines plus reserved/empty rows and heading/bismillah rows. The same special 7-line opening-page treatment exists in the Madani layout. Normal IndoPak page 42 fills its 15 canonical lines. Therefore this capture is retained as an audit observation, but it is **not** counted among the issues.
 
-![Expected IndoPak opening-page geometry](screenshots/2026-08-14-full-app-audit/ISSUE-017-indopak-page2-not-15-lines-large-empty-area.png)
+_Expected IndoPak opening-page geometry_
 
 ## Issue summary
 
@@ -199,7 +199,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Each visually enabled button performs its named action or is visibly disabled/marked unavailable.  
 **Actual:** All four controls accept a press but produce no change. Source corroboration: the bottom toolbar supplies no handlers for those three buttons.
 
-![Reader controls remain on the same screen](screenshots/2026-08-14-full-app-audit/ISSUE-001-reader-more-no-op.png)
+_Reader controls remain on the same screen_
 
 ### ISSUE-002 — Bookmark Undo leaves a stale selected indicator
 
@@ -217,7 +217,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Undo removes the just-created bookmark and immediately returns the toolbar icon to its unselected state.  
 **Actual:** The Undo action is accepted, but the filled/selected toolbar state remains visible.
 
-![Bookmark remains selected after Undo](screenshots/2026-08-14-full-app-audit/ISSUE-002-bookmark-undo-stale-selected.png)
+_Bookmark remains selected after Undo_
 
 ### ISSUE-003 — Mini-player Pause does not pause
 
@@ -234,7 +234,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Playback transitions to paused and the control changes to Play.  
 **Actual:** It remains in the playing/Pause state. The adjacent Stop action does work.
 
-![Mini player remains in Pause/playing state](screenshots/2026-08-14-full-app-audit/ISSUE-003-mini-player-pause-no-op.png)
+_Mini player remains in Pause/playing state_
 
 ### ISSUE-004 — Full-player Information button is inert
 
@@ -250,7 +250,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Recitation/ayah information opens, or the control is visibly disabled.  
 **Actual:** Nothing changes. Source corroboration: the button is rendered without an `onPress` handler.
 
-![Full player remains unchanged after Information](screenshots/2026-08-14-full-app-audit/ISSUE-004-player-information-no-op.png)
+_Full player remains unchanged after Information_
 
 ### ISSUE-005 — A started download cannot be cancelled
 
@@ -267,7 +267,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** A second tap cancels, or a progress/cancel UI explains what is happening.  
 **Actual:** The control remains selected/downloading with no progress, completion, error, or cancellation feedback.
 
-![Download remains active after cancellation attempt](screenshots/2026-08-14-full-app-audit/ISSUE-005-download-cancel-stays-active.png)
+_Download remains active after cancellation attempt_
 
 ### ISSUE-006 — Bookmarks overflow menu is inert
 
@@ -282,7 +282,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Sorting, management, or another menu opens; alternatively the unfinished control is hidden.  
 **Actual:** No visible/state change. Source corroboration labels this handler “wiring TBD.”
 
-![Bookmarks stays unchanged after overflow press](screenshots/2026-08-14-full-app-audit/ISSUE-006-bookmarks-options-no-op.png)
+_Bookmarks stays unchanged after overflow press_
 
 ### ISSUE-007 — Swipe-to-delete opens the bookmark instead
 
@@ -298,7 +298,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** The row reveals its Delete action without navigating.  
 **Actual:** The press/navigation wins and opens the Mushaf reader. No Delete action is revealed. A direct accessibility activation of the hidden Delete label also did not remove the row.
 
-![Reader opened after attempting bookmark swipe](screenshots/2026-08-14-full-app-audit/ISSUE-007-bookmark-swipe-opens-reader.png)
+_Reader opened after attempting bookmark swipe_
 
 ### ISSUE-008 — Surah rows do not open with a standard button tap
 
@@ -313,7 +313,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** The Surah reader opens.  
 **Actual:** The row merely receives selected styling. Opening depends on an undisclosed double-tap within 300 ms or 400 ms long-press. Rapid automation double-click attempts also did not open it. The accessibility role is “button,” whose standard activation should perform the primary navigation.
 
-![Surah row only selected after a standard tap](screenshots/2026-08-14-full-app-audit/ISSUE-008-surah-single-tap-only-selects.png)
+_Surah row only selected after a standard tap_
 
 ### ISSUE-009 — Juz rows do not open with a standard button tap
 
@@ -328,7 +328,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** `/juz/1` opens.  
 **Actual:** The row only becomes selected; the required double-tap/long-press behavior is not communicated. The route itself works when opened through `alfurqan://juz/1`, so this is an entry-control problem rather than a missing page.
 
-![Juz row only selected after a standard tap](screenshots/2026-08-14-full-app-audit/ISSUE-009-home-list-rows-single-tap-no-navigation.png)
+_Juz row only selected after a standard tap_
 
 ### ISSUE-010 — Search result Play/Copy/Bookmark actions are not accessible
 
@@ -344,7 +344,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Each visible action is a separately labeled, focusable button.  
 **Actual:** Only the entire result card is exposed. The nested actions cannot be focused independently, although coordinate presses prove all three visually work.
 
-![Visible nested search actions are missing from accessibility](screenshots/2026-08-14-full-app-audit/ISSUE-010-search-result-actions-not-accessible.png)
+_Visible nested search actions are missing from accessibility_
 
 ### ISSUE-011 — Settings font and sensitivity controls lack correct accessibility semantics
 
@@ -361,7 +361,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Font size is an adjustable slider with value and Increment/Decrement actions; sensitivity is a labeled button or adjustable control.  
 **Actual:** Font size is absent as an adjustable element. Sensitivity is exposed as a generic element, not a button. Both work only through sighted coordinate pressing/dragging.
 
-![Settings controls without slider/button semantics](screenshots/2026-08-14-full-app-audit/ISSUE-011-settings-slider-and-sensitivity-not-accessible.png)
+_Settings controls without slider/button semantics_
 
 ### ISSUE-012 — About is obscured by the tab bar and does nothing
 
@@ -378,7 +378,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** The row is fully reachable above the bar and opens About/legal/version information.  
 **Actual:** The row remains partially trapped under the tab bar and has no action. The accessibility tree exposes text rather than a button.
 
-![About row obscured by the floating tab bar](screenshots/2026-08-14-full-app-audit/ISSUE-012-about-row-obscured-and-inert.png)
+_About row obscured by the floating tab bar_
 
 ### ISSUE-013 — Several Practice controls are inert
 
@@ -395,7 +395,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** The word opens correction detail or playback; Skip advances; speaker/pause control the session.  
 **Actual:** None changes the screen or session. Skip is a `Pressable` without a handler; the word and side icons are non-interactive views and are absent from accessibility.
 
-![Practice controls remain unchanged](screenshots/2026-08-14-full-app-audit/ISSUE-013-practice-inert-controls.png)
+_Practice controls remain unchanged_
 
 ### ISSUE-014 — Practice microphone closes the modal
 
@@ -410,7 +410,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Recording/listening toggles and the user remains in Practice.  
 **Actual:** Practice immediately closes and returns to the prior tab. Source corroboration: the microphone handler calls `router.back()`.
 
-![Settings visible immediately after tapping Practice microphone](screenshots/2026-08-14-full-app-audit/ISSUE-014-practice-mic-closes-modal.png)
+_Settings visible immediately after tapping Practice microphone_
 
 ### ISSUE-015 — Ayah selection does not open the action popup
 
@@ -427,7 +427,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** The ayah popup appears with actions such as Play, Bookmark, Copy, Tafsir, and Word-by-word.  
 **Actual:** Highlighting occurs but the popup never appears; no popup actions or Close element exist. Downstream popup-button testing is therefore blocked.
 
-![Ayah highlighted without the expected popup](screenshots/2026-08-14-full-app-audit/ISSUE-015-ayah-long-press-no-popup.png)
+_Ayah highlighted without the expected popup_
 
 ### ISSUE-016 — Horizontal Mushaf swipe is captured by ayah selection
 
@@ -444,7 +444,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** A deliberate horizontal swipe moves to the adjacent page without selecting an ayah.  
 **Actual:** Swiping over text selects/highlights an ayah, and margin attempts did not change page 1. Because Computer Use produces mouse-driven Simulator gestures, confirm final gesture thresholds on a physical touch device before release; the repeated Simulator result remains a real regression signal.
 
-![Ayah selected while page indicator remains unchanged](screenshots/2026-08-14-full-app-audit/ISSUE-016-horizontal-swipe-selects-ayah-instead-of-paging.png)
+_Ayah selected while page indicator remains unchanged_
 
 ### ISSUE-018 — Search page number ignores the selected Mushaf layout
 
@@ -461,9 +461,9 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Search metadata uses the selected layout and displays page 610.  
 **Actual:** The result card displays page 604 (Madani's page), while canonical navigation correctly opens IndoPak page 610. This is presentation/data-query isolation, not a canonical-navigation failure.
 
-![Search says page 604 with IndoPak selected](screenshots/2026-08-14-full-app-audit/ISSUE-018-search-page-number-ignores-selected-layout.png)
+_Search says page 604 with IndoPak selected_
 
-![The same result correctly opens IndoPak page 610](screenshots/2026-08-14-full-app-audit/ISSUE-018-reader-opens-page610-support.png)
+_The same result correctly opens IndoPak page 610_
 
 ### ISSUE-019 — Onboarding exposes offscreen slides and final CTA to accessibility
 
@@ -480,7 +480,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Only slide 1 content and its current controls are accessible.  
 **Actual:** All three slide headings/bodies, multiple swipe hints, and slide 3's Get Started button are exposed simultaneously. Activating that offscreen button skips onboarding and enters Home.
 
-![Slide 1 while offscreen slide semantics are exposed](screenshots/2026-08-14-full-app-audit/ISSUE-019-onboarding-exposes-offscreen-slides-to-accessibility.png)
+_Slide 1 while offscreen slide semantics are exposed_
 
 ### ISSUE-020 — Onboarding cannot be advanced by swipe in Simulator
 
@@ -496,7 +496,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** The horizontally paged ScrollView advances to slide 2 and then slide 3.  
 **Actual:** The first dot and slide-1 content remain active after every attempt. Because the visible CTA exists only on slide 3, a normal sighted user cannot complete onboarding in this run. Physical-device confirmation is recommended because Simulator Computer Use gestures are mouse-driven.
 
-![Onboarding remains on slide 1 after repeated swipes](screenshots/2026-08-14-full-app-audit/ISSUE-020-onboarding-swipe-does-not-advance.png)
+_Onboarding remains on slide 1 after repeated swipes_
 
 ### ISSUE-021 — First reader load is blank without progress feedback
 
@@ -512,7 +512,7 @@ The captured page-2 image initially looked suspicious because of the empty upper
 **Expected:** Qur'anic content appears promptly, or the page shows an explicit loading/progress state.  
 **Actual:** The entire sacred-content viewport is blank for several seconds (about four seconds in this run) while header/toolbar remain active. Text eventually appears without feedback.
 
-![Blank reader viewport during initial page load](screenshots/2026-08-14-full-app-audit/ISSUE-021-first-reader-load-shows-blank-page.png)
+_Blank reader viewport during initial page load_
 
 ## Confirmed working behavior worth preserving
 
