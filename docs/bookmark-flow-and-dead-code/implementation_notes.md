@@ -69,6 +69,16 @@ Filled in as each step lands.
 | Remove retired repository code | Type check, tests, lint | Clean. 54 suites, 300 tests pass. |
 | Remove settings, locale and audio dead code | Type check, tests, lint, launch and screenshot | Clean. 54 suites, 300 tests pass. Home screen renders identically and persisted reading position, streak and Qiblah survive the settings migration. |
 
+## Defects found and fixed while building the bookmark flow
+
+### A slow surah lookup could retarget the sheet
+
+The sheet opens immediately and fills in the surah name when the lookup returns. Written the obvious way, that second update overwrites whatever is on screen. A reader who opens the sheet for one ayah, dismisses it and opens another quickly enough would see the first ayah's name against the second ayah. The update now applies only when the sheet still holds the ayah the lookup was for.
+
+## Known gap, carried over rather than introduced
+
+If the page and juz lookup fails after a commit, no confirmation appears, so the commit stands with no way to undo it. The previous implementation behaved the same way. It is recorded here because the new flow makes it a single place to fix rather than three.
+
 ## Corrections to the spec found during implementation
 
 ### The retired section was not entirely retired
