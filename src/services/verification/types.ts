@@ -7,13 +7,6 @@ export interface QuranWordToken {
   wordPosition?: number;
 }
 
-export interface TranscriptChunk {
-  text: string;
-  startedAtMs?: number;
-  endedAtMs?: number;
-  isFinal?: boolean;
-}
-
 export type VerificationMatchStatus = 'match' | 'mismatch' | 'incomplete';
 export type VerificationErrorType = 'wrong-word' | 'skipped-word' | 'repeated-word';
 

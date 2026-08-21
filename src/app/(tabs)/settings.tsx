@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useStrings } from '../../constants/strings';
@@ -29,6 +30,7 @@ const TAB_BAR_FAB_OVERHANG = 40;
 export default function SettingsScreen() {
   const theme = useTheme();
   const strings = useStrings();
+  const router = useRouter();
   const [pickerVisible, setPickerVisible] = useState(false);
   const [mushafPickerVisible, setMushafPickerVisible] = useState(false);
   const [savedVisible, setSavedVisible] = useState(false);
@@ -316,6 +318,23 @@ export default function SettingsScreen() {
             onPress={() => setAboutVisible(true)}
           />
         </SettingsGroup>
+
+        {__DEV__ ? (
+          <SettingsGroup label="Developer">
+            <SettingsRow
+              isLast
+              icon={
+                <Svg viewBox="0 0 24 24" {...ICON_PROPS}>
+                  <Rect x={9} y={3} width={6} height={12} rx={3} stroke={theme.semantic.primary} />
+                  <Path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke={theme.semantic.primary} strokeLinecap="round" />
+                </Svg>
+              }
+              label="Whisper spike"
+              value="Microphone and model measurements"
+              onPress={() => router.push('/dev/asr-spike')}
+            />
+          </SettingsGroup>
+        ) : null}
       </ScrollView>
 
       <ReciterPickerSheet visible={pickerVisible} onClose={() => setPickerVisible(false)} />

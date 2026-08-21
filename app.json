@@ -53,7 +53,8 @@
       [
         "expo-audio",
         {
-          "enableBackgroundPlayback": true
+          "enableBackgroundPlayback": true,
+          "microphonePermission": "Al Furqan listens through the microphone so it can follow your recitation. Recognition runs on your device and your recitation is never uploaded."
         }
       ],
       "expo-font",
