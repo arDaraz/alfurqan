@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance when working with code in this repository.
 
 ## Project Overview
 
@@ -66,29 +66,31 @@ The supported coordination model is **one active worktree/Metro server on port 8
 
 ### Routing (Expo Router, file-based)
 - `src/app/_layout.tsx` — Root layout, RTL lock, font loading, onboarding guard
-- `src/app/(tabs)/` — Bottom tab bar: Home, Surahs, Review, Settings + center FAB for Practice
+- `src/app/(tabs)/` — Bottom tab bar: Home, Search, Bookmarks, Settings + center FAB for Practice
 - `src/app/surah/[id].tsx` / `src/app/juz/[id].tsx` — Dynamic reader routes
-- `src/app/practice.tsx` — Practice mode modal (UI only, backend not wired)
+- `src/app/practice.tsx` — Practice mode modal (recitation engine drives playback; mic capture is a demo toggle)
 - `src/app/onboarding.tsx` — First-run carousel, gates access via `hasCompletedOnboarding`
 
 ### State (Zustand + MMKV)
-- `src/stores/settingsStore.ts` — Language, theme, font scale, tashkeel, qari, mushaf font
+- `src/stores/settingsStore.ts` — Language, theme, Quran font scale, mushaf layout, night reading, home widgets, prayer settings
 - `src/stores/readingStore.ts` — Last-read position, onboarding flag, bookmarks
-- `src/stores/selectionStore.ts` — Transient ayah range selection (not persisted)
+- `src/stores/reciterStore.ts` — Selected reciter and per-surah audio download state
+- `src/stores/recitationStore.ts` — Transient recitation session state (not persisted)
 
-Each store uses `react-native-mmkv` for persistence (faster than AsyncStorage).
+The persisted stores use `react-native-mmkv` (faster than AsyncStorage).
 
 ### Data Layer (SQLite)
-- `src/data/database.ts` — DB init, asset import, v2 schema migration (checks for `mushaf_words` table)
+- `src/data/database.ts` — DB init, bundled-asset import; reimports the asset when the content schema version or layout manifest is stale
+- `src/data/mushafLayouts.ts` — Mushaf layout registry (page counts, fonts; default `indopak-15-line-hafs`)
 - `src/data/quranRepository.ts` — SQL queries (surahs, ayahs, juz, mushaf words, markers)
 - `src/data/types.ts` — Shared TypeScript interfaces (Surah, Ayah, Juz, MushafWord, Bookmark, etc.)
 - `assets/db/quran.db` — Bundled SQLite database
 
 ### Mushaf Renderer
-- `src/components/quran/MushafReader.tsx` — Native page-by-page swiper (`react-native-pager-view`, RTL, 604 pages)
+- `src/components/quran/MushafReader.tsx` — Native page-by-page swiper (`react-native-pager-view`, RTL, page count from the active mushaf layout)
 - `src/components/quran/MushafReader.web.tsx` — Web fallback (pager-view is native-only)
 - `src/components/quran/mushafHtml.ts` — Generates HTML/CSS for WebView rendering of individual pages
-- `src/hooks/useMushafPage.ts` — Loads + caches mushaf page HTML (LRU, up to 10 pages)
+- `src/hooks/useMushafPage.ts` — Loads + caches mushaf page HTML (LRU, up to 12 pages)
 
 ### Design System
 - `src/constants/theme.ts` — Full v2 token system: palette (paper/ink/teal/gold/sage/rose), semantic tokens (light + dark), spacing (8pt scale), radii, motion, elevation, fonts
@@ -97,9 +99,9 @@ Each store uses `react-native-mmkv` for persistence (faster than AsyncStorage).
 
 ### Key Hooks
 - `useTheme()` — Resolves light/dark/system theme to semantic tokens
-- `useQuranText(surahNumber)` — Async fetch ayahs for a surah
 - `useSurahList()` / `useJuzList()` — Async fetch all surahs/juz
-- `useSearch()` — Filter surahs by name or number
+- `useBookmarkFlow()` — Bookmark save/undo flow shared by reader surfaces
+- `usePrayerTimes()` — Prayer times for the home band (via `adhan`)
 
 ## RTL Layout — Critical Gotcha
 
@@ -142,8 +144,8 @@ The theme exposes ready-made scales — always use these instead of hardcoded va
 This is a **native mobile app**. Always verify UI changes on the iOS simulator, not in a web browser.
 
 **How to verify:**
-1. Build and run the app with `npm run ios`; for later JS-only changes, keep it installed and run `npm start`
-2. Take a simulator screenshot: `xcrun simctl io booted screenshot /tmp/screen.png`
+1. Launch through the Mandatory Agent Launch Protocol above: `npm run dev:port` first, then `npm run ios` (first run or native changes) or `npm start` (JS-only changes)
+2. Take a simulator screenshot: `xcrun simctl io booted screenshot /tmp/alfurqan-screen.png`
 3. Read the screenshot with the Read tool to visually inspect the result
 
 **Screenshots and recordings never enter the repository.** Write them to a
@@ -167,3 +169,17 @@ Jest with the `jest-expo` preset. Tests use `@testing-library/react-native`. Run
 ## Experiments
 
 `app.json` enables `typedRoutes` (compile-time route checking) and `reactCompiler` (React Compiler).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `arDaraz/alfurqan`, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage labels, each label string equal to its role name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
