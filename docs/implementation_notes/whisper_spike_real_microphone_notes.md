@@ -134,9 +134,18 @@ ran through an identical procedure.
 | Decode time, median | 533 ms | 513 ms |
 | Decode time, worst | 3086 ms | 976 ms |
 | Realtime factor (decode / audio) | 0.07 | 0.04 |
-| Peak audio buffered | 2.25 MB | 2.25 MB |
+| Peak audio buffered in JavaScript | 2.25 MB | 2.25 MB |
+| App resident memory, before the model loads | 794 MB | 800 MB |
+| App resident memory, peak while listening | 1237 MB | 1268 MB |
+| Growth attributable to the model and decode | 443 MB | 468 MB |
 | Committed-transcript accuracy | 0% (0 / 29 words) | 41% (12 / 29 words) |
 | Wrong / skipped / extra words | 0 / 29 / 0 | 3 / 14 / 0 |
+
+Resident memory is the whole app measured on the host with `ps -o rss=`, because
+a Simulator app is a host process. It therefore includes the Qur'an database, the
+JavaScript bundle and the UI, and it will not match a real phone. The growth row
+is the useful figure: both models cost about the same, which is what two f16
+builds of the same architecture should do.
 
 What the transcripts actually looked like matters more than the accuracy column.
 
