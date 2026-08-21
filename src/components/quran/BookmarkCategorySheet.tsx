@@ -8,18 +8,11 @@ import { toArabicIndic } from '../../utils/arabic';
 import type { Theme } from '../../constants/theme';
 import type { BookmarkCategory } from '../../data/types';
 
-export interface BookmarkCommit {
-  previous: BookmarkCategory[];
-  next: BookmarkCategory[];
-  added: BookmarkCategory[];
-  removed: BookmarkCategory[];
-}
-
 interface Props {
   surahName: string;
   ayahNumber: number;
   initialCategories: BookmarkCategory[];
-  onCommit: (commit: BookmarkCommit) => void;
+  onCommit: (categories: BookmarkCategory[]) => void;
   onDismiss: () => void;
 }
 
@@ -40,27 +33,17 @@ export function BookmarkCategorySheet({
   const previous = useMemo(() => sortCats(initialCategories), [initialCategories]);
   const previousSet = useMemo(() => new Set(previous), [previous]);
 
-  const buildCommit = (next: BookmarkCategory[]): BookmarkCommit => {
-    const nextSet = new Set(next);
-    return {
-      previous,
-      next,
-      added: next.filter((c) => !previousSet.has(c)),
-      removed: previous.filter((c) => !nextSet.has(c)),
-    };
-  };
-
   // Tap chip → toggle this category against the previous state and commit immediately.
   // The parent dismisses the sheet on commit, so one tap = save & close.
   const handleChipTap = (c: BookmarkCategory) => {
     const next = new Set(previousSet);
     if (next.has(c)) next.delete(c);
     else next.add(c);
-    onCommit(buildCommit(sortCats(Array.from(next))));
+    onCommit(sortCats(Array.from(next)));
   };
 
   const handleRemoveAll = () => {
-    onCommit(buildCommit([]));
+    onCommit([]);
   };
 
   const ayahLabel = isArabic ? toArabicIndic(ayahNumber) : ayahNumber;

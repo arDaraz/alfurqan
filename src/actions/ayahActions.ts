@@ -1,28 +1,17 @@
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
-import {
-  getAyahTextRange,
-  getMushafJuzAndPageForAyah,
-  getSurahLastAyah,
-} from '../data/quranRepository';
-import { useReadingStore } from '../stores/readingStore';
-import { useSettingsStore } from '../stores/settingsStore';
+import { getAyahTextRange, getSurahLastAyah } from '../data/quranRepository';
 import { recitationEngine } from '../services/recitationEngine';
 import type { AyahActionType, AyahSelection } from '../data/types';
 
-export interface AyahActionCallbacks {
-  /**
-   * Invoked when the user requests a bookmark. The host should open the
-   * category-picker sheet. If absent, the bookmark request is a no-op (a
-   * warning is logged).
-   */
-  onRequestBookmark?: (selection: AyahSelection) => void;
-}
-
+/**
+ * Runs an ayah action that needs no host interface. Bookmarking is not here:
+ * it opens a sheet and raises a confirmation, so hosts route it to the bookmark
+ * flow instead.
+ */
 export async function handleAyahAction(
-  action: AyahActionType,
-  selection: AyahSelection,
-  callbacks?: AyahActionCallbacks
+  action: Exclude<AyahActionType, 'bookmark'>,
+  selection: AyahSelection
 ): Promise<void> {
   const { startSurah, startAyah, endSurah, endAyah } = selection;
 
@@ -35,17 +24,6 @@ export async function handleAyahAction(
     case 'share': {
       const text = await getAyahTextRange(startSurah, startAyah, endAyah);
       await Share.share({ message: text });
-      break;
-    }
-    case 'bookmark': {
-      const layoutId = useSettingsStore.getState().mushafLayoutId;
-      const { juz, page } = await getMushafJuzAndPageForAyah(layoutId, startSurah, startAyah);
-      useReadingStore.getState().setLastRead(startSurah, startAyah, juz, page, new Date(), layoutId);
-      if (callbacks?.onRequestBookmark) {
-        callbacks.onRequestBookmark(selection);
-      } else {
-        console.warn('handleAyahAction: bookmark request without onRequestBookmark callback');
-      }
       break;
     }
     case 'play': {

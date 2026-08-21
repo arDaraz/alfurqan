@@ -8,15 +8,16 @@ import { useStrings } from '../../constants/strings';
 import { useTheme } from '../../hooks/useTheme';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useSurahList } from '../../hooks/useSurahList';
-import { searchAyahs, getSurahByNumber, type AyahSearchResult } from '../../data/quranRepository';
+import { searchAyahs, type AyahSearchResult } from '../../data/quranRepository';
 import { toArabicIndic } from '../../utils/arabic';
 import { OrnamentDivider } from '../brand/OrnamentDivider';
 import { handleAyahAction } from '../../actions/ayahActions';
 import { recitationEngine } from '../../services/recitationEngine';
 import { useRecitationStore } from '../../stores/recitationStore';
-import { useReadingStore } from '../../stores/readingStore';
-import type { Surah, AyahSelection } from '../../data/types';
-import { BookmarkCategorySheet, type BookmarkCommit } from '../quran/BookmarkCategorySheet';
+import type { Surah } from '../../data/types';
+import { BookmarkCategorySheet } from '../quran/BookmarkCategorySheet';
+import { BookmarkSavedSnackbar } from '../quran/BookmarkSavedSnackbar';
+import { useBookmarkFlow } from '../../hooks/useBookmarkFlow';
 
 import { SearchInput } from './SearchInput';
 import { AyahResultRow } from './AyahResultRow';
@@ -97,32 +98,7 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
   const totalDigits = isArabic ? toArabicIndic(totalCount) : String(totalCount);
   const showHeaderCount = status === 'ready' && totalCount > 0;
 
-  const addBookmark = useReadingStore((s) => s.addBookmark);
-  const removeBookmark = useReadingStore((s) => s.removeBookmark);
-  const getBookmarkCategories = useReadingStore((s) => s.getBookmarkCategories);
-
-  const [sheetSelection, setSheetSelection] = useState<AyahSelection | null>(null);
-  const [sheetSurahName, setSheetSurahName] = useState('');
-
-  const openSheet = useCallback(async (selection: AyahSelection) => {
-    setSheetSelection(selection);
-    try {
-      const s = await getSurahByNumber(selection.startSurah);
-      setSheetSurahName(isArabic ? s?.nameArabic ?? '' : s?.nameEnglish ?? '');
-    } catch {
-      setSheetSurahName('');
-    }
-  }, [isArabic]);
-
-  const handleSheetCommit = useCallback((commit: BookmarkCommit) => {
-    if (!sheetSelection) return;
-    const { startSurah, startAyah } = sheetSelection;
-    commit.added.forEach((c) => addBookmark(startSurah, startAyah, c));
-    commit.removed.forEach((c) => removeBookmark(startSurah, startAyah, c));
-    setSheetSelection(null);
-  }, [sheetSelection, addBookmark, removeBookmark]);
-
-  const handleSheetDismiss = useCallback(() => setSheetSelection(null), []);
+  const bookmarkFlow = useBookmarkFlow();
 
   const selectionFor = useCallback(
     (r: AyahSearchResult) => ({
@@ -174,7 +150,7 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
 
   const handleCopy = useCallback(
     (r: AyahSearchResult) => {
-      handleAyahAction('copy', selectionFor(r), undefined).catch((err) => {
+      handleAyahAction('copy', selectionFor(r)).catch((err) => {
         console.warn('copy failed', err);
       });
     },
@@ -183,15 +159,9 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
 
   const handleBookmark = useCallback(
     (r: AyahSearchResult) => {
-      handleAyahAction('bookmark', selectionFor(r), {
-        onRequestBookmark: (sel) => {
-          void openSheet(sel);
-        },
-      }).catch((err) => {
-        console.warn('bookmark failed', err);
-      });
+      bookmarkFlow.requestBookmark(selectionFor(r));
     },
-    [selectionFor, openSheet],
+    [selectionFor, bookmarkFlow],
   );
 
   return (
@@ -290,13 +260,11 @@ export function SearchScreen({ initialQuery = '' }: SearchScreenProps) {
         />
       )}
 
-      {sheetSelection && (
-        <BookmarkCategorySheet
-          surahName={sheetSurahName}
-          ayahNumber={sheetSelection.startAyah}
-          initialCategories={getBookmarkCategories(sheetSelection.startSurah, sheetSelection.startAyah)}
-          onCommit={handleSheetCommit}
-          onDismiss={handleSheetDismiss}
+      {bookmarkFlow.sheet && <BookmarkCategorySheet {...bookmarkFlow.sheet} />}
+      {bookmarkFlow.snackbar && (
+        <BookmarkSavedSnackbar
+          key={`${bookmarkFlow.snackbar.resultingCategories.join('|')}-${bookmarkFlow.snackbar.undone ? 'undone' : 'saved'}`}
+          {...bookmarkFlow.snackbar}
         />
       )}
     </SafeAreaView>
