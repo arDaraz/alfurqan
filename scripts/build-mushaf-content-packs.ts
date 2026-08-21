@@ -6,7 +6,7 @@
  * into layout-keyed tables and bundles its matching Nastaleeq font.
  *
  * Source snapshots are intentionally explicit and checksummed. See
- * docs/mushaf-content-packs.md before updating either URL.
+ * docs/MUSHAF_CONTENT_PACKS.md before updating either URL.
  */
 import Database from 'better-sqlite3';
 import { createHash } from 'node:crypto';

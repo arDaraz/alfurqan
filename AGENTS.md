@@ -95,6 +95,7 @@ The persisted stores use `react-native-mmkv` (faster than AsyncStorage).
 - `src/constants/theme.ts` — Full v2 token system: palette (paper/ink/teal/gold/sage/rose), semantic tokens (light + dark), spacing (8pt scale), radii, motion, elevation, fonts
 - `src/constants/strings.ts` — Bilingual i18n object (ar + en), accessed via `useStrings()`
 - `src/constants/quran.ts` — Qur'an constants (surah bismillah rules, quarter labels, revelation types)
+- `docs/BRAND.md`: naming policy. Read it before writing any user-facing name. It fixes the full brand name, the transliteration rules, which name each surface shows, and the app identifiers. Both platforms use bundle identifier `com.alfurqan.app`, and that value freezes at the first store submission.
 
 ### Key Hooks
 - `useTheme()` — Resolves light/dark/system theme to semantic tokens

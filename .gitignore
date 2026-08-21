@@ -77,3 +77,6 @@ app-example
 # End-to-end and manual QA reports. Local working history, not shared record.
 # Findings that must survive go in the pull request or a tracker issue.
 docs/qa/
+
+# Brainstorm tool scratch state, not a record of decisions.
+.superpowers/
