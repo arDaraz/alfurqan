@@ -5,16 +5,16 @@ import type { Surah } from '../data/types';
 export function useSurahList() {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setError(false);
       const data = await getSurahs();
       setSurahs(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load surahs');
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }

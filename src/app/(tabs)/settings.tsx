@@ -329,8 +329,8 @@ export default function SettingsScreen() {
         visible={aboutVisible}
         title={strings.settingsAbout}
         rows={[
-          { label: strings.appTitleFull, value: appVersion },
-          { label: strings.reader.infoMushaf, value: mushafLayoutLabel },
+          { label: strings.appTitleFull, value: appVersion, numeric: true },
+          { label: strings.reader.infoMushaf, value: mushafLayoutLabel, numeric: true },
         ]}
         note={`${strings.about.credits}: ${
           isArabic ? selectedMushafLayout.attribution.ar : selectedMushafLayout.attribution.en

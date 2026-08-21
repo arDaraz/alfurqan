@@ -7,6 +7,7 @@ import {
   getMushafJuzAndPageForAyah,
   getMushafSurahForPage,
   getMushafTopAyahForPage,
+  MushafContentPackError,
 } from '../../data/quranRepository';
 import { handleAyahAction } from '../../actions/ayahActions';
 import { MushafReader } from './MushafReader';
@@ -36,11 +37,11 @@ export interface InitialMushafPage {
 
 interface Props {
   loadInitialPage: () => Promise<InitialMushafPage>;
-  errorMessage: string;
 }
 
+type LoadError = 'page_load_error' | 'content_pack_error';
 
-export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
+export function MushafScreenLayout({ loadInitialPage }: Props) {
   const { colors, nightReadingEnabled } = useReaderColors();
   const strings = useStrings();
   const language = useSettingsStore((state) => state.language);
@@ -52,7 +53,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
   const [initialLocation, setInitialLocation] = useState<CanonicalQuranLocation | undefined>();
   const [currentJuz, setCurrentJuz] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<LoadError | null>(null);
 
   const bookmarkFlow = useBookmarkFlow();
   const layoutId = useSettingsStore((state) => state.mushafLayoutId);
@@ -67,11 +68,16 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       setInitialLocation(result.location);
       setCurrentPage(result.page);
     } catch (err) {
-      setError(err instanceof Error ? err.message : errorMessage);
+      // A thrown message is written for a developer and is always English.
+      setError(
+        err instanceof MushafContentPackError && err.code !== 'out_of_range'
+          ? 'content_pack_error'
+          : 'page_load_error'
+      );
     } finally {
       setLoading(false);
     }
-  }, [loadInitialPage, errorMessage]);
+  }, [loadInitialPage]);
 
   useEffect(() => {
     loadData();
@@ -126,6 +132,7 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
     {
       label: strings.reader.infoMushaf,
       value: isArabic ? readerLayout.displayName.ar : readerLayout.displayName.en,
+      numeric: true,
     },
   ];
 
@@ -142,7 +149,14 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
       {loading ? (
         <LoadingSkeleton />
       ) : error ? (
-        <ErrorState message={error} onRetry={loadData} />
+        <ErrorState
+          message={
+            error === 'content_pack_error'
+              ? strings.mushafContentPackError
+              : strings.mushafPageLoadError
+          }
+          onRetry={loadData}
+        />
       ) : initialPage !== null ? (
         <View style={styles.body}>
           <MushafReader

@@ -59,5 +59,5 @@ export default function SurahScreen() {
     return { page: initialPage, surahName: surah?.nameArabic ?? '', location };
   }, [ayahNumber, layoutId, pageLayoutId, requestedPage, surahNumber]);
 
-  return <MushafScreenLayout loadInitialPage={loadInitialPage} errorMessage="Failed to load surah" />;
+  return <MushafScreenLayout loadInitialPage={loadInitialPage} />;
 }

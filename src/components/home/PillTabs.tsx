@@ -97,8 +97,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
     countChipActive: {
       backgroundColor: theme.semantic.fgOnPrimary + '33',
     },
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
     countText: {
-      fontFamily: theme.fonts.arabic,
+      fontFamily: theme.fonts.arabicSerif,
       fontSize: 12,
       color: theme.semantic.fgMuted,
     },

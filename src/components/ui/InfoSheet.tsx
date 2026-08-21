@@ -124,8 +124,9 @@ function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
       textAlign: 'right',
       writingDirection: isArabic ? 'rtl' : 'ltr',
     },
+    // Manrope ships no Arabic-Indic digits and no Arabic letters.
     rowValueNumeric: {
-      fontFamily: theme.fonts.latin,
+      fontFamily: isArabic ? theme.fonts.arabicSerif : theme.fonts.latin,
       fontWeight: '700',
     },
     note: {

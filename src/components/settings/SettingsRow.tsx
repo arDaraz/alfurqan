@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { NumeralText } from '../home/widgets/NumeralText';
 
 interface Props {
   icon: React.ReactNode;
@@ -24,7 +25,11 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
       <View style={styles.iconWrap}>{icon}</View>
       <View style={styles.text}>
         <Text style={styles.k}>{label}</Text>
-        {value && <Text style={styles.v}>{value}</Text>}
+        {value && (
+          <NumeralText style={styles.v} numeralStyle={isArabic ? styles.numeral : undefined}>
+            {value}
+          </NumeralText>
+        )}
       </View>
       <View style={styles.trailing}>
         {trailing ?? (
@@ -56,7 +61,11 @@ export function SettingsRow({ icon, label, value, isLast, onPress, trailing }: P
           <View style={styles.iconWrap}>{icon}</View>
           <View style={styles.text}>
             <Text style={styles.k}>{label}</Text>
-            {value && <Text style={styles.v}>{value}</Text>}
+            {value && (
+              <NumeralText style={styles.v} numeralStyle={isArabic ? styles.numeral : undefined}>
+                {value}
+              </NumeralText>
+            )}
           </View>
           <View style={styles.trailing}>
             {trailing ?? (
@@ -108,6 +117,10 @@ function createStyles(theme: ReturnType<typeof useTheme>, isLast: boolean, isAra
       writingDirection: isArabic ? 'rtl' : 'ltr',
       lineHeight: 18,
       fontWeight: isArabic ? 'normal' : '500',
+    },
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
+    numeral: {
+      fontFamily: theme.fonts.arabicSerif,
     },
     v: {
       fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,

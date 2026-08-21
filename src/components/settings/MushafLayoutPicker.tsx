@@ -6,6 +6,7 @@ import { MUSHAF_LAYOUTS, type MushafLayoutId } from '../../data/mushafLayouts';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useStrings } from '../../constants/strings';
 import { useTheme } from '../../hooks/useTheme';
+import { NumeralText } from '../home/widgets/NumeralText';
 
 interface Props {
   visible: boolean;
@@ -84,17 +85,22 @@ export function MushafLayoutPicker({ visible, value, onChange, onDismiss }: Prop
                   </View>
                   <View style={styles.cardCopy}>
                     <View style={styles.cardTitleRow}>
-                      <Text style={[styles.cardTitle, selected && styles.cardTitleSelected]}>
+                      <NumeralText
+                        style={[styles.cardTitle, selected && styles.cardTitleSelected]}
+                        numeralStyle={styles.numeral}
+                      >
                         {primaryName}
-                      </Text>
+                      </NumeralText>
                       {selected && (
                         <Text style={styles.selectedBadge}>{strings.settingsMushafLayoutSelected}</Text>
                       )}
                     </View>
-                    <Text style={styles.cardArabic}>{secondaryName}</Text>
-                    <Text style={styles.meta}>
-                      {region} · {strings.settingsMushafLayoutMeta(layout.pageCount, layout.linesPerPage)}
-                    </Text>
+                    <NumeralText style={styles.cardArabic} numeralStyle={styles.numeral}>
+                      {secondaryName}
+                    </NumeralText>
+                    <NumeralText style={styles.meta} numeralStyle={styles.numeral}>
+                      {`${region} · ${strings.settingsMushafLayoutMeta(layout.pageCount, layout.linesPerPage)}`}
+                    </NumeralText>
                     <Text style={styles.offline}>{strings.settingsMushafLayoutOffline}</Text>
                     <Text style={styles.attribution}>{attribution}</Text>
                   </View>
@@ -112,6 +118,10 @@ export function MushafLayoutPicker({ visible, value, onChange, onDismiss }: Prop
 
 function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
+    numeral: {
+      fontFamily: theme.fonts.arabicSerif,
+    },
     root: { flex: 1, justifyContent: 'flex-end' },
     backdrop: {
       ...StyleSheet.absoluteFill,

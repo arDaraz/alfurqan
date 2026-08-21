@@ -60,8 +60,9 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.semantic.fg,
       textAlign: 'center',
     },
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
     body: {
-      fontFamily: theme.fonts.arabic,
+      fontFamily: theme.fonts.arabicSerif,
       fontSize: 13,
       letterSpacing: 1.32,
       color: theme.semantic.accent,

@@ -119,7 +119,6 @@ const HOSTS = [
     element: (
       <MushafScreenLayout
         loadInitialPage={async () => ({ page: 45, surahName: 'البقرة' })}
-        errorMessage="error"
       />
     ),
   },
