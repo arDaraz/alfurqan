@@ -206,16 +206,31 @@ Recorded here because they bound what the measurements prove.
 
 ## A note on driving this screen
 
-Taps on the spike screen do not always register under UI automation, whether
-through `idb` or through XcodeBuildMCP's accessibility actions. A Start tap was
-observed to do nothing, so a later tap meant as Stop started the run instead. Two
-independent testers hit this.
+Taps aimed at coordinates read off a screenshot miss often enough to look like
+broken buttons. Two testers reported exactly that: a chip selecting the wrong
+model, chip taps that did nothing, and Record run appearing to navigate away or
+do nothing.
 
-It has not been shown to be a defect in the screen: a person tapping by hand was
-never observed to miss, and every miss so far happened while the app was still
-settling after a navigation or a reload. Verify each tap by re-reading the screen
-rather than assuming it landed, and do not read a missed tap as a broken button
-until someone reproduces it by hand.
+None of it is a defect in the screen. Every one of those reports came from
+tapping a coordinate that was not where the element actually sat. The
+accessibility tree reports an element's position inside the scroll content, so
+Record run sits at y=1425 while the screen is only 874 points tall; tapping 1425
+lands nowhere. Re-tested by finding each element in the tree, scrolling it into
+the viewport, tapping its centre, and confirming the change:
+
+- Model chips: 5 of 5 alternating taps selected the right model, confirmed by the
+  `Selected` trait on the chip.
+- Record run: the counter went 0, 1, 2 and the screen never navigated away.
+- Start and Stop: the status line went from `Listening to fatiha-16k.wav.` to
+  `Stopped. Numbers below cover the whole session.`
+- The model-missing path: with `ggml-base-ar-quran-f16.bin` absent, Start shows
+  `Could not start listening: Whisper base (Quran-retrained) has no published
+  build. Put ggml-base-ar-quran-f16.bin in the app's asr-models directory.` and
+  the screen stays usable.
+
+To drive this screen, find elements by label in `idb ui describe-all`, scroll them
+into the viewport, and verify each tap by re-reading the tree. Do not report a
+missed tap as a broken button.
 
 ## Deferred
 
