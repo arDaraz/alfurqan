@@ -177,6 +177,58 @@ Decision: **the Quran-retrained model ships.** It is the same size, decodes
 faster in the worst case (976 ms against 3086 ms), and is the only one of the
 two that writes the script the matcher needs.
 
+## Android
+
+The Android half was previously untested. It now builds and runs.
+
+**The build works.** `./gradlew assembleDebug` succeeds in 11m 49s with NDK 27
+and CMake 3.22, and the APK carries `librnwhisper.so` for every ABI:
+`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`, plus the CPU variants
+`librnwhisper_v8.so`, `librnwhisper_v8fp16_va_2.so`, `librnwhisper_vfpv4.so` and
+`librnwhisper_x86_64.so`. whisper.cpp compiles for Android without changes.
+
+**The microphone permission works.** Tapping Start on a running Android device
+raises the system prompt `Allow Al Furqan to record audio?`, and granting it lets
+the session start. That is the Android half of the permission criterion, observed
+on screen rather than inferred from the manifest.
+
+**Whisper transcribes Arabic on Android.** The Quran-retrained model produced
+`بِسْمِ اللَّهِ الرَّجْع` from the recorded Al-Fatiha.
+
+Measured on the emulator, Pixel 9 profile, Android 16, arm64, software GPU:
+
+| | iOS Simulator | Android emulator |
+| --- | --- | --- |
+| First transcript | 2034 ms | 10827 ms |
+| Segments transcribed | 98 | 7 |
+| Decode time, median | 514 ms | 9349 ms |
+| Decode time, worst | 986 ms | 23530 ms |
+| Realtime factor | 0.04 | 2.92 |
+| Peak audio buffered | 2.25 MB | 0.78 MB |
+| Accuracy | 69% to 72% | 7% (2 / 29) |
+
+**These Android numbers do not describe a phone.** A realtime factor of 2.92
+means decoding takes nearly three times as long as the audio it covers, so the
+recognizer falls further behind every second. That is what an emulator on a
+software GPU does, not what an arm64 phone with NEON does. The accuracy figure
+follows from the same cause: only 7 slices were transcribed before the session
+ended, so most of the surah never reached the matcher. **A real mid-range phone
+is still required for any Android performance claim.**
+
+**Open: an Android-only RangeError.** Three times during the run, roughly once
+per transcription, logcat shows:
+
+```
+E ReactNativeJS: [Error: Uncaught (in promise, id: N) RangeError: Maximum call stack size exceeded]
+```
+
+Each one lands about eight seconds after a `rnwhisper::job::~job` line, so it is
+in the promise chain that runs after a transcription returns, not in the native
+decode. It never appeared on iOS. It correlates with Android producing 7 segments
+where iOS produced 98, so it is likely eating slices rather than being harmless.
+Root cause is not established and it is not in the spike's own code path as far as
+this pass could tell. **Investigate before the practice engine targets Android.**
+
 ## Test environment limits
 
 Recorded here because they bound what the measurements prove.
