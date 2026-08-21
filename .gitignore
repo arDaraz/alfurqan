@@ -73,3 +73,7 @@ app-example
 
 # Simulator device id written per worktree by the wt post-start hook
 .simulator-udid
+
+# End-to-end and manual QA reports. Local working history, not shared record.
+# Findings that must survive go in the pull request or a tracker issue.
+docs/qa/

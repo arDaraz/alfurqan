@@ -1,7 +1,8 @@
 # Implementation notes
 
-Spec: `docs/bookmark-flow-and-dead-code/spec.md`
-Manual test report: `docs/bookmark-flow-and-dead-code/manual_test_report.md`
+Spec: GitHub issue #7, which is where specs live. The local copy under
+`docs/bookmark-flow-and-dead-code/` was deleted on 21 August 2026 as a duplicate;
+the manual test report that sat beside it went with it and is in git history.
 Tracker: https://github.com/arDaraz/alfurqan/issues/7
 Branch: `bookmark-flow-and-dead-code`
 

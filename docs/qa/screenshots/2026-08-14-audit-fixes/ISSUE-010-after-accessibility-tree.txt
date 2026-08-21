@@ -1,5 +1,0 @@
-AXButton | ١ نتيجة في القرآن الكريم | value= | actions=AXPress,AXScrollToVisible,AXCancel,AXShowMenu
-AXButton | سورة الناس، الآية 1، جزء 30، صفحة 610 | value= | actions=AXPress,AXScrollToVisible,AXCancel,AXShowMenu
-AXButton | حفظ الآية | value= | actions=AXPress,AXScrollToVisible,AXCancel,AXShowMenu
-AXButton | نسخ الآية | value= | actions=AXPress,AXScrollToVisible,AXCancel,AXShowMenu
-AXButton | تشغيل الآية | value= | actions=AXPress,AXScrollToVisible,AXCancel,AXShowMenu
