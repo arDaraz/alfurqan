@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
+import { NumeralText } from '../home/widgets/NumeralText';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
@@ -82,9 +83,9 @@ export function BookmarkSavedSnackbar({
               ? strings.bookmark.removedTitle
               : strings.bookmark.savedTitle}
         </Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
+        <NumeralText style={styles.subtitle} numeralStyle={styles.numeral} numberOfLines={1}>
           {subtitle}
-        </Text>
+        </NumeralText>
       </View>
 
       {!undone && (
@@ -104,6 +105,10 @@ export function BookmarkSavedSnackbar({
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
+    numeral: {
+      fontFamily: theme.fonts.arabicSerif,
+    },
     container: {
       position: 'absolute',
       left: theme.spacing.md,

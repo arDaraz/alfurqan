@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown, FadeIn, FadeOut } from 'react-native-reanimated';
 import { useTheme } from '../../hooks/useTheme';
+import { NumeralText } from '../home/widgets/NumeralText';
 import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { toArabicIndic } from '../../utils/arabic';
@@ -73,7 +74,9 @@ export function BookmarkCategorySheet({
         accessibilityLabel={title}
       >
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{`${surahName} · ${strings.searchAyahLabel} ${ayahLabel}`}</Text>
+        <NumeralText style={styles.subtitle} numeralStyle={styles.numeral}>
+          {`${surahName} · ${strings.searchAyahLabel} ${ayahLabel}`}
+        </NumeralText>
 
         <View style={styles.chipRow}>
           {CATEGORIES.map((c) => {
@@ -118,6 +121,10 @@ function sortCats(cats: BookmarkCategory[]): BookmarkCategory[] {
 
 function createStyles(theme: Theme, isArabic: boolean) {
   return StyleSheet.create({
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
+    numeral: {
+      fontFamily: theme.fonts.arabicSerif,
+    },
     root: { position: 'absolute', left: 0, right: 0, bottom: 0, top: 0 },
     backdrop: {
       ...StyleSheet.absoluteFill,

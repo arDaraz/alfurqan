@@ -55,10 +55,10 @@ export function ReaderHeader({ surahName, juzNumber, pageNumber, onMore }: Props
           </>
         ) : null}
         <Text style={isRTL ? styles.metaLabel : styles.metaLabelEn}>{juzWord}</Text>
-        <Text style={styles.metaDigit}>{juzText}</Text>
+        <Text style={isRTL ? styles.metaDigit : styles.metaDigitEn}>{juzText}</Text>
         <View style={styles.bullet} />
         <Text style={isRTL ? styles.metaLabel : styles.metaLabelEn}>{pageWord}</Text>
-        <Text style={styles.metaDigit}>{pageText}</Text>
+        <Text style={isRTL ? styles.metaDigit : styles.metaDigitEn}>{pageText}</Text>
       </View>
 
       <Pressable
@@ -131,8 +131,14 @@ function createStyles(theme: Theme, colors: ReaderColors) {
       letterSpacing: 0.2,
       marginEnd: 4,
     },
+    // KFGQPC-Uthmani draws Arabic-Indic digits as ayah ornaments.
     metaDigit: {
-      fontFamily: theme.fonts.arabic,
+      fontFamily: theme.fonts.arabicSerif,
+      fontSize: theme.typeScale.label.size,
+      color: colors.fgMuted,
+    },
+    metaDigitEn: {
+      fontFamily: theme.fonts.latin,
       fontSize: theme.typeScale.label.size,
       color: colors.fgMuted,
     },

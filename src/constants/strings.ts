@@ -123,7 +123,7 @@ const ar = {
   juzShortLabel: (n: number) => `جزء ${n}`,
 
   // Mushaf
-  mushafPageIndicator: (n: number, total = 604) => `صفحة ${n} من ${toArabicIndic(total)}`,
+  mushafPageIndicator: (n: number, total = 604) => `صفحة ${toArabicIndic(n)} من ${toArabicIndic(total)}`,
   mushafPageLoadError: 'تعذّر تحميل هذه الصفحة. يرجى المحاولة مرة أخرى.',
   mushafFontLoadError: 'تعذّر تحميل خط المصحف. يرجى إعادة تشغيل التطبيق.',
   mushafContentPackError: 'حزمة هذا المصحف مفقودة أو تالفة. أعد تثبيت التطبيق لاستعادتها.',
