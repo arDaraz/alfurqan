@@ -131,15 +131,15 @@ ran through an identical procedure.
 | Model size | 148 MB | 148 MB |
 | First transcript | 1994 ms | 2068 ms |
 | Segments transcribed | 73 | 98 |
-| Decode time, median | 533 ms | 513 ms |
-| Decode time, worst | 3086 ms | 976 ms |
+| Decode time, median | 529 to 533 ms | 514 to 570 ms |
+| Decode time, worst | 3086 to 3679 ms | 970 to 1171 ms |
 | Realtime factor (decode / audio) | 0.07 | 0.04 |
 | Peak audio buffered in JavaScript | 2.25 MB | 2.25 MB |
 | App resident memory, before the model loads | 794 MB | 800 MB |
 | App resident memory, peak while listening | 1237 MB | 1268 MB |
 | Growth attributable to the model and decode | 443 MB | 468 MB |
-| Committed-transcript accuracy | 0% (0 / 29 words) | 41% (12 / 29 words) |
-| Wrong / skipped / extra words | 0 / 29 / 0 | 3 / 14 / 0 |
+| Committed-transcript accuracy | 0% (0 / 29 words) | 69% to 72% (20 to 21 / 29 words) |
+| Wrong / skipped / extra words | 0 / 29 / 0 | 5 / 4 / 0 |
 
 Resident memory is the whole app measured on the host with `ps -o rss=`, because
 a Simulator app is a host process. It therefore includes the Qur'an database, the
@@ -157,6 +157,12 @@ So the general model romanizes Quranic recitation, flips script mid-session, and
 when it does write Arabic it produces words the matcher cannot key on. Word-level
 matching against the mushaf is impossible with it. Its 0% is real, not a scoring
 artifact.
+
+Ranges come from repeated runs. Accuracy was measured three times on the Quran
+model: 69% and 72% on runs left to play the recording out, and 41% on an earlier
+run stopped before the last segments committed. The figure is 69% to 72%; the 41%
+measured a truncated session, not the model. An earlier revision of this file and
+of the issue comment published that 41% and has been corrected.
 
 Quran-retrained model, committed transcript:
 `ف ال حمدُ لِلَّهِ رَبِّ الْعَالَمِينَ الرَّحْمَنِ الرَّحِيمِ مَالِكِ يَوْمِ الدِّينِ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينَ`
@@ -197,6 +203,19 @@ Recorded here because they bound what the measurements prove.
 - **No physical iPhone attached.** The Simulator runs whisper.cpp on the Mac's
   CPU and GPU, so decode times will be faster than a real iPhone. The accuracy
   and script findings do not depend on the host and carry over.
+
+## A note on driving this screen
+
+Taps on the spike screen do not always register under UI automation, whether
+through `idb` or through XcodeBuildMCP's accessibility actions. A Start tap was
+observed to do nothing, so a later tap meant as Stop started the run instead. Two
+independent testers hit this.
+
+It has not been shown to be a defect in the screen: a person tapping by hand was
+never observed to miss, and every miss so far happened while the app was still
+settling after a navigation or a reload. Verify each tap by re-reading the screen
+rather than assuming it landed, and do not read a missed tap as a broken button
+until someone reproduces it by hand.
 
 ## Deferred
 
