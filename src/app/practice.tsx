@@ -263,8 +263,8 @@ function MicButton({ listening, onToggle }: { listening: boolean; onToggle: () =
   }));
   const styles = createStyles(theme);
   return (
-    // ponytail: toggles the listening state only. Audio capture and live
-    // verification are not wired yet, see docs/superpowers/specs/2026-05-01-recitation-verification-adr.md.
+    // ponytail: this button only flips the listening flag. Microphone capture
+    // and live recitation checking against the ayah are not implemented.
     <Pressable
       onPress={onToggle}
       accessibilityRole="button"

@@ -302,7 +302,7 @@ _Practice after Skip, with both side controls live_
 
 **Fix:** The microphone toggles the listening state and stays on the screen. The button turns red while listening, the pulse ring only animates while listening, and the label under it switches between the idle prompt and "يستمع". The button reports its own selected state to accessibility.
 
-Audio capture and live verification are still not wired. The button carries a `ponytail:` comment pointing at `docs/superpowers/specs/2026-05-01-recitation-verification-adr.md`, so the remaining work is recorded next to the code rather than hidden behind a control that lies.
+Audio capture and live verification are still not wired. The button carries a `ponytail:` comment recording the remaining work next to the code, rather than hiding it behind a control that lies. The recitation verification ADR it cited lived at `docs/superpowers/specs/2026-05-01-recitation-verification-adr.md` and was removed with the planning archives; read it in git history if the reasoning is needed.
 
 **Files:** `src/app/practice.tsx`, `src/constants/strings.ts`.
 
@@ -318,7 +318,7 @@ _Practice listening, still on the same screen_
 
 **Ayah selection does not open the action popup.** High. Reader.
 
-**Root cause:** Both page generators sent `openMenu:false` when the user tapped an ayah. `MushafReader` reads that flag to decide whether to show `AyahPopup`, so a tap highlighted the ayah and showed nothing else. Only a completed long press set the flag, and the long press was itself fragile, see ISSUE-016. The design spec for this screen, `docs/superpowers/specs/2026-03-25-ayah-selection-behavior-fix.md`, states that a tap should highlight the ayah and open the popup near the tap.
+**Root cause:** Both page generators sent `openMenu:false` when the user tapped an ayah. `MushafReader` reads that flag to decide whether to show `AyahPopup`, so a tap highlighted the ayah and showed nothing else. Only a completed long press set the flag, and the long press was itself fragile, see ISSUE-016. The design spec for this screen stated that a tap should highlight the ayah and open the popup near the tap. That spec lived at `docs/superpowers/specs/2026-03-25-ayah-selection-behavior-fix.md` and was removed with the planning archives; it is in git history.
 
 **Fix:** A tap now sends `openMenu:true` in both the Madani generator and the IndoPak generator.
 
