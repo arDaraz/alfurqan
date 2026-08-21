@@ -178,8 +178,13 @@ Recorded here because they bound what the measurements prove.
   `RealtimeTranscriber`, the same VAD, and the same decode path. Everything
   after audio capture is identical to the microphone path.
 - **No Android device or emulator on this machine.** There is no Android SDK
-  installed and no physical device attached, so the Android half of the
-  acceptance criteria could not be run.
+  installed and no physical device attached, so nothing Android could be run.
+  The configuration half was checked without a device:
+  `npx expo prebuild --platform android` puts
+  `<uses-permission android:name="android.permission.RECORD_AUDIO"/>` in the
+  generated manifest, and both `whisper.rn` and
+  `@fugood/react-native-audio-pcm-stream` ship `android/build.gradle`, so they
+  autolink. Compiling and running still needs the SDK and a device.
 - **No physical iPhone attached.** The Simulator runs whisper.cpp on the Mac's
   CPU and GPU, so decode times will be faster than a real iPhone. The accuracy
   and script findings do not depend on the host and carry over.
