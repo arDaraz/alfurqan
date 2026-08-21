@@ -1,0 +1,244 @@
+{
+  "projectId": "8d503039-248b-4826-9183-3f0afa2eb6f1",
+  "shape": "package",
+  "pkg": "alfurqan",
+  "globalName": "Alfurqan",
+  "entry": ".design-sync/generated/ds-entry.tsx",
+  "tsconfig": ".design-sync/tsconfig.ds-sync.json",
+  "srcDir": "src",
+  "cssEntry": ".design-sync/generated/tokens.css",
+  "extraFonts": [
+    ".design-sync/styles/fonts.css"
+  ],
+  "componentSrcMap": {
+    "AyahPopup": "src/components/quran/AyahPopup.tsx",
+    "AyahResultRow": "src/components/search/AyahResultRow.tsx",
+    "AyahRosette": "src/components/brand/AyahRosette.tsx",
+    "BookmarkCategorySheet": "src/components/quran/BookmarkCategorySheet.tsx",
+    "BookmarkRow": "src/components/bookmarks/BookmarkRow.tsx",
+    "BookmarkSavedSnackbar": "src/components/quran/BookmarkSavedSnackbar.tsx",
+    "BookmarksScreen": "src/components/bookmarks/BookmarksScreen.tsx",
+    "BrandBar": "src/components/home/BrandBar.tsx",
+    "ContinueReadingWidget": "src/components/home/widgets/ContinueReadingWidget.tsx",
+    "ErrorState": "src/components/ui/ErrorState.tsx",
+    "FontSizeRow": "src/components/settings/FontSizeRow.tsx",
+    "HomeView": "src/components/home/HomeView.tsx",
+    "HomeWidgetsGroup": "src/components/settings/HomeWidgetsGroup.tsx",
+    "InfoSheet": "src/components/ui/InfoSheet.tsx",
+    "JuzListItem": "src/components/home/JuzListItem.tsx",
+    "KhatamStar": "src/components/brand/KhatamStar.tsx",
+    "KhatamWidget": "src/components/home/widgets/KhatamWidget.tsx",
+    "LoadingSkeleton": "src/components/ui/LoadingSkeleton.tsx",
+    "LogoGlyph": "src/components/brand/LogoGlyph.tsx",
+    "MicVisualizer": "src/components/practice/MicVisualizer.tsx",
+    "MiniPlayerBar": "src/components/quran/MiniPlayerBar.tsx",
+    "MushafBottomToolbar": "src/components/quran/MushafBottomToolbar.tsx",
+    "MushafLayoutPicker": "src/components/settings/MushafLayoutPicker.tsx",
+    "MushafPage": "src/components/quran/MushafPage.tsx",
+    "MushafReader": "src/components/quran/MushafReader.web.tsx",
+    "MushafScreenLayout": "src/components/quran/MushafScreenLayout.tsx",
+    "NightReadingPicker": "src/components/settings/NightReadingPicker.tsx",
+    "NumeralText": "src/components/home/widgets/NumeralText.tsx",
+    "OnboardingDots": "src/components/onboarding/OnboardingDots.tsx",
+    "OnboardingScreen": "src/components/onboarding/OnboardingScreen.tsx",
+    "OrnamentDivider": "src/components/brand/OrnamentDivider.tsx",
+    "Pill": "src/components/settings/Pill.tsx",
+    "PillTabs": "src/components/home/PillTabs.tsx",
+    "PlayerSheet": "src/components/quran/PlayerSheet.tsx",
+    "PrayerBand": "src/components/home/widgets/PrayerBand.tsx",
+    "QiblahWidget": "src/components/home/widgets/QiblahWidget.tsx",
+    "ReaderHeader": "src/components/quran/ReaderHeader.tsx",
+    "ReciterPickerSheet": "src/components/quran/ReciterPickerSheet.tsx",
+    "SearchInput": "src/components/search/SearchInput.tsx",
+    "SearchScreen": "src/components/search/SearchScreen.tsx",
+    "SettingsGroup": "src/components/settings/SettingsGroup.tsx",
+    "SettingsRow": "src/components/settings/SettingsRow.tsx",
+    "SplashView": "src/components/splash/SplashView.tsx",
+    "StreakWidget": "src/components/home/widgets/StreakWidget.tsx",
+    "SurahBrowser": "src/components/search/SurahBrowser.tsx",
+    "SurahCartouche": "src/components/brand/SurahCartouche.tsx",
+    "SurahListItem": "src/components/home/SurahListItem.tsx",
+    "TabBar": "src/components/navigation/TabBar.tsx",
+    "TasmeeWidget": "src/components/home/widgets/TasmeeWidget.tsx",
+    "Toggle": "src/components/settings/Toggle.tsx",
+    "WidgetCard": "src/components/home/widgets/WidgetCard.tsx",
+    "Wordmark": "src/components/brand/Wordmark.tsx"
+  },
+  "guidelinesGlob": [
+    "docs/brand.md"
+  ],
+  "dtsPropsFor": {
+    "SurahListItem": "  surah: { number: number; nameArabic: string; nameEnglish: string; ayahCount: number; revelationType: 'Makki' | 'Madani'; revelationOrder: number; juzStart: number };\n  onSelect: (surahNumber: number) => void;\n  onOpen: (surahNumber: number) => void;\n  isActive?: boolean;",
+    "JuzListItem": "  juz: { number: number; startSurah: number; startAyah: number; endSurah: number; endAyah: number };\n  /** Surah number to display name, used for the range label. */\n  surahNames: Map<number, string>;\n  onSelect: (juzNumber: number) => void;\n  onOpen: (juzNumber: number) => void;\n  isActive?: boolean;",
+    "InfoSheet": "  visible: boolean;\n  title: string;\n  /** `numeric` opts a value out of the Arabic UI font, whose digits sit inside ayah-marker ornaments. */\n  rows: Array<{ label: string; value: string; numeric?: boolean }>;\n  note?: string;\n  onClose: () => void;",
+    "BookmarkSavedSnackbar": "  surahName: string;\n  pageNumber: number;\n  juzNumber: number;\n  resultingCategories: Array<'reading' | 'recitation'>;\n  /** Confirms a completed Undo: restates the restored state and drops the Undo action. */\n  undone?: boolean;\n  onUndo: () => void;\n  onDismiss: () => void;",
+    "BookmarkCategorySheet": "  surahName: string;\n  ayahNumber: number;\n  initialCategories: Array<'reading' | 'recitation'>;\n  onCommit: (categories: Array<'reading' | 'recitation'>) => void;\n  onDismiss: () => void;",
+    "PrayerBand": "  day: {\n    times: Record<'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha', Date>;\n    /** The prayer whose time has most recently passed, or null before Fajr. */\n    current: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha' | null;\n    next: { name: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'; at: Date };\n  };\n  city: string;\n  now: Date;",
+    "QiblahWidget": "  point: { latitude: number; longitude: number };\n  size?: number;\n  style?: object;",
+    "AyahPopup": "  selection: { startSurah: number; startAyah: number; endSurah: number; endAyah: number };\n  /** Screen position of the tapped ayah, in pixels. */\n  x: number;\n  y: number;\n  onAction: (\n    action: 'play' | 'tafsir' | 'bookmark' | 'copy' | 'share' | 'wordByWord',\n    selection: { startSurah: number; startAyah: number; endSurah: number; endAyah: number },\n  ) => void;\n  onDismiss: () => void;",
+    "AyahResultRow": "  result: { surahNumber: number; ayahNumber: number; textUthmani: string; juzNumber: number; pageNumber: number };\n  surahNameArabic: string;\n  surahNameEnglish: string;\n  /** The search term, highlighted inside the ayah text. */\n  query: string;\n  onPress?: (result: { surahNumber: number; ayahNumber: number; textUthmani: string; juzNumber: number; pageNumber: number }) => void;\n  onPlay?: (result: { surahNumber: number; ayahNumber: number; textUthmani: string; juzNumber: number; pageNumber: number }) => void;\n  onCopy?: (result: { surahNumber: number; ayahNumber: number; textUthmani: string; juzNumber: number; pageNumber: number }) => void;\n  onBookmark?: (result: { surahNumber: number; ayahNumber: number; textUthmani: string; juzNumber: number; pageNumber: number }) => void;",
+    "TabBar": "  /** Supplied by expo-router's Tabs navigator; this bar is not meant to be built by hand. */\n  state: { index: number; routes: Array<{ key: string; name: string }> };\n  descriptors: Record<string, { options: { title?: string; tabBarLabel?: string } }>;\n  navigation: { navigate: (name: string) => void; emit: (event: object) => { defaultPrevented: boolean } };\n  insets: { top: number; right: number; bottom: number; left: number };",
+    "ContinueReadingWidget": "  /** 'resume' also requires surahNumber, surahName, ayahNumber, juzNumber and pageNumber. 'start' takes onPress alone. */\n  variant: 'resume' | 'start';\n  surahNumber?: number;\n  surahName?: string;\n  ayahNumber?: number;\n  juzNumber?: number;\n  pageNumber?: number;\n  onPress: () => void;"
+  },
+  "overrides": {
+    "MushafLayoutPicker": {
+      "cardMode": "single",
+      "viewport": "390x800"
+    },
+    "InfoSheet": {
+      "cardMode": "single",
+      "viewport": "760x560"
+    },
+    "OnboardingScreen": {
+      "cardMode": "single",
+      "viewport": "430x860",
+      "primaryStory": "WelcomeSlide"
+    },
+    "PlayerSheet": {
+      "cardMode": "single",
+      "primaryStory": "Playing",
+      "viewport": "390x800"
+    },
+    "ReciterPickerSheet": {
+      "cardMode": "single",
+      "viewport": "390x800"
+    },
+    "BookmarkRow": {
+      "cardMode": "column"
+    },
+    "BookmarksScreen": {
+      "cardMode": "column"
+    },
+    "AyahRosette": {
+      "cardMode": "column"
+    },
+    "KhatamStar": {
+      "cardMode": "column"
+    },
+    "LogoGlyph": {
+      "cardMode": "column"
+    },
+    "OrnamentDivider": {
+      "cardMode": "column"
+    },
+    "SurahCartouche": {
+      "cardMode": "column"
+    },
+    "Wordmark": {
+      "cardMode": "column"
+    },
+    "ErrorState": {
+      "cardMode": "column"
+    },
+    "LoadingSkeleton": {
+      "cardMode": "column"
+    },
+    "BrandBar": {
+      "cardMode": "column"
+    },
+    "HomeView": {
+      "cardMode": "column"
+    },
+    "JuzListItem": {
+      "cardMode": "column"
+    },
+    "PillTabs": {
+      "cardMode": "column"
+    },
+    "SurahListItem": {
+      "cardMode": "column"
+    },
+    "TabBar": {
+      "cardMode": "column"
+    },
+    "OnboardingDots": {
+      "cardMode": "column"
+    },
+    "MicVisualizer": {
+      "cardMode": "column"
+    },
+    "AyahPopup": {
+      "cardMode": "column"
+    },
+    "BookmarkCategorySheet": {
+      "cardMode": "column"
+    },
+    "BookmarkSavedSnackbar": {
+      "cardMode": "column"
+    },
+    "MushafBottomToolbar": {
+      "cardMode": "column"
+    },
+    "MushafScreenLayout": {
+      "cardMode": "column"
+    },
+    "ReaderHeader": {
+      "cardMode": "column"
+    },
+    "AyahResultRow": {
+      "cardMode": "column"
+    },
+    "SearchInput": {
+      "cardMode": "column"
+    },
+    "SearchScreen": {
+      "cardMode": "column"
+    },
+    "SurahBrowser": {
+      "cardMode": "column"
+    },
+    "FontSizeRow": {
+      "cardMode": "column"
+    },
+    "HomeWidgetsGroup": {
+      "cardMode": "column"
+    },
+    "NightReadingPicker": {
+      "cardMode": "column"
+    },
+    "Pill": {
+      "cardMode": "column"
+    },
+    "SettingsGroup": {
+      "cardMode": "column"
+    },
+    "SettingsRow": {
+      "cardMode": "column"
+    },
+    "Toggle": {
+      "cardMode": "column"
+    },
+    "SplashView": {
+      "cardMode": "column"
+    },
+    "ContinueReadingWidget": {
+      "cardMode": "column"
+    },
+    "KhatamWidget": {
+      "cardMode": "column"
+    },
+    "NumeralText": {
+      "cardMode": "column"
+    },
+    "PrayerBand": {
+      "cardMode": "column"
+    },
+    "QiblahWidget": {
+      "cardMode": "column"
+    },
+    "StreakWidget": {
+      "cardMode": "column"
+    },
+    "TasmeeWidget": {
+      "cardMode": "column"
+    },
+    "WidgetCard": {
+      "cardMode": "column"
+    },
+    "MiniPlayerBar": {
+      "cardMode": "single",
+      "primaryStory": "Playing"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
