@@ -76,7 +76,11 @@ export function BookmarkSavedSnackbar({
 
       <View style={styles.textColumn}>
         <Text style={styles.title} numberOfLines={1}>
-          {undone ? strings.bookmark.undoneTitle : strings.bookmark.savedTitle}
+          {undone
+            ? strings.bookmark.undoneTitle
+            : resultingCategories.length === 0
+              ? strings.bookmark.removedTitle
+              : strings.bookmark.savedTitle}
         </Text>
         <Text style={styles.subtitle} numberOfLines={1}>
           {subtitle}
@@ -105,6 +109,7 @@ function createStyles(theme: Theme) {
       left: theme.spacing.md,
       right: theme.spacing.md,
       bottom: 70,
+      zIndex: 10,
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: 10,

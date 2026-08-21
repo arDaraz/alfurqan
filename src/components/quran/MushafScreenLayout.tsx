@@ -155,15 +155,17 @@ export function MushafScreenLayout({ loadInitialPage, errorMessage }: Props) {
             onPageBookmarkRequest={bookmarkFlow.requestBookmark}
             onPageInfoRequest={() => setInfoVisible(true)}
           />
-          {bookmarkFlow.sheet && <BookmarkCategorySheet {...bookmarkFlow.sheet} />}
-          {bookmarkFlow.snackbar && (
-            <BookmarkSavedSnackbar
-              key={`${bookmarkFlow.snackbar.resultingCategories.join('|')}-${bookmarkFlow.snackbar.undone ? 'undone' : 'saved'}`}
-              {...bookmarkFlow.snackbar}
-            />
-          )}
         </View>
       ) : null}
+      {/* Outside the reader body: the native pager paints over its own siblings,
+          which leaves these in the tree but not tappable. */}
+      {bookmarkFlow.sheet && <BookmarkCategorySheet {...bookmarkFlow.sheet} />}
+      {bookmarkFlow.snackbar && (
+        <BookmarkSavedSnackbar
+          key={`${bookmarkFlow.snackbar.resultingCategories.join('|')}-${bookmarkFlow.snackbar.undone ? 'undone' : 'saved'}`}
+          {...bookmarkFlow.snackbar}
+        />
+      )}
       <InfoSheet
         visible={infoVisible}
         title={strings.reader.pageOptions}

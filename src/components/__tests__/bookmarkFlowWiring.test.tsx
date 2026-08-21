@@ -138,6 +138,26 @@ describe('the bookmark flow', () => {
     });
   });
 
+  it('restores through undo even when React runs the state updater twice', async () => {
+    // The restore once ran inside a state updater. Updaters must be pure, and
+    // this project compiles with the React compiler, so an impure one silently
+    // dropped the restore in the real app while passing here. Rendering under
+    // StrictMode double-invokes updaters, which reproduces that.
+    const { StrictMode } = require('react');
+    const view = render(
+      <StrictMode>
+        <Host />
+      </StrictMode>
+    );
+    fireEvent.press(view.getByTestId('request'));
+    fireEvent.press(await view.findByTestId('chip-reading'));
+    await waitFor(() => expect(categoriesNow()).toEqual(['reading']));
+
+    fireEvent.press(await view.findByLabelText(UNDO));
+
+    await waitFor(() => expect(categoriesNow()).toEqual([]));
+  });
+
   it('keeps the ayah bookmarked when only one of two categories is dropped', async () => {
     useReadingStore.setState({
       bookmarks: [

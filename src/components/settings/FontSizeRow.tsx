@@ -7,6 +7,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 interface Props {
   label: string;
@@ -19,7 +20,8 @@ const STEP = 0.1;
 
 export function FontSizeRow({ label, value, onChange }: Props) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const isArabic = useSettingsStore((s) => s.language) === 'ar';
+  const styles = createStyles(theme, isArabic);
   const trackRef = useRef<View>(null);
   const trackLayout = useRef({ x: 0, width: 0 });
   const previewSize = 18 + Math.round(value * 18);
@@ -81,7 +83,7 @@ export function FontSizeRow({ label, value, onChange }: Props) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>) {
+function createStyles(theme: ReturnType<typeof useTheme>, isArabic: boolean) {
   return StyleSheet.create({
     wrap: {
       paddingVertical: 14,
@@ -95,10 +97,10 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       alignItems: 'center',
     },
     k: {
-      fontFamily: theme.fonts.quran,
+      fontFamily: isArabic ? theme.fonts.quran : theme.fonts.latin,
       fontSize: 15,
       color: theme.semantic.fg,
-      writingDirection: 'rtl',
+      writingDirection: isArabic ? 'rtl' : 'ltr',
     },
     v: {
       fontFamily: theme.fonts.latin,

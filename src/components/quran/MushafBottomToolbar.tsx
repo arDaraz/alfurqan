@@ -34,7 +34,7 @@ export function MushafBottomToolbar({
       <ToolbarIcon
         label={strings.reader.surahIndex}
         icon="format-list-bulleted"
-        onPress={() => router.push('/(tabs)')}
+        onPress={() => router.push('/(tabs)/search')}
       />
       <Pressable
         accessibilityRole="button"

@@ -147,16 +147,21 @@ export function useBookmarkFlow(): BookmarkFlow {
   );
 
   const handleUndo = useCallback(() => {
-    setConfirmation((current) => {
-      if (!current?.undo) return current;
-      undoBookmarks(current.undo);
-      return {
-        ...current,
-        resultingCategories: current.undo.previous.map((b) => b.category),
-        undo: null,
-      };
-    });
-  }, [undoBookmarks]);
+    const undo = confirmation?.undo;
+    if (!undo) return;
+    // The store write stays outside the updater. An updater may run during
+    // render or more than once, which would drop or repeat the restore.
+    undoBookmarks(undo);
+    setConfirmation((current) =>
+      current
+        ? {
+            ...current,
+            resultingCategories: undo.previous.map((b) => b.category),
+            undo: null,
+          }
+        : current
+    );
+  }, [confirmation, undoBookmarks]);
 
   const categoriesFor = (surahNumber: number, ayahNumber: number) =>
     bookmarks
