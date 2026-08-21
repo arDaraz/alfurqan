@@ -79,6 +79,40 @@ The sheet opens immediately and fills in the surah name when the lookup returns.
 
 If the page and juz lookup fails after a commit, no confirmation appears, so the commit stands with no way to undo it. The previous implementation behaved the same way. It is recorded here because the new flow makes it a single place to fix rather than three.
 
+## Defects found by manual testing on the simulator
+
+An agent drove the simulator and exercised every feature. It found seven reproducible bugs. All seven are fixed and re-verified on the device. Four were mine, three were older.
+
+### Undo did not restore, and the tests could not have caught it
+
+The reversal was written inside a React state updater. Updaters must be pure. This project builds with the React compiler, so the updater could run during render or more than once, and the restore was dropped. Bookmarking from a search result or deleting by swipe therefore could not be undone, while the automated tests passed, because the test renderer calls an updater exactly once.
+
+The store write now happens outside the updater. A regression test renders the flow under strict mode, which double-invokes updaters and reproduces the original failure.
+
+The lesson worth keeping: a passing suite did not mean the code was correct, because the test environment did not reproduce the condition that broke it. Only running the real application found this.
+
+### The reader confirmation was present but unreachable
+
+The confirmation and the category sheet were rendered inside the reader body, as siblings of the native pager. A native pager paints over its own siblings, so both were in the accessibility tree, and invisible, and a tap meant for Undo reached the Quran page underneath. They are now rendered outside that body, with an explicit stacking order.
+
+### The header and the visible page disagreed after a page turn
+
+Older than this work, and the most involved to fix.
+
+The reader mounts three pages at a time and the pager sits on the middle one. That window was centred on the page being read, so it slid on every turn, including while a swipe was still settling. The pager's children therefore changed underneath the gesture, and the index the code read on page-select no longer referred to the children the pager actually held. The header ended up one page away from the content, repeated turns stalled, and alternating turns eventually left the page blank.
+
+A first attempt delayed the correction by one frame. It fixed forward turns and left backward turns broken, which is the signature of treating a symptom: it only helped whichever direction won the race.
+
+The window is now centred by its own state, separate from the page being read. A swipe updates the header at once and leaves the window alone. The window recentres only when the pager reports that scrolling has gone idle. Jumps that are not swipes still recentre immediately, because there is no gesture to disturb.
+
+### Smaller fixes
+
+The surah index action opened Home, because it pushed the tab group rather than the tab holding the index. A test asserted the wrong destination, so the defect was pinned as correct behaviour; that test was corrected too. The deletion confirmation used the saved title. The settings switch used a physical margin and rendered backwards in English. The font size label was locked to the Quran font and right-to-left.
+
+## Left for the owner to decide
+
+The tafsir and word-by-word actions are stubs that close the popup and do nothing. The tester recommends hiding them rather than labelling them, on the grounds that an active control which does nothing is a dead end in the main reading flow. That is a product decision, so nothing was changed.
+
 ## Corrections to the spec found during implementation
 
 ### The retired section was not entirely retired
