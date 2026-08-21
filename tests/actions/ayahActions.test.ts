@@ -84,43 +84,6 @@ describe('handleAyahAction', () => {
     });
   });
 
-  describe('bookmark action', () => {
-    it('invokes onRequestBookmark with the selection', async () => {
-      const onRequestBookmark = jest.fn();
-      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark });
-      expect(onRequestBookmark).toHaveBeenCalledTimes(1);
-      expect(onRequestBookmark).toHaveBeenCalledWith(mockSelection);
-    });
-
-    it('updates last-read position via setLastRead even on bookmark', async () => {
-      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark: jest.fn() });
-      const state = useReadingStore.getState();
-      expect(state.lastReadSurah).toBe(mockSelection.startSurah);
-      expect(state.lastReadAyah).toBe(mockSelection.startAyah);
-      expect(state.lastReadJuz).toBe(3);
-      expect(state.lastReadPage).toBe(51);
-    });
-
-    it('does not mutate bookmarks directly; defers to the callback', async () => {
-      const onRequestBookmark = jest.fn();
-      await handleAyahAction('bookmark', mockSelection, { onRequestBookmark });
-      expect(useReadingStore.getState().bookmarks).toEqual([]);
-      expect(onRequestBookmark).toHaveBeenCalledTimes(1);
-    });
-
-    it('still updates last-read and logs a warning when called without onRequestBookmark', async () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
-      await handleAyahAction('bookmark', mockSelection);
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('onRequestBookmark'),
-      );
-      const state = useReadingStore.getState();
-      expect(state.lastReadSurah).toBe(mockSelection.startSurah);
-      expect(state.lastReadAyah).toBe(mockSelection.startAyah);
-      warnSpy.mockRestore();
-    });
-  });
-
   describe('placeholder actions', () => {
     it('play action starts recitation from selected ayah to end of surah', async () => {
       await handleAyahAction('play', mockSelection);

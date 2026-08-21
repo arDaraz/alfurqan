@@ -116,7 +116,7 @@ The app globally forces RTL via `I18nManager.forceRTL(true)` in `_layout.tsx`. U
 
 ## Styling
 
-NativeWind (Tailwind for React Native) via `className` props is the primary styling approach. Custom theme colors and spacing are extended in `tailwind.config.js` (mirrors `theme.ts` palette). Some components use inline `style` with `useTheme()` for runtime-resolved dark mode values.
+`StyleSheet.create` is the styling approach, paired with `useTheme()` for runtime-resolved light and dark values. The common pattern is a `createStyles(theme, isArabic)` factory at the bottom of the file, called from the component. Take every colour, spacing, radius, and type value from the theme tokens rather than writing a literal.
 
 Path alias: `@/*` maps to `src/*`, `@/assets/*` maps to `assets/*`.
 
@@ -145,6 +145,15 @@ This is a **native mobile app**. Always verify UI changes on the iOS simulator, 
 1. Build and run the app with `npm run ios`; for later JS-only changes, keep it installed and run `npm start`
 2. Take a simulator screenshot: `xcrun simctl io booted screenshot /tmp/screen.png`
 3. Read the screenshot with the Read tool to visually inspect the result
+
+**Screenshots and recordings never enter the repository.** Write them to a
+scratch directory outside the working tree, or to `/tmp`, and reference them by
+absolute path while the task is open. A report records what was seen in words,
+because the words survive and the file does not. Images and video are ignored by
+`.gitignore` everywhere except `assets/` and `.github/`, so committing one takes
+`git add -f`. If that seems necessary, it is a decision to raise, not a step to
+take: this repository already accumulated 71 stray captures across four invented
+folders that way.
 
 Key things that **don't work on web** (do not use web for verification):
 - `expo-sqlite` hooks never resolve (home screen hangs forever)

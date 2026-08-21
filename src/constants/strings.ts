@@ -179,6 +179,7 @@ const ar = {
   // Bookmark snackbar
   bookmark: {
     savedTitle: 'تم حفظ الصفحة',
+    removedTitle: 'تم حذف الإشارة',
     undoneTitle: 'تم التراجع',
     savedSubtitleReading: (surahName: string, page: string | number, juz: string | number) =>
       `${surahName} · صفحة ${page} · جزء ${juz} · للقراءة`,
@@ -463,6 +464,7 @@ const en = {
 
   bookmark: {
     savedTitle: 'Page saved',
+    removedTitle: 'Bookmark removed',
     undoneTitle: 'Undone',
     savedSubtitleReading: (surahName: string, page: string | number, juz: string | number) =>
       `${surahName} · Page ${page} · Juz ${juz} · Reading`,

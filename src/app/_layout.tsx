@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { I18nManager } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import '../../global.css';
 import { useTheme, useResolvedThemeMode } from '../hooks/useTheme';
 import { useReadingStore } from '../stores/readingStore';
 import { useSettingsStore } from '../stores/settingsStore';

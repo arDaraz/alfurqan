@@ -29,15 +29,6 @@ export type AudioAdapter = {
   subscribeStatus?: (listener: (status: AudioPlaybackStatus) => void) => () => void;
 };
 
-type AudioRemoteHandlers = {
-  next?: () => Promise<void> | void;
-  pause?: () => Promise<void> | void;
-  previous?: () => Promise<void> | void;
-  resume?: () => Promise<void> | void;
-  seek?: (seconds: number) => Promise<void> | void;
-  stop?: () => Promise<void> | void;
-};
-
 let player: AudioPlayer | null = null;
 let setupPromise: Promise<void> | null = null;
 let statusListener: ((status: AudioPlaybackStatus) => void) | null = null;
@@ -69,11 +60,6 @@ async function activateAudioSession(activePlayer?: AudioPlayer): Promise<void> {
     activePlayer.muted = false;
     activePlayer.volume = 1;
   }
-}
-
-export function registerAudioRemoteHandlers(_handlers: AudioRemoteHandlers): void {
-  // expo-audio handles lock-screen play/pause/seek on the active player. This
-  // hook preserves the engine contract for platforms/adapters with custom events.
 }
 
 async function setup(): Promise<AudioPlayer> {

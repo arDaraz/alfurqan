@@ -2,6 +2,23 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 
 const mockPush = jest.fn();
+jest.mock('react-native-reanimated', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const Animated = {
+    View: (props: any) => <View {...props} />,
+  };
+  const passthrough = () => ({ duration: () => ({}) });
+  return {
+    __esModule: true,
+    default: Animated,
+    SlideInDown: passthrough(),
+    SlideOutDown: passthrough(),
+    FadeIn: passthrough(),
+    FadeOut: passthrough(),
+  };
+});
+
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: (...args: any[]) => mockPush(...args), back: jest.fn() }),
   useLocalSearchParams: () => ({}),

@@ -50,7 +50,7 @@ describe('MushafBottomToolbar', () => {
     );
 
     fireEvent.press(getByLabelText('فهرس السور'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)');
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/search');
 
     fireEvent.press(getByLabelText('معلومات الصفحة'));
     expect(onInfoPress).toHaveBeenCalledTimes(1);

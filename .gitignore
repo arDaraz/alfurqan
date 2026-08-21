@@ -52,3 +52,21 @@ app-example
 
 # mobile-verify simulator proofs
 .claude/mobile-verify/
+
+# Images and video are ignored everywhere, then allowed back only where they
+# belong. Listing the folders to ignore was tried and failed: every tool that
+# captured a simulator screenshot invented its own path and slipped past it.
+# Committing one now needs `git add -f`, which makes it a decision.
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.mp4
+*.mov
+!assets/**
+!.github/**
+
+# SQLite sidecar files the running app creates next to the bundled database
+*.db-shm
+*.db-wal

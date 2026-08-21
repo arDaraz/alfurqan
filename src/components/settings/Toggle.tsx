@@ -47,7 +47,9 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       backgroundColor: theme.palette.paper[50],
       ...theme.elevation.shadow1,
     },
-    knobOn: { marginLeft: 2 },
-    knobOff: { marginLeft: 20 },
+    // Start-relative so the knob follows the row's direction. A physical margin
+    // renders the switch backwards in English.
+    knobOn: { marginStart: 20 },
+    knobOff: { marginStart: 2 },
   });
 }

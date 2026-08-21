@@ -4,7 +4,7 @@ import { getReciterById } from '../data/reciters';
 import { useReciterStore } from '../stores/reciterStore';
 import { useRecitationStore, type PlaybackRange, type PlaybackMode, type PlaybackSpeed } from '../stores/recitationStore';
 import { ayahAudioCache, CacheError } from './ayahAudioCache';
-import { audioAdapter, registerAudioRemoteHandlers, type AudioAdapter, type AudioPlaybackStatus } from './audioAdapter';
+import { audioAdapter, type AudioAdapter, type AudioPlaybackStatus } from './audioAdapter';
 
 type WebViewLike = {
   injectJavaScript: (script: string) => void;
@@ -359,15 +359,6 @@ export class RecitationEngine {
 export const recitationEngine = new RecitationEngine({
   adapter: audioAdapter,
   cache: ayahAudioCache,
-});
-
-registerAudioRemoteHandlers({
-  next: () => recitationEngine.next(),
-  pause: () => recitationEngine.pause(),
-  previous: () => recitationEngine.prev(),
-  resume: () => recitationEngine.resume(),
-  seek: (seconds) => recitationEngine.seek(seconds),
-  stop: () => recitationEngine.stop(),
 });
 
 export function createRecitationEngineForTest(deps: RecitationEngineDeps): RecitationEngine {

@@ -21,6 +21,13 @@ const mmkvStorage: StateStorage = {
   },
 };
 
+/** The bookmark records an ayah held before a commit. Opaque to callers. */
+export interface BookmarkUndo {
+  surahNumber: number;
+  ayahNumber: number;
+  previous: Bookmark[];
+}
+
 interface ReadingState {
   lastReadSurah: number | null;
   lastReadAyah: number | null;
@@ -55,6 +62,17 @@ interface ReadingState {
   ) => void;
   removeBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
   toggleBookmark: (surah: number, ayah: number, category: BookmarkCategory) => void;
+  /**
+   * Sets the categories an ayah ends up with and returns the records it had
+   * before, so `undoBookmarks` can restore them with their original creation
+   * times and the ayah keeps its place in the bookmarks list.
+   */
+  commitBookmarks: (
+    surah: number,
+    ayah: number,
+    categories: BookmarkCategory[]
+  ) => BookmarkUndo;
+  undoBookmarks: (undo: BookmarkUndo) => void;
   /**
    * Returns a fresh array on every call. Safe to read via `useReadingStore.getState()`
    * or inside `useMemo`. Do NOT subscribe via `useReadingStore((s) => s.getBookmarkCategories(...))`
@@ -215,6 +233,35 @@ export const useReadingStore = create<ReadingState>()(
         } else {
           get().addBookmark(surah, ayah, category);
         }
+      },
+      commitBookmarks: (surah, ayah, categories) => {
+        const isThisAyah = (b: Bookmark) =>
+          b.surahNumber === surah && b.ayahNumber === ayah;
+        const previous = get().bookmarks.filter(isThisAyah);
+        const createdAtFor = new Map(previous.map((b) => [b.category, b.createdAt]));
+        const now = Date.now();
+        set({
+          bookmarks: [
+            ...get().bookmarks.filter((b) => !isThisAyah(b)),
+            ...categories.map((category) => ({
+              surahNumber: surah,
+              ayahNumber: ayah,
+              category,
+              createdAt: createdAtFor.get(category) ?? now,
+            })),
+          ],
+        });
+        return { surahNumber: surah, ayahNumber: ayah, previous };
+      },
+      undoBookmarks: ({ surahNumber, ayahNumber, previous }) => {
+        set({
+          bookmarks: [
+            ...get().bookmarks.filter(
+              (b) => !(b.surahNumber === surahNumber && b.ayahNumber === ayahNumber)
+            ),
+            ...previous,
+          ],
+        });
       },
       getBookmarkCategories: (surah, ayah) =>
         get()

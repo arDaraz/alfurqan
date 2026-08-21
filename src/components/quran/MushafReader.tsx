@@ -101,9 +101,13 @@ export function MushafReader({
   const safeInitialPage = Math.max(1, Math.min(layout.pageCount, initialPage));
   const [currentPage, setCurrentPage] = useState(safeInitialPage);
   const currentPageRef = useRef(safeInitialPage);
+  // The mounted window is centred separately from the page being read. Sliding
+  // it while a swipe is still settling changes the pager's children underneath
+  // it, which leaves the header and the visible page one turn apart.
+  const [windowCentre, setWindowCentre] = useState(safeInitialPage);
   const pages = useMemo(
-    () => getMushafPageWindow(currentPage, layout.pageCount),
-    [currentPage, layout.pageCount]
+    () => getMushafPageWindow(windowCentre, layout.pageCount),
+    [windowCentre, layout.pageCount]
   );
   const { colors } = useReaderColors();
   const styles = createStyles(colors);
@@ -120,10 +124,17 @@ export function MushafReader({
   const [pageTopAyah, setPageTopAyah] = useState<PageTopAyahInfo | null>(null);
 
   const applyPageChange = useCallback(
-    (pageNumber: number, locationToPreserve?: CanonicalQuranLocation) => {
+    (
+      pageNumber: number,
+      locationToPreserve?: CanonicalQuranLocation,
+      recentreWindow = true
+    ) => {
       if (pageNumber < 1 || pageNumber > layout.pageCount) return;
       currentPageRef.current = pageNumber;
       setCurrentPage(pageNumber);
+      // A jump has no gesture to disturb, so its window moves at once. A swipe
+      // waits for the pager to go idle.
+      if (recentreWindow) setWindowCentre(pageNumber);
       setPageTopAyah(null);
       void (async () => {
         try {
@@ -177,8 +188,8 @@ export function MushafReader({
     applyPageChange(safeInitialPage, initialLocation);
   }, [applyPageChange, initialLocation, safeInitialPage]);
 
-  // The window of mounted pages slides as the reader moves, so the pager is told
-  // which of the three it now sits on instead of being rebuilt around it.
+  // Once the window has moved, the pager is told which of the three it now sits
+  // on. The page under it is unchanged, so this is not visible.
   useEffect(() => {
     pagerRef.current?.setPageWithoutAnimation(pages.selectedIndex);
   }, [pages.selectedIndex, pages.pages]);
@@ -267,8 +278,16 @@ export function MushafReader({
         onPageSelected={(event) => {
           const pageNumber = pages.pages[event.nativeEvent.position];
           if (pageNumber != null && pageNumber !== currentPageRef.current) {
-            applyPageChange(pageNumber);
+            applyPageChange(pageNumber, undefined, false);
           }
+        }}
+        onPageScrollStateChanged={(event) => {
+          if (event.nativeEvent.pageScrollState !== 'idle') return;
+          // Safe to move the window now: no gesture is in flight, so changing
+          // the pager's children cannot be mistaken for a page turn.
+          setWindowCentre((centre) =>
+            centre === currentPageRef.current ? centre : currentPageRef.current
+          );
         }}
       >
         {pages.pages.map((pageNumber) => (

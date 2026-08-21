@@ -66,30 +66,6 @@ jest.mock('../../../stores/recitationStore', () => ({
   ),
 }));
 
-const mockAddBookmark = jest.fn();
-const mockRemoveBookmark = jest.fn();
-const mockGetBookmarkCategories = jest.fn<unknown[], [number, number]>(() => []);
-
-jest.mock('../../../stores/readingStore', () => ({
-  useReadingStore: Object.assign(
-    (selector: (s: unknown) => unknown) =>
-      selector({
-        bookmarks: [],
-        addBookmark: mockAddBookmark,
-        removeBookmark: mockRemoveBookmark,
-        getBookmarkCategories: mockGetBookmarkCategories,
-      }),
-    {
-      getState: () => ({
-        bookmarks: [],
-        addBookmark: mockAddBookmark,
-        removeBookmark: mockRemoveBookmark,
-        getBookmarkCategories: mockGetBookmarkCategories,
-      }),
-    },
-  ),
-}));
-
 jest.mock('expo-router', () => ({
   router: { push: (...args: unknown[]) => mockRouterPush(...args) },
   useLocalSearchParams: () => ({}),
@@ -163,10 +139,6 @@ describe('SearchScreen action wiring', () => {
     mockEnginePause.mockClear();
     mockEngineResume.mockClear();
     mockEngineState = { state: 'idle', range: null };
-    mockAddBookmark.mockReset();
-    mockRemoveBookmark.mockReset();
-    mockGetBookmarkCategories.mockReset();
-    mockGetBookmarkCategories.mockReturnValue([]);
   });
 
   it('plays only the single ayah of the search result via recitationEngine.start', async () => {
@@ -231,26 +203,6 @@ describe('SearchScreen action wiring', () => {
     };
     await waitFor(() => {
       expect(mockHandleAyahAction).toHaveBeenCalledWith('copy', expectedSelection, undefined);
-    });
-  });
-
-  it('opens the category sheet when the bookmark action is pressed', async () => {
-    const { findByLabelText, findByText } = render(<SearchScreen initialQuery="الفرقان" />);
-    const bookmarkButton = await findByLabelText(/حفظ الآية|Bookmark verse/i);
-    fireEvent.press(bookmarkButton);
-
-    expect(await findByText('حفظ الإشارة المرجعية')).toBeTruthy();
-  });
-
-  it('commits the chosen category to the store as soon as the chip is tapped', async () => {
-    const { findByLabelText, findByTestId } = render(
-      <SearchScreen initialQuery="الفرقان" />,
-    );
-    fireEvent.press(await findByLabelText(/حفظ الآية|Bookmark verse/i));
-    fireEvent.press(await findByTestId('chip-reading'));
-
-    await waitFor(() => {
-      expect(mockAddBookmark).toHaveBeenCalledWith(2, 53, 'reading');
     });
   });
 

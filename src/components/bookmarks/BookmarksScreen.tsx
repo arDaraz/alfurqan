@@ -10,6 +10,9 @@ import { useStrings } from '../../constants/strings';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { PillTabs } from '../home/PillTabs';
 import { BookmarkRow } from './BookmarkRow';
+import { BookmarkSavedSnackbar } from '../quran/BookmarkSavedSnackbar';
+import { BookmarkCategorySheet } from '../quran/BookmarkCategorySheet';
+import { useBookmarkFlow } from '../../hooks/useBookmarkFlow';
 import { getMushafJuzAndPageForAyah, getSurahByNumber } from '../../data/quranRepository';
 import { toArabicIndic } from '../../utils/arabic';
 import type { Bookmark, BookmarkCategory } from '../../data/types';
@@ -30,7 +33,7 @@ export function BookmarksScreen() {
   const params = useLocalSearchParams<{ tab?: string }>();
 
   const bookmarks = useReadingStore((s) => s.bookmarks);
-  const removeBookmark = useReadingStore((s) => s.removeBookmark);
+  const bookmarkFlow = useBookmarkFlow();
 
   const initialTab: BookmarkCategory = params.tab === 'reading' ? 'reading' : 'recitation';
   const [activeTab, setActiveTab] = useState<BookmarkCategory>(initialTab);
@@ -201,9 +204,19 @@ export function BookmarksScreen() {
                   params: { id: String(item.surahNumber), ayah: String(item.ayahNumber) },
                 })
               }
-              onDelete={() => removeBookmark(item.surahNumber, item.ayahNumber, item.category)}
+              onDelete={() =>
+                bookmarkFlow.removeCategory(item.surahNumber, item.ayahNumber, item.category)
+              }
             />
           )}
+        />
+      )}
+
+      {bookmarkFlow.sheet && <BookmarkCategorySheet {...bookmarkFlow.sheet} />}
+      {bookmarkFlow.snackbar && (
+        <BookmarkSavedSnackbar
+          key={`${bookmarkFlow.snackbar.resultingCategories.join('|')}-${bookmarkFlow.snackbar.undone ? 'undone' : 'saved'}`}
+          {...bookmarkFlow.snackbar}
         />
       )}
     </SafeAreaView>

@@ -27,7 +27,6 @@ jest.mock('react-native-reanimated', () => {
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { BookmarkCategorySheet } from '../BookmarkCategorySheet';
-import type { BookmarkCategory } from '../../../data/types';
 
 function renderSheet(props?: Partial<React.ComponentProps<typeof BookmarkCategorySheet>>) {
   const onCommit = jest.fn();
@@ -57,45 +56,25 @@ describe('BookmarkCategorySheet', () => {
   it('commits added=[recitation] immediately when the recitation chip is tapped', () => {
     const { onCommit, getByTestId } = renderSheet({ initialCategories: ['reading'] });
     fireEvent.press(getByTestId('chip-recitation'));
-    expect(onCommit).toHaveBeenCalledWith({
-      previous: ['reading'],
-      next: ['reading', 'recitation'],
-      added: ['recitation'],
-      removed: [],
-    });
+    expect(onCommit).toHaveBeenCalledWith(['reading', 'recitation']);
   });
 
   it('commits removed=[reading] when an already-checked chip is tapped (toggle off)', () => {
     const { onCommit, getByTestId } = renderSheet({ initialCategories: ['reading'] });
     fireEvent.press(getByTestId('chip-reading'));
-    expect(onCommit).toHaveBeenCalledWith({
-      previous: ['reading'],
-      next: [],
-      added: [],
-      removed: ['reading'],
-    });
+    expect(onCommit).toHaveBeenCalledWith([]);
   });
 
   it('commits added=[reading] when chip tapped on a never-bookmarked ayah', () => {
     const { onCommit, getByTestId } = renderSheet({ initialCategories: [] });
     fireEvent.press(getByTestId('chip-reading'));
-    expect(onCommit).toHaveBeenCalledWith({
-      previous: [],
-      next: ['reading'],
-      added: ['reading'],
-      removed: [],
-    });
+    expect(onCommit).toHaveBeenCalledWith(['reading']);
   });
 
   it('commits an empty next when user taps remove-all', () => {
     const { onCommit, getByText } = renderSheet({ initialCategories: ['reading', 'recitation'] });
     fireEvent.press(getByText('حذف الكل'));
-    expect(onCommit).toHaveBeenCalledWith({
-      previous: ['reading', 'recitation'],
-      next: [],
-      added: [],
-      removed: ['reading', 'recitation'],
-    });
+    expect(onCommit).toHaveBeenCalledWith([]);
   });
 
   it('does not show remove-all when initialCategories is empty', () => {
