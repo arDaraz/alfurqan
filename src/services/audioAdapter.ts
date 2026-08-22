@@ -62,17 +62,35 @@ async function activateAudioSession(activePlayer?: AudioPlayer): Promise<void> {
   }
 }
 
+const PLAYBACK_SESSION = {
+  allowsRecording: false,
+  playsInSilentMode: true,
+  shouldRouteThroughEarpiece: false,
+  shouldPlayInBackground: true,
+  interruptionMode: 'doNotMix',
+} as const;
+
+/**
+ * Open the audio session to the microphone. An iOS session that only allows
+ * playback refuses to start a recording queue, so anything that listens has to
+ * claim the session before it opens the microphone.
+ */
+export async function startAudioRecordingSession(): Promise<void> {
+  const { setAudioModeAsync } = await getAudioModule();
+  await setAudioModeAsync({ ...PLAYBACK_SESSION, allowsRecording: true });
+}
+
+/** Hand the session back to playback once listening ends. */
+export async function endAudioRecordingSession(): Promise<void> {
+  const { setAudioModeAsync } = await getAudioModule();
+  await setAudioModeAsync(PLAYBACK_SESSION);
+}
+
 async function setup(): Promise<AudioPlayer> {
   const { createAudioPlayer, setAudioModeAsync } = await getAudioModule();
 
   if (!setupPromise) {
-    setupPromise = setAudioModeAsync({
-      allowsRecording: false,
-      playsInSilentMode: true,
-      shouldRouteThroughEarpiece: false,
-      shouldPlayInBackground: true,
-      interruptionMode: 'doNotMix',
-    })
+    setupPromise = setAudioModeAsync(PLAYBACK_SESSION)
       .then(() => activateAudioSession())
       .catch((error) => {
         setupPromise = null;
