@@ -207,13 +207,23 @@ Measured on the emulator, Pixel 9 profile, Android 16, arm64, software GPU:
 | Peak audio buffered | 2.25 MB | 0.78 MB |
 | Accuracy | 69% to 72% | 7% (2 / 29) |
 
-**These Android numbers do not describe a phone.** A realtime factor of 2.92
-means decoding takes nearly three times as long as the audio it covers, so the
-recognizer falls further behind every second. That is what an emulator on a
-software GPU does, not what an arm64 phone with NEON does. The accuracy figure
-follows from the same cause: only 7 slices were transcribed before the session
-ended, so most of the surah never reached the matcher. **A real mid-range phone
-is still required for any Android performance claim.**
+**A realtime factor of 2.92 means decoding takes nearly three times as long as
+the audio it covers**, so the recognizer falls further behind every second. The
+accuracy figure follows: only 7 slices were transcribed before the session ended,
+so most of the surah never reached the matcher.
+
+An earlier revision of this file blamed that on emulated CPU. That was wrong. The
+emulator runs **native arm64 under the hypervisor**, not instruction emulation.
+`/proc/cpuinfo` on the device reports `arm64-v8a` across 4 cores with
+`fp asimd asimddp fphp asimdhp bf16`, which are the same SIMD features whisper.cpp
+uses on a phone. So slow instruction emulation does not explain 2.92.
+
+What does explain it is not established. Candidates worth checking on a phone:
+four cores against a phone's six or eight, host contention from everything else
+running on this Mac, and the RangeError below, which appears to drop slices and
+would inflate the per-slice figures. **Treat 2.92 as unexplained rather than as an
+emulator artifact, and re-measure on a real mid-range phone before drawing any
+conclusion about Android throughput.**
 
 **Open: an Android-only RangeError.** Three times during the run, roughly once
 per transcription, logcat shows:
