@@ -249,28 +249,57 @@ the 7 that survived, and the accuracy figure is low partly because three slices
 of text were thrown away rather than because the model misheard them. Treat the
 whole Android row as provisional until the error is fixed.
 
-**Open: a RangeError that eats one transcription each time.** Three times during
-the run, roughly once per transcription, logcat shows:
+**A RangeError in whisper.rn eats one transcription each time.** Three times
+during the run, roughly once per transcription, logcat shows:
 
 ```
 E ReactNativeJS: [Error: Uncaught (in promise, id: N) RangeError: Maximum call stack size exceeded]
 ```
 
-Each one lands about eight seconds after a `rnwhisper::job::~job` line, so it is
-in the promise chain that runs after a transcription returns, not in the native
-decode. It correlates with Android producing 7 segments where iOS produced 98, so
-it is likely eating slices rather than being harmless. Root cause is not
-established and it is not in the spike's own code path as far as this pass could
-tell.
+The symbolicated stack, read off LogBox on the device, names the fault exactly:
 
-**Whether iOS has the same fault is unknown, not ruled out.** It was found on
-Android because React Native writes JS errors to `logcat`. No channel used in this
-spike surfaces the equivalent on iOS: the simulator's device log contains no React
-Native lines at all, and Metro's output did not capture even the Android
-occurrences. So iOS silence here is missing instrumentation, not a clean bill of
-health. Anyone chasing this should attach a JS error handler or the debugger
-rather than trusting the logs. **Investigate before the practice engine targets
-Android.**
+```
+cleanupOldSlices   SliceManager.ts:170:27
+getCurrentSlice    SliceManager.ts:85:28
+addAudioData       SliceManager.ts:33:46
+addAudioData       SliceManager.ts:43:31
+addAudioData       SliceManager.ts:43:31   (repeats to stack exhaustion)
+```
+
+It is a bug in `whisper.rn`, in
+`node_modules/whisper.rn/src/realtime-transcription/SliceManager.ts`.
+`addAudioData` recurses into itself rather than looping:
+
+```js
+if (currentSlice.sampleCount + audioData.length > bytesPerSlice) {
+  this.finalizeCurrentSlice()
+  this.currentSliceIndex += 1
+  return this.addAudioData(audioData) // line 43
+}
+```
+
+That terminates only when the next slice can hold the chunk. Whenever
+`getCurrentSlice()` keeps returning a slice already at capacity, the guard stays
+true and it recurses until the stack dies. It should be a loop, with a guard for
+a chunk larger than one slice.
+
+Ruled out while narrowing it, recorded so nobody repeats the work:
+
+- Chunk size alone is not the trigger. The file adapter emits
+  `0.1 * bytesPerSecond`, 3,200 bytes, against a 960,000 byte slice.
+- `maxSlicesInMemory` is correctly defaulted to 3 at `RealtimeTranscriber.ts:132`,
+  so `SliceManager`'s own default of 1 never applies.
+- `bytesPerSlice` is computed identically in `addAudioData` and `getCurrentSlice`,
+  so the two do not disagree.
+- `sampleRate` is not passed to the `SliceManager` constructor and falls back to
+  16000, which matches what this app configures.
+
+Unproven suspicion: `currentSliceIndex` advances from two places, here and
+`nextSlice()` on VAD speech-end. An index collision with an already-full slice
+would hold the guard true.
+
+The fix belongs upstream. Do not patch `node_modules`. Until it lands, the Android
+figures above stay provisional, and iOS cannot be assumed clean, only unmeasured.
 
 ## Test environment limits
 
