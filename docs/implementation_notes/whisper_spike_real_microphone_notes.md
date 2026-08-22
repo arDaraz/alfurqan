@@ -350,6 +350,32 @@ chunks iteratively with a progress guard. Do not patch `node_modules`. The app
 workaround should be removed after a fixed `whisper.rn` release is adopted. iOS
 cannot be assumed clean, only unmeasured.
 
+## The fix is verified on the file path, not the microphone path
+
+The `preRecordingBufferMs` workaround was confirmed on the recorded-audio path: a
+47.64 second Android run produced zero RangeErrors, against 3 in the equivalent
+run before it.
+
+The microphone path could not be confirmed. The emulator was rebooted with audio
+enabled, the host input was set to the one device on this Mac that does capture,
+and Al-Fatiha was played twice through the speakers. The session ran and stopped
+cleanly, but `job::~job` was 0, meaning no audio ever reached whisper. That is an
+inconclusive result, not a pass: with no audio there is nothing for the ring
+buffer to overflow with, so zero RangeErrors proves nothing.
+
+So neither simulator on this machine captures audio. The iOS Simulator refuses at
+`AudioQueueStartWithFlags`, and the Android emulator accepts the recording but
+delivers silence.
+
+The fix should still hold on the microphone path, because the overflow came from
+VAD ring-buffer accumulation measured in elapsed audio rather than from the
+source's chunk size, and the cap applies the same way to both. That is reasoning,
+not evidence. **Confirm it on a real device.**
+
+One thing the file-path run did not fully settle: 7 native jobs produced 6
+displayed segments. Zero stack overflows, but one result still went missing
+through some other route. Worth watching on the first real-device run.
+
 ## Test environment limits
 
 Recorded here because they bound what the measurements prove.
