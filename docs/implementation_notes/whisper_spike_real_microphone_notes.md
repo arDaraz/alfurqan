@@ -224,10 +224,19 @@ E ReactNativeJS: [Error: Uncaught (in promise, id: N) RangeError: Maximum call s
 
 Each one lands about eight seconds after a `rnwhisper::job::~job` line, so it is
 in the promise chain that runs after a transcription returns, not in the native
-decode. It never appeared on iOS. It correlates with Android producing 7 segments
-where iOS produced 98, so it is likely eating slices rather than being harmless.
-Root cause is not established and it is not in the spike's own code path as far as
-this pass could tell. **Investigate before the practice engine targets Android.**
+decode. It correlates with Android producing 7 segments where iOS produced 98, so
+it is likely eating slices rather than being harmless. Root cause is not
+established and it is not in the spike's own code path as far as this pass could
+tell.
+
+**Whether iOS has the same fault is unknown, not ruled out.** It was found on
+Android because React Native writes JS errors to `logcat`. No channel used in this
+spike surfaces the equivalent on iOS: the simulator's device log contains no React
+Native lines at all, and Metro's output did not capture even the Android
+occurrences. So iOS silence here is missing instrumentation, not a clean bill of
+health. Anyone chasing this should attach a JS error handler or the debugger
+rather than trusting the logs. **Investigate before the practice engine targets
+Android.**
 
 ## Test environment limits
 
