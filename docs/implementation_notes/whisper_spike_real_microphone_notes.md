@@ -363,9 +363,13 @@ cleanly, but `job::~job` was 0, meaning no audio ever reached whisper. That is a
 inconclusive result, not a pass: with no audio there is nothing for the ring
 buffer to overflow with, so zero RangeErrors proves nothing.
 
-So neither simulator on this machine captures audio. The iOS Simulator refuses at
-`AudioQueueStartWithFlags`, and the Android emulator accepts the recording but
-delivers silence.
+So neither simulator on this machine captures audio, and the Android side was
+tried twice. The iOS Simulator refuses at `AudioQueueStartWithFlags`. The Android
+emulator accepts the recording and delivers silence, both on the default audio
+backend and on `-audio coreaudio`, with `-no-audio` removed and the host input set
+to the one device that does capture. `job::~job` stayed 0 in every attempt.
+
+Do not spend more time on emulator audio. Three routes are closed.
 
 The fix should still hold on the microphone path, because the overflow came from
 VAD ring-buffer accumulation measured in elapsed audio rather than from the
