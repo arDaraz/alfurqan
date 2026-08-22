@@ -266,9 +266,23 @@ addAudioData       SliceManager.ts:43:31
 addAudioData       SliceManager.ts:43:31   (repeats to stack exhaustion)
 ```
 
-It is a bug in `whisper.rn`, in
-`node_modules/whisper.rn/src/realtime-transcription/SliceManager.ts`.
-`addAudioData` recurses into itself rather than looping:
+Two bugs in `whisper.rn` combine to cause the failure. The first is a units bug
+in `RingBufferVad.ts:80`:
+
+```js
+const bufferSize = Math.floor(preRecordingBufferMs * sampleRate * 2)
+```
+
+`preRecordingBufferMs` is milliseconds, but the calculation treats it as
+seconds. The default therefore allocates `1000 * 16000 * 2 = 32,000,000` bytes
+instead of the intended 32,000 bytes. The sibling calculation at line 83 uses
+the correct conversion: `(inferenceIntervalMs / 1000) * sampleRate * 2`.
+
+The oversized ring buffer does not wrap during an ordinary session, so
+`RingBuffer.read()` returns everything written so far. Once that VAD context
+exceeds the 960,000-byte audio slice, a speech-start event passes a chunk that no
+fresh slice can hold. The second bug is in `SliceManager.ts:43`, where
+`addAudioData` recurses into itself rather than consuming the input in a loop:
 
 ```js
 if (currentSlice.sampleCount + audioData.length > bytesPerSlice) {
@@ -278,15 +292,51 @@ if (currentSlice.sampleCount + audioData.length > bytesPerSlice) {
 }
 ```
 
-That terminates only when the next slice can hold the chunk. Whenever
-`getCurrentSlice()` keeps returning a slice already at capacity, the guard stays
-true and it recurses until the stack dies. It should be a loop, with a guard for
-a chunk larger than one slice.
+That terminates only when the next slice can hold the unchanged chunk. A chunk
+larger than one slice therefore recurses until the stack dies. This is a
+production-path defect because the microphone path also uses `RingBufferVad`.
+
+The app applies a temporary option-only workaround in `WhisperAsrSource`:
+
+- `preRecordingBufferMs: 25`
+- `inferenceIntervalMs: 25`
+
+The library guard rejects only `preRecordingBufferMs < inferenceIntervalMs`, so
+equality is valid. With the library's faulty arithmetic, the ring is capped at
+`25 * 16000 * 2 = 800,000` bytes, below the 960,000-byte slice. It still holds
+25 seconds of real pre-roll rather than the intended one second.
+
+The configured inference threshold falls from 16,000 bytes to 800 bytes, but
+`RingBufferVad` can enqueue at most one inference per source callback. The file
+adapter sends 3,200 bytes every 100 ms, so the actual scheduling ceiling rises
+from 2 to 10 calls per audio second, not 40. The CPU could not keep up with that
+queue. Six instrumented calls completed during the 47.64-second candidate run.
+They ranged from 43 to 36,336 ms, with a 157.5 ms median and 7,021 ms mean. Their
+42,126 ms total is 884 ms of completed VAD work per second of input audio.
+
+In matched silent microphone windows, where the production adapter sends one
+16,384-byte callback about every 512 ms, the default settings spent 39,411 ms
+across 12 native VAD calls. The workaround spent 41,382 ms across 13 calls, a
+5.0% rise in total native VAD time. The workaround also stopped the VAD input
+from growing past 800,000 bytes.
+
+`RingBufferVad.ts:226` also uses `preRecordingBufferMs` as a millisecond timing
+offset. Changing 1000 to 25 moves its internal speech-start and silence clocks
+by 975 ms for the same detected speech offset. The app's observed first
+transcript moved from 10,827 ms in the earlier Android baseline to 13,100 ms in
+the workaround run, 2,273 ms later. That arrival time also includes the VAD
+queue and Whisper decoding, so it does not isolate the 975 ms clock change.
+
+A final uninstrumented 47.64-second recorded-audio run completed seven native
+jobs with zero `RangeError`s. The screen displayed six transcribed segments, so
+the run removed the stack overflow but did not meet a strict one-segment-per-job
+criterion.
 
 Ruled out while narrowing it, recorded so nobody repeats the work:
 
-- Chunk size alone is not the trigger. The file adapter emits
-  `0.1 * bytesPerSecond`, 3,200 bytes, against a 960,000 byte slice.
+- The file adapter emits `0.1 * bytesPerSecond`, 3,200 bytes, against a 960,000
+  byte slice. The oversized chunk is the accumulated VAD context, not a source
+  audio callback.
 - `maxSlicesInMemory` is correctly defaulted to 3 at `RealtimeTranscriber.ts:132`,
   so `SliceManager`'s own default of 1 never applies.
 - `bytesPerSlice` is computed identically in `addAudioData` and `getCurrentSlice`,
@@ -294,12 +344,11 @@ Ruled out while narrowing it, recorded so nobody repeats the work:
 - `sampleRate` is not passed to the `SliceManager` constructor and falls back to
   16000, which matches what this app configures.
 
-Unproven suspicion: `currentSliceIndex` advances from two places, here and
-`nextSlice()` on VAD speech-end. An index collision with an already-full slice
-would hold the guard true.
-
-The fix belongs upstream. Do not patch `node_modules`. Until it lands, the Android
-figures above stay provisional, and iOS cannot be assumed clean, only unmeasured.
+The permanent fix belongs upstream. `RingBufferVad` must divide
+`preRecordingBufferMs` by 1000, and `SliceManager.addAudioData` must consume large
+chunks iteratively with a progress guard. Do not patch `node_modules`. The app
+workaround should be removed after a fixed `whisper.rn` release is adopted. iOS
+cannot be assumed clean, only unmeasured.
 
 ## Test environment limits
 

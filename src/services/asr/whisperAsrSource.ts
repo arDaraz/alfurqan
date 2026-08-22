@@ -83,6 +83,8 @@ export class WhisperAsrSource implements AsrSource {
       vad = new RingBufferVad(this.vadContext, {
         vadPreset: 'sensitive',
         sampleRate: SAMPLE_RATE,
+        preRecordingBufferMs: 25,
+        inferenceIntervalMs: 25,
       });
     }
 
