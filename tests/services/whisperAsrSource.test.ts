@@ -2,6 +2,7 @@ const mockInitWhisper = jest.fn();
 const mockInitWhisperVad = jest.fn();
 const mockRingBufferVadConstructor = jest.fn();
 const mockTranscriberStart = jest.fn();
+const mockTranscriberConstructor = jest.fn();
 const mockStartAudioRecordingSession = jest.fn();
 
 jest.mock('whisper.rn/index', () => ({
@@ -18,9 +19,10 @@ jest.mock('whisper.rn/realtime-transcription/RingBufferVad', () => ({
 }));
 
 jest.mock('whisper.rn/realtime-transcription/RealtimeTranscriber', () => ({
-  RealtimeTranscriber: jest.fn().mockImplementation(() => ({
-    start: mockTranscriberStart,
-  })),
+  RealtimeTranscriber: jest.fn().mockImplementation((...args: unknown[]) => {
+    mockTranscriberConstructor(...args);
+    return { start: mockTranscriberStart };
+  }),
 }));
 
 jest.mock('whisper.rn/realtime-transcription/adapters/AudioPcmStreamAdapter', () => ({
@@ -59,6 +61,28 @@ describe('WhisperAsrSource', () => {
         preRecordingBufferMs: 25,
         inferenceIntervalMs: 25,
       })
+    );
+  });
+
+  it('keeps the VAD buffer smaller than a slice however the numbers change', async () => {
+    const source = new WhisperAsrSource({
+      modelId: 'quran',
+      modelPath: '/models/quran.bin',
+      vadModelPath: '/models/vad.bin',
+    });
+
+    await source.start({ onTranscript: jest.fn(), onError: jest.fn() });
+
+    const vadOptions = mockRingBufferVadConstructor.mock.calls[0][1] as {
+      preRecordingBufferMs: number;
+    };
+    const transcriberOptions = mockTranscriberConstructor.mock.calls[0][1] as {
+      audioSliceSec: number;
+    };
+
+    // A buffer wider than a slice overflows whisper.rn's decoder stack.
+    expect(vadOptions.preRecordingBufferMs).toBeLessThanOrEqual(
+      transcriberOptions.audioSliceSec
     );
   });
 });
