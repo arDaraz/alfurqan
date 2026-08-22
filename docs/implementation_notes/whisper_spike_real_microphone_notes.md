@@ -218,12 +218,27 @@ emulator runs **native arm64 under the hypervisor**, not instruction emulation.
 `fp asimd asimddp fphp asimdhp bf16`, which are the same SIMD features whisper.cpp
 uses on a phone. So slow instruction emulation does not explain 2.92.
 
-What does explain it is not established. Candidates worth checking on a phone:
-four cores against a phone's six or eight, host contention from everything else
-running on this Mac, and the RangeError below, which appears to drop slices and
-would inflate the per-slice figures. **Treat 2.92 as unexplained rather than as an
-emulator artifact, and re-measure on a real mid-range phone before drawing any
-conclusion about Android throughput.**
+**The two platforms do not use the same compute backend.** That is most of the
+gap. `whisper.rn`'s iOS source compiles under `WSP_GGML_USE_METAL` and sets
+`params.use_gpu = options.useGpu`, which defaults to true, so iOS decoded on the
+GPU through Metal. Its Android `CMakeLists.txt` sets no GPU flag at all, so
+Android decoded on the CPU only. A GPU-versus-CPU comparison explains a gap of
+this size far better than core count does.
+
+Two consequences, and both matter more than the raw numbers:
+
+1. **The iOS and Android rows are not comparable.** Do not read the table as
+   "Android is 73 times slower than iOS". It says a Mac GPU beat four virtualised
+   CPU cores.
+2. **The iOS numbers are optimistic for a phone too.** They came from Metal on a
+   Mac's GPU, which is far stronger than an iPhone's. A real iPhone will also use
+   Metal, so the shape carries over, but the magnitude will not.
+
+Still unaccounted for beyond the backend difference: four cores against a phone's
+six or eight, host contention on this Mac, and the RangeError below, which appears
+to drop slices and would inflate per-slice figures. **Re-measure both platforms on
+real hardware before drawing any throughput conclusion.** Whether Android should
+enable a GPU backend at all is a question for the practice engine phase.
 
 **Open: an Android-only RangeError.** Three times during the run, roughly once
 per transcription, logcat shows:
