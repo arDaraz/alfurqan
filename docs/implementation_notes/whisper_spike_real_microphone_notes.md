@@ -240,8 +240,17 @@ to drop slices and would inflate per-slice figures. **Re-measure both platforms 
 real hardware before drawing any throughput conclusion.** Whether Android should
 enable a GPU backend at all is a question for the practice engine phase.
 
-**Open: an Android-only RangeError.** Three times during the run, roughly once
-per transcription, logcat shows:
+**The Android decode figures come from survivors only.** logcat for that session
+shows 10 completed native jobs (`job::~job`), 3 RangeErrors, and the screen
+reported 7 segments. 10 minus 3 is exactly 7, so every RangeError destroys one
+finished transcription before it reaches JavaScript. The native decode never
+failed. That means the Android median and worst decode times were computed from
+the 7 that survived, and the accuracy figure is low partly because three slices
+of text were thrown away rather than because the model misheard them. Treat the
+whole Android row as provisional until the error is fixed.
+
+**Open: a RangeError that eats one transcription each time.** Three times during
+the run, roughly once per transcription, logcat shows:
 
 ```
 E ReactNativeJS: [Error: Uncaught (in promise, id: N) RangeError: Maximum call stack size exceeded]
