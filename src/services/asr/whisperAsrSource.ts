@@ -80,6 +80,8 @@ export class WhisperAsrSource implements AsrSource {
     let vad: RingBufferVad | undefined;
     if (this.options.vadModelPath) {
       this.vadContext = await initWhisperVad({ filePath: this.options.vadModelPath });
+      // whisper.rn sizes this ring buffer as milliseconds times the sample rate,
+      // so its default asks for 32 MB and overflows the decoder's stack.
       vad = new RingBufferVad(this.vadContext, {
         vadPreset: 'sensitive',
         sampleRate: SAMPLE_RATE,
