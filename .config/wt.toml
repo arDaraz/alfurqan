@@ -86,13 +86,14 @@ printf '%s\n' {{ (repo ~ '-' ~ branch) | hash_port }}
 # holding 11.8 GB before this hook existed. Never blocks removal.
 pre-remove.simulator = '''
 name="alfurqan $(basename "{{ worktree_path }}")"
-udid="$(xcrun simctl list devices | grep -F "$name (" \
-  | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}" | head -1)"
-if [ -n "$udid" ]; then
+# Every match, because a device left unavailable by a removed runtime can share
+# the name with the one the post-start hook made to replace it.
+for udid in $(xcrun simctl list devices | grep -F "$name (" \
+  | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"); do
   xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
   xcrun simctl delete "$udid" >/dev/null 2>&1 || true
-  echo "removed Simulator device: $name"
-fi
+  echo "removed Simulator device: $name ($udid)"
+done
 exit 0
 '''
 pre-remove.derived-data = '''
@@ -132,7 +133,9 @@ npm install
 # the Metro port alone does not.
 simulator = '''
 name="alfurqan $(basename "{{ worktree_path }}")"
-if xcrun simctl list devices | grep -qF "$name ("; then
+# Only available devices count. A device whose runtime was removed stays listed
+# as unavailable and cannot boot.
+if xcrun simctl list devices available | grep -qF "$name ("; then
   echo "Simulator device already exists: $name"
   exit 0
 fi

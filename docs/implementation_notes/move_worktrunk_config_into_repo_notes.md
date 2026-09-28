@@ -56,3 +56,29 @@ commit ahead of the clone's `main`.
 - With a user config that also defined `new`, `wt new 9 dup` created the
   worktree through the user alias, and the project alias then failed with
   "Branch 9-dup already exists".
+
+## Simulator device check
+
+A review found that the `simulator` post-start hook counted an unavailable
+device as an existing one. `simctl list devices` still lists a device after its
+runtime is removed, marked unavailable. The hook then skipped creation, and the
+worktree had no device that could boot.
+
+**The check reads `simctl list devices available`.** An unavailable device with
+the worktree's name no longer blocks a new one.
+
+**`pre-remove.simulator` deletes every device with the worktree's name.** After
+the fix, a stale device and its replacement can share one name. The old hook
+deleted only the first match and left the other behind.
+
+Verified with a stub `xcrun`, because this machine has no Xcode. The stub keeps
+its devices in a state file and lists unavailable ones under an `Unavailable`
+runtime header, the way `simctl` does.
+
+- With a stale unavailable `alfurqan 12-fix-ports`, the old hook printed
+  "Simulator device already exists" and created nothing. The new hook created
+  a device and wrote its UDID to `.simulator-udid`.
+- A second run of the new hook found the new device and created no other.
+- With two devices named `alfurqan 12-fix-ports` and one named
+  `alfurqan 12-fix-ports-2`, the old `pre-remove` deleted one and left the
+  other. The new one deleted both and kept `alfurqan 12-fix-ports-2`.
