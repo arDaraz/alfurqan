@@ -303,10 +303,10 @@ xcrun simctl list devices | grep Booted
 # Primary checkout: name the shared device the line above reported.
 xcrun simctl io "iPhone 17 Pro" screenshot /tmp/alfurqan-screen.png
 
-# Linked worktree only: `wt new` names the device `alfurqan <branch>`, and the
-# worktree directory carries that branch name. In the primary checkout this
-# form builds the name "alfurqan alfurqan", which is not a real device.
-xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png
+# Linked worktree only: `wt new` names the device `alfurqan <branch>`. In the
+# primary checkout this form builds the name "alfurqan main", which is not a
+# real device.
+xcrun simctl io "alfurqan $(git branch --show-current)" screenshot /tmp/alfurqan-screen.png
 ```
 
 Inspect the screenshot and confirm that Metro contains no red-screen or missing-native-module error. Then run the quality checks:

@@ -2,7 +2,7 @@
 
 This file provides guidance when working with code in this repository.
 
-## Project Overview
+## Project overview
 
 Mushaf Al Furqan is a Qur'an reading and recitation practice app built with React Native (Expo SDK 57) targeting iOS and Android. It features authentic mushaf page rendering, ayah selection, bookmarking, and a bilingual Arabic/English interface with an Arabic-first RTL layout.
 
@@ -29,7 +29,7 @@ npm run seed                 # Rebuild quran.db from JSON sources
 npm run seed:mushaf          # Populate mushaf_words table
 ```
 
-## Development Workflow
+## Development workflow
 
 - Follow `docs/DEVELOPMENT_SETUP.md` for the detailed, reproducible setup, authentication boundaries, Xcode runtime recovery, and verification procedure.
 - This project uses `expo-dev-client`; do not use Expo Go.
@@ -42,7 +42,7 @@ npm run seed:mushaf          # Populate mushaf_words table
 - The generated `ios/` and `android/` directories are ignored. `app.json` and Expo config plugins are their source of truth.
 - If Xcode reports that no destination matches because an iOS platform is missing, install the matching runtime in **Xcode > Settings > Components**, or run `xcodebuild -downloadPlatform iOS -architectureVariant arm64` on Apple Silicon.
 
-## Mandatory Agent Launch Protocol
+## Mandatory agent launch protocol
 
 Every agent must use this protocol before launching or verifying the app. Do not guess which Metro server, worktree, native binary, or Simulator is active.
 
@@ -55,7 +55,7 @@ Every agent must use this protocol before launching or verifying the app. Do not
    - First run or native inputs changed: `npm run ios`.
    - Connected physical iPhone: `npm run ios:device`.
    - Android emulator/device: `npm run android`.
-6. Verify that `npm run dev:port` reports the **current worktree path**, confirm the intended Simulator/device, and visually inspect the native app. For iOS, capture a screenshot from this worktree's own device with `xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png`. Never use `booted`, which is ambiguous once a second Simulator runs.
+6. Verify that `npm run dev:port` reports the **current worktree path**, confirm the intended Simulator/device, and visually inspect the native app. For iOS, capture a screenshot from this worktree's own device with `xcrun simctl io "alfurqan $(git branch --show-current)" screenshot /tmp/alfurqan-screen.png`. Never use `booted`, which is ambiguous once a second Simulator runs.
 
 Agents must not use Expo Go, direct `npx expo start`, automatic port fallback, direct `xcodebuild` launch commands, or a web browser as substitutes for this workflow.
 
@@ -64,46 +64,46 @@ Agents must not use Expo Go, direct `npx expo start`, automatic port fallback, d
 ## Architecture
 
 ### Routing (Expo Router, file-based)
-- `src/app/_layout.tsx` — Root layout, RTL lock, font loading, onboarding guard
-- `src/app/(tabs)/` — Bottom tab bar: Home, Search, Bookmarks, Settings + center FAB for Practice
-- `src/app/surah/[id].tsx` / `src/app/juz/[id].tsx` — Dynamic reader routes
-- `src/app/practice.tsx` — Practice mode modal (recitation engine drives playback; mic capture is a demo toggle)
-- `src/app/onboarding.tsx` — First-run carousel, gates access via `hasCompletedOnboarding`
+- `src/app/_layout.tsx`: Root layout, RTL lock, font loading, onboarding guard
+- `src/app/(tabs)/`: Bottom tab bar: Home, Search, Bookmarks, Settings + center FAB for Practice
+- `src/app/surah/[id].tsx` / `src/app/juz/[id].tsx`: Dynamic reader routes
+- `src/app/practice.tsx`: Practice mode modal (recitation engine drives playback; mic capture is a demo toggle)
+- `src/app/onboarding.tsx`: First-run carousel, gates access via `hasCompletedOnboarding`
 
 ### State (Zustand + MMKV)
-- `src/stores/settingsStore.ts` — Language, theme, Quran font scale, mushaf layout, night reading, home widgets, prayer settings
-- `src/stores/readingStore.ts` — Last-read position, onboarding flag, bookmarks
-- `src/stores/reciterStore.ts` — Selected reciter and per-surah audio download state
-- `src/stores/recitationStore.ts` — Transient recitation session state (not persisted)
+- `src/stores/settingsStore.ts`: Language, theme, Quran font scale, mushaf layout, night reading, home widgets, prayer settings
+- `src/stores/readingStore.ts`: Last-read position, onboarding flag, bookmarks
+- `src/stores/reciterStore.ts`: Selected reciter and per-surah audio download state
+- `src/stores/recitationStore.ts`: Transient recitation session state (not persisted)
 
 The persisted stores use `react-native-mmkv` (faster than AsyncStorage).
 
-### Data Layer (SQLite)
-- `src/data/database.ts` — DB init, bundled-asset import; reimports the asset when the content schema version or layout manifest is stale
-- `src/data/mushafLayouts.ts` — Mushaf layout registry (page counts, fonts; default `indopak-15-line-hafs`)
-- `src/data/quranRepository.ts` — SQL queries (surahs, ayahs, juz, mushaf words, markers)
-- `src/data/types.ts` — Shared TypeScript interfaces (Surah, Ayah, Juz, MushafWord, Bookmark, etc.)
-- `assets/db/quran.db` — Bundled SQLite database
+### Data layer (SQLite)
+- `src/data/database.ts`: DB init, bundled-asset import; reimports the asset when the content schema version or layout manifest is stale
+- `src/data/mushafLayouts.ts`: Mushaf layout registry (page counts, fonts; default `indopak-15-line-hafs`)
+- `src/data/quranRepository.ts`: SQL queries (surahs, ayahs, juz, mushaf words, markers)
+- `src/data/types.ts`: Shared TypeScript interfaces (Surah, Ayah, Juz, MushafWord, Bookmark, etc.)
+- `assets/db/quran.db`: Bundled SQLite database
 
-### Mushaf Renderer
-- `src/components/quran/MushafReader.tsx` — Native page-by-page swiper (`react-native-pager-view`, RTL, page count from the active mushaf layout)
-- `src/components/quran/MushafReader.web.tsx` — Web fallback (pager-view is native-only)
-- `src/components/quran/mushafHtml.ts` — Generates HTML/CSS for WebView rendering of individual pages
-- `src/hooks/useMushafPage.ts` — Loads + caches mushaf page HTML (LRU, up to 12 pages)
+### Mushaf renderer
+- `src/components/quran/MushafReader.tsx`: Native page-by-page swiper (`react-native-pager-view`, RTL, page count from the active mushaf layout)
+- `src/components/quran/MushafReader.web.tsx`: Web fallback (pager-view is native-only)
+- `src/components/quran/mushafHtml.ts`: Generates HTML/CSS for WebView rendering of individual pages
+- `src/hooks/useMushafPage.ts`: Loads + caches mushaf page HTML (LRU, up to 12 pages)
 
-### Design System
-- `src/constants/theme.ts` — Full v2 token system: palette (paper/ink/teal/gold/sage/rose), semantic tokens (light + dark), spacing (8pt scale), radii, motion, elevation, fonts
-- `src/constants/strings.ts` — Bilingual i18n object (ar + en), accessed via `useStrings()`
-- `src/constants/quran.ts` — Qur'an constants (surah bismillah rules, quarter labels, revelation types)
+### Design system
+- `src/constants/theme.ts`: Full v2 token system: palette (paper/ink/teal/gold/sage/rose), semantic tokens (light + dark), spacing (8pt scale), radii, motion, elevation, fonts
+- `src/constants/strings.ts`: Bilingual i18n object (ar + en), accessed via `useStrings()`
+- `src/constants/quran.ts`: Qur'an constants (surah bismillah rules, quarter labels, revelation types)
 - `docs/BRAND.md`: naming policy. Read it before writing any user-facing name. It fixes the full brand name, the transliteration rules, which name each surface shows, and the app identifiers. Both platforms use bundle identifier `com.alfurqan.app`, and that value freezes at the first store submission.
 
-### Key Hooks
-- `useTheme()` — Resolves light/dark/system theme to semantic tokens
-- `useSurahList()` / `useJuzList()` — Async fetch all surahs/juz
-- `useBookmarkFlow()` — Bookmark save/undo flow shared by reader surfaces
-- `usePrayerTimes()` — Prayer times for the home band (via `adhan`)
+### Key hooks
+- `useTheme()`: Resolves light/dark/system theme to semantic tokens
+- `useSurahList()` / `useJuzList()`: Async fetch all surahs/juz
+- `useBookmarkFlow()`: Bookmark save/undo flow shared by reader surfaces
+- `usePrayerTimes()`: Prayer times for the home band (via `adhan`)
 
-## RTL Layout — Critical Gotcha
+## RTL layout gotcha
 
 The app globally forces RTL via `I18nManager.forceRTL(true)` in `_layout.tsx`. Under this mode, React Native **flips** `textAlign` values:
 
@@ -122,30 +122,30 @@ The app globally forces RTL via `I18nManager.forceRTL(true)` in `_layout.tsx`. U
 
 Path alias: `@/*` maps to `src/*`, `@/assets/*` maps to `assets/*`.
 
-## Design System Scales (`src/constants/theme.ts`)
+## Design system scales (`src/constants/theme.ts`)
 
-The theme exposes ready-made scales — always use these instead of hardcoded values. Access via `useTheme()`:
+The theme exposes ready-made scales. Use them instead of hardcoded values. Access via `useTheme()`:
 
-**`theme.spacing`** — 8pt scale: `2xs(2)` `xs(4)` `sm(8)` `md(16)` `lg(24)` `xl(32)` `2xl(48)` `3xl(64)` `4xl(96)`
-**`theme.gutter`** — Named gutters: `screen(24)` `row(16)` `ayah(28)`
-**`theme.radii`** — Border radii: `xs(4)` `sm(8)` `md(14)` `lg(20)` `xl(28)` `2xl(36)` `pill(9999)`
-**`theme.typeScale`** — Typography presets (size + lineHeight + tracking):
+**`theme.spacing`**: 8pt scale: `2xs(2)` `xs(4)` `sm(8)` `md(16)` `lg(24)` `xl(32)` `2xl(48)` `3xl(64)` `4xl(96)`
+**`theme.gutter`**: Named gutters: `screen(24)` `row(16)` `ayah(28)`
+**`theme.radii`**: Border radii: `xs(4)` `sm(8)` `md(14)` `lg(20)` `xl(28)` `2xl(36)` `pill(9999)`
+**`theme.typeScale`**: Typography presets (size + lineHeight + tracking):
 - `caption(12)` `label(14)` `body(17)` `title(22)` `heading(28)` `display(40)` `hero(56)`
 - `quran(30)` `quranSm(24)` `arabicDisplay(44)`
 
-**`theme.motion`** — Animation timing: durations `fast(140ms)` `base(220ms)` `slow(360ms)` `ambient(1200ms)` + easing curves `standard` `entrance` `exit`
-**`theme.elevation`** — Shadow presets: `shadow1` `shadow2` `shadow3` `shadowFloat` (warm-tinted, with Android elevation)
-**`theme.fonts`** — Font family names: `arabic` `arabicMedium` `arabicSemiBold` `arabicBold` `arabicSerif` `quran` `quranSerif` `latin` `latinDisplay`
-**`theme.semantic`** — Colors by purpose (auto light/dark): `bg` `bgRaised` `bgSunken` `fg` `fgMuted` `fgSubtle` `primary` `accent` `success` `danger` `border` `borderStrong` `selectedRange` etc.
-**`theme.palette`** — Raw color ramps: `paper` `ink` `teal` `gold` `rose` `sage` (prefer `semantic` tokens; use `palette` only when you need a specific ramp stop)
+**`theme.motion`**: Animation timing: durations `fast(140ms)` `base(220ms)` `slow(360ms)` `ambient(1200ms)` + easing curves `standard` `entrance` `exit`
+**`theme.elevation`**: Shadow presets: `shadow1` `shadow2` `shadow3` `shadowFloat` (warm-tinted, with Android elevation)
+**`theme.fonts`**: Font family names: `arabic` `arabicMedium` `arabicSemiBold` `arabicBold` `arabicSerif` `quran` `quranSerif` `latin` `latinDisplay`
+**`theme.semantic`**: Colors by purpose (auto light/dark): `bg` `bgRaised` `bgSunken` `fg` `fgMuted` `fgSubtle` `primary` `accent` `success` `danger` `border` `borderStrong` `selectedRange` etc.
+**`theme.palette`**: Raw color ramps: `paper` `ink` `teal` `gold` `rose` `sage` (prefer `semantic` tokens; use `palette` only when you need a specific ramp stop)
 
 ## Verification
 
 This is a **native mobile app**. Always verify UI changes on the iOS simulator, not in a web browser.
 
 **How to verify:**
-1. Launch through the Mandatory Agent Launch Protocol above: `npm run dev:port` first, then `npm run ios` (first run or native changes) or `npm start` (JS-only changes)
-2. Take a screenshot of this worktree's device: `xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png`
+1. Launch through the mandatory agent launch protocol above: `npm run dev:port` first, then `npm run ios` (first run or native changes) or `npm start` (JS-only changes)
+2. Take a screenshot of this worktree's device with the command in step 6 of the launch protocol.
 3. Read the screenshot with the Read tool to visually inspect the result
 
 **Screenshots and recordings never enter the repository.** Write them to a

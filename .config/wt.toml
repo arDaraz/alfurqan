@@ -32,8 +32,8 @@ for a in "$@"; do
       echo "drop the hash: write 'wt new ${a#\#}', not 'wt new $a'." >&2
       echo "Branch names in this repo start with the plain issue number." >&2
       exit 3 ;;
-    [0-9]*) if [ -z "$id" ] && [ -z "$words" ]; then id="$a"; else words="$words $a"; fi ;;
-    *) words="$words $a" ;;
+    *[!0-9]*) words="$words $a" ;;
+    *) if [ -z "$id" ] && [ -z "$words" ]; then id="$a"; else words="$words $a"; fi ;;
   esac
 done
 if [ -n "$id" ] && [ -z "$words" ]; then
@@ -83,7 +83,7 @@ printf '%s\n' {{ (repo ~ '-' ~ branch) | hash_port }}
 pre-remove.simulator = '''
 # The post-start simulator hook must build the same name, or this hook finds
 # nothing.
-name="alfurqan $(basename "{{ worktree_path }}")"
+name="alfurqan {{ branch | default('') }}"
 # Delete every match. An unavailable device and its replacement can have the
 # same name.
 for udid in $(xcrun simctl list devices | grep -F "$name (" \
@@ -124,7 +124,7 @@ npm install
 # Each worktree gets its own Simulator device. All worktrees use one bundle
 # identifier. On one device, installs replace each other's app data.
 simulator = '''
-name="alfurqan $(basename "{{ worktree_path }}")"
+name="alfurqan {{ branch | default('') }}"
 # Only available devices count. A device whose runtime was removed stays listed
 # as unavailable and cannot boot.
 if xcrun simctl list devices available | grep -qF "$name ("; then

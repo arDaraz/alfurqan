@@ -104,3 +104,31 @@ These passes ran on the whole diff against `origin/main`.
   `scripts/expo-run.mjs` hashes the worktree path. `wt metro-port` hashes the
   repository and branch names. A `tomllib` comparison with comment lines
   stripped showed that every command body is unchanged by that pass.
+
+## Codex review of the quality-pass commit
+
+Codex reported two P2 findings on the quality-pass commit. Both are fixed.
+
+**The Simulator device name comes from the branch.** The hooks named the device
+after the worktree directory. That name matches the branch only when the user's
+`worktree-path` ends in the branch name, and this repo sets no
+`worktree-path`. Both hooks now use `{{ branch | default('') }}`. `AGENTS.md`
+and `docs/DEVELOPMENT_SETUP.md` take the screenshot with
+`$(git branch --show-current)`. In a detached worktree, the name expands to
+`alfurqan ''`. That name matches no device, so `pre-remove` still exits 0.
+
+**`wt new` takes an issue number only from an all-digit word.** The old pattern
+`[0-9]*` made `wt new 2fa` look up issue `2fa` and fail. The case now sends any
+word with a non-digit to the slug words. A comparison of the old and new loops
+gave the same result for `12`, `12 fix ports`, `fix 12 ports`, `12 2fa`, and
+`--clobber 7 add login`. `2fa` and `2fa setup` now become slug words.
+
+`wt hook pre-remove --dry-run` showed the expanded name on a branch and in a
+detached worktree. The stub `xcrun` test created `alfurqan 12-fix-ports` from a
+directory with another name, and `pre-remove` deleted it and kept
+`alfurqan 12-fix-ports-2`.
+
+The written-text pass also covered `docs/DEVELOPMENT_SETUP.md` and `AGENTS.md`
+in full. It replaced curly quotes, em dashes, title-case headings, and a few
+figures of speech. `AGENTS.md` now points its verification step at the launch
+protocol's screenshot command instead of repeating it.
