@@ -41,7 +41,7 @@ Apple's direct-download page may still say that the account cannot access an arc
 
 ## 2. Install the tools
 
-Two tiers. The required tier is enough for the normal workflow: one checkout, one Simulator, Metro on port 8081. The optional tier exists only for running several worktrees at once; skip it on a first setup and come back when you need it.
+The tools come in two tiers. The required tier covers the normal workflow of one checkout, one Simulator, and Metro on port 8081. The optional tier is only for running several worktrees at once. Skip it on a first setup and come back when you need it.
 
 ### Required
 
@@ -84,14 +84,13 @@ A single checkout needs none of these. The launch wrapper detects the primary ch
 | GitHub CLI (`gh`) | `wt new <issue>` reads the issue title for the branch slug | Pass the slug words yourself: `wt new 12 fix ports` |
 | watchman | File watching when several Metro servers run at once | Metro falls back to its own crawler, which can exhaust file descriptors with multiple servers |
 
-Install with `brew install worktrunk gh watchman` (adjust to what you actually need).
+Install them with `brew install worktrunk gh watchman`, and leave out any tool you do not need.
 
-**Worktrunk alone is not enough.** The `wt new` and `wt metro-port` commands this repo's docs reference are aliases and hooks from a worktrunk *user config*, not part of worktrunk itself or of this repo. On a machine without that config, `wt metro-port` fails and the launch wrapper falls back to the error above; `ALFURQAN_METRO_PORT` is always the escape hatch. The config must define:
+**Worktrunk alone is not enough.** This repo's `.config/wt.toml` defines the `wt new` alias that names branches and creates worktrees, the `wt metro-port` alias, and the worktree hooks. Worktrunk runs none of them until you approve them with `wt config approvals add`, once per clone and again after one of them changes. Until then, `wt metro-port` fails and the launch wrapper falls back to the error above. You can always set `ALFURQAN_METRO_PORT` instead.
 
-- `aliases.metro-port` printing `{{ (repo ~ '-' ~ branch) | hash_port }}`,
-- optionally `post-start` hooks that run `npm install` and create a per-worktree Simulator device, and `pre-remove` hooks that delete that device and the worktree's DerivedData.
+`wt new` fetches `origin`'s default branch and bases the new worktree on the fetched commit. Keep `aliases.new` out of your worktrunk *user config*. If both configs define it, Worktrunk runs both, and the second one fails because the branch already exists.
 
-See section 13 for what those hooks do and why.
+See section 13 for what the hooks do and why.
 
 ## 3. Clone and install Al Furqan
 
@@ -193,7 +192,7 @@ For the first run:
 npm run ios
 ```
 
-This is the canonical simulator command. It:
+This is the standard Simulator command. It does these steps:
 
 1. runs `expo run:ios`;
 2. generates the ignored `ios/` project when it is absent;
@@ -210,7 +209,7 @@ npm start
 
 Keep the installed Al Furqan app open. Fast Refresh sends JavaScript changes without rebuilding Xcode.
 
-The wrapper picks the port: `8081` in the primary checkout, and in a linked worktree the port worktrunk derives from repo plus branch (range 10000-19999). It never falls forward to another port on its own, because that can connect the native app to the wrong worktree's JavaScript bundle. Inspect the listener with:
+The wrapper picks the port. The primary checkout uses `8081`. A linked worktree uses the port that worktrunk derives from the repository and branch names, in the range 10000-19999. It never falls forward to another port on its own, because that can connect the native app to the wrong worktree's JavaScript bundle. Inspect the listener with:
 
 ```bash
 npm run dev:port
@@ -304,10 +303,10 @@ xcrun simctl list devices | grep Booted
 # Primary checkout: name the shared device the line above reported.
 xcrun simctl io "iPhone 17 Pro" screenshot /tmp/alfurqan-screen.png
 
-# Linked worktree only: `wt new` names the device `alfurqan <branch>`, and the
-# worktree directory carries that branch name. In the primary checkout this
-# form builds the name "alfurqan alfurqan", which is not a real device.
-xcrun simctl io "alfurqan $(basename $PWD)" screenshot /tmp/alfurqan-screen.png
+# Linked worktree only: `wt new` names the device `alfurqan <branch>`. In the
+# primary checkout this form builds the name "alfurqan main", which is not a
+# real device.
+xcrun simctl io "alfurqan $(git branch --show-current)" screenshot /tmp/alfurqan-screen.png
 ```
 
 Inspect the screenshot and confirm that Metro contains no red-screen or missing-native-module error. Then run the quality checks:
@@ -320,7 +319,7 @@ npm test -- --runInBand
 git diff --check
 ```
 
-## 11. Recovery used when Xcode 26.6 was stuck on “Preparing”
+## 11. Recovery used when Xcode 26.6 was stuck on "Preparing"
 
 This is a version-specific recovery record, not the normal install path. Prefer Xcode Components or `xcodebuild -downloadPlatform` first.
 
@@ -394,7 +393,7 @@ aea decrypt \
   -key-value 'base64:<ArchiveDecryptionKey-from-the-catalog>' \
   -v
 
-# 5. Materialize the MobileAsset with Apple's yaa asset patcher.
+# 5. Build the runtime files from the MobileAsset with Apple's yaa asset patcher.
 mkdir -p \
   "$HOME/Downloads/iOS_26.5-runtime-source" \
   "$HOME/Downloads/iOS_26.5-runtime-patched"
@@ -449,11 +448,11 @@ The migration also removed the direct `expo-modules-core` dependency, because Ex
 
 ## 13. Developing with Git worktrees
 
-Git worktrees are useful for keeping multiple branches checked out at the same time. Each worktree has its own source files, `node_modules`, generated `ios/` and `android/` folders, and Xcode build directory identity. They still share several machine-wide resources, which is where launch confusion comes from.
+Git worktrees are useful for keeping multiple branches checked out at the same time. Each worktree has its own source files, `node_modules`, generated `ios/` and `android/` folders, and Xcode build directory identity. They still share several machine-wide resources, and those shared resources cause most launch mistakes.
 
 ### Create a worktree
 
-Prerequisite: the optional multi-worktree tools from section 2, including the worktrunk user config they describe. With them installed, one command does everything:
+Prerequisite: the optional multi-worktree tools from section 2, including the approval they describe. With them installed, one command does everything:
 
 ```bash
 wt new 12               # branch 12-<slug from the GitHub issue title>
@@ -462,7 +461,7 @@ wt new 12 fix ports     # branch 12-fix-ports, no gh lookup needed
 
 `wt new` creates the branch and worktree, runs `npm install`, creates a Simulator device named `alfurqan <branch>`, and gives the worktree its own Metro port. `wt remove <branch>` undoes all of that, including the device and the worktree's Xcode build directory.
 
-Branch names are `<github-issue-number>-<slug>`, all lowercase, hyphens only. **Never use a slash in a branch name.** The worktree directory is named after the branch, and the two must be identical; a slash would be rewritten to a hyphen in the directory name and the names would stop matching. A guard refuses such branches at creation.
+Branch names are `<github-issue-number>-<slug>`, all lowercase, hyphens only. **Never use a slash in a branch name.** The worktree directory takes the branch name, and the two must be identical. A slash becomes a hyphen in the directory name, so the names stop matching. A guard refuses such branches at creation.
 
 Without the worktrunk tooling, plain Git still works, but nothing is automated:
 
@@ -474,7 +473,7 @@ npm install
 ALFURQAN_METRO_PORT=10123 npm start   # pick any free port; the wrapper cannot derive one without wt
 ```
 
-Create a separate Simulator device by hand (see “Use a separate Simulator device per worktree” below), and remember that removing such a worktree with `git worktree remove` cleans up neither the device nor DerivedData. Never point two worktrees at the same branch; Git normally prevents this.
+Create a separate Simulator device by hand (see "Use a separate Simulator device per worktree" below), and remember that removing such a worktree with `git worktree remove` cleans up neither the device nor DerivedData. Never point two worktrees at the same branch; Git normally prevents this.
 
 ### What worktrees share
 
@@ -491,7 +490,7 @@ Create a separate Simulator device by hand (see “Use a separate Simulator devi
 
 ### How each worktree gets its Metro port
 
-Metro listens on a TCP port, not “inside” a worktree. The danger with a shared port is that an installed development client keeps requesting one worktree's URL while the developer is looking at another, producing stale screens, the wrong branch, or apparently missing changes.
+Metro listens on a TCP port, not "inside" a worktree. With a shared port, an installed development client can keep requesting one worktree's URL while the developer looks at another. The developer then sees stale screens, the wrong branch, or changes that seem to be missing.
 
 This repository avoids that by giving every worktree its own stable port:
 
@@ -587,7 +586,7 @@ Separate Simulator devices isolate the installed app and its MMKV/SQLite data. C
 
 ### Running two worktrees simultaneously
 
-Supported. Each worktree runs Metro on its own derived port and installs the app on its own Simulator device. Start each one from its own directory with `npm start`, and connect each device to its own worktree with the development client's server list, or with a deep link naming the port explicitly:
+You can run two worktrees at once. Each worktree runs Metro on its own derived port and installs the app on its own Simulator device. Start each one from its own directory with `npm start`, and connect each device to its own worktree with the development client's server list, or with a deep link naming the port explicitly:
 
 ```bash
 xcrun simctl openurl <device-udid> "alfurqan://expo-development-client/?url=http%3A%2F%2Flocalhost%3A<port>"
@@ -608,7 +607,7 @@ git -C /path/to/worktree status --short
 git worktree list
 ```
 
-Stop its Metro server from inside that worktree. Remove the worktree only after its changes are committed, preserved elsewhere, or intentionally discarded. Prefer `wt remove <branch>`: it also deletes the worktree's Simulator device and its Xcode build directory. Plain Git works but runs no cleanup hooks, so the device and DerivedData leak:
+Stop its Metro server from inside that worktree. Remove the worktree only after its changes are committed, preserved elsewhere, or intentionally discarded. Prefer `wt remove <branch>`, because it also deletes the worktree's Simulator device and its Xcode build directory. Plain Git works but runs no cleanup hooks, so the device and DerivedData stay on disk:
 
 ```bash
 git worktree remove /path/to/worktree

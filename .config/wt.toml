@@ -1,0 +1,147 @@
+# Run `wt config approvals add` once per clone, and again after a hook changes.
+# Worktrunk runs no project hook until then.
+#
+# worktree-path is a user setting, so it is not here. The usual user value puts
+# a worktree at ../worktrees/alfurqan/<branch>.
+#
+# Keep every dotted key above the first [[post-start]] header. TOML adds a later
+# dotted key to the last array element.
+
+# CI runs these two checks on every push. They are also the cheapest checks to
+# run locally.
+pre-merge.types = "npx tsc --noEmit"
+pre-merge.test = "npm test -- --runInBand"
+
+# `wt new 12` makes `12-<slug from issue title>`. `wt new 12 fix ports` makes
+# `12-fix-ports`. `wt new fix ports` makes `fix-ports`.
+#
+# Do not also define `aliases.new` in a user config. Worktrunk runs both
+# aliases, and the second alias fails because the branch exists.
+#
+# The branch name also sets the Metro port, because `wt metro-port` hashes the
+# repository and branch names.
+aliases.new = '''
+set -e
+set -- {{ args }}
+id=""
+words=""
+for a in "$@"; do
+  case "$a" in
+    --*) echo "note: $a ignored, set wt switch defaults in config instead" >&2 ;;
+    '#'[0-9]*)
+      echo "drop the hash: write 'wt new ${a#\#}', not 'wt new $a'." >&2
+      echo "Branch names in this repo start with the plain issue number." >&2
+      exit 3 ;;
+    *[!0-9]*) words="$words $a" ;;
+    *) if [ -z "$id" ] && [ -z "$words" ]; then id="$a"; else words="$words $a"; fi ;;
+  esac
+done
+if [ -n "$id" ] && [ -z "$words" ]; then
+  title="$(gh issue view "$id" --repo arDaraz/alfurqan --json title -q .title 2>/dev/null || true)"
+  if [ -z "$title" ]; then
+    echo "could not read issue $id from GitHub. Check gh auth status, or give the slug words yourself." >&2
+    exit 3
+  fi
+  echo "issue $id: $title"
+  words="$(printf 'Compress this issue title into AT MOST 4 lowercase words separated by spaces, the fewest distinctive words that identify the change. Drop project names, filler and punctuation. Output only the words.\n\n%s\n' "$title" \
+    | CLAUDECODE= MAX_THINKING_TOKENS=0 claude -p --no-session-persistence --model=haiku --tools='' --disable-slash-commands --setting-sources='' --system-prompt='' 2>/dev/null || true)"
+  [ -n "$words" ] || words="$title"
+  words="$(printf '%s' "$words" | awk '{for(i=1;i<=4&&i<=NF;i++)printf "%s ",$i}')"
+fi
+slug="$(printf '%s' "$words" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//' | cut -c1-48 | sed 's/-*$//')"
+if [ -n "$id" ]; then name="$id${slug:+-$slug}"; else name="$slug"; fi
+if [ -z "$name" ]; then
+  echo "usage: wt new [12] [slug words]" >&2
+  exit 2
+fi
+echo "branch: $name"
+abort_new() {
+  printf '%s; no worktree created\n' "$1" >&2
+  exit 1
+}
+# Fetch remote HEAD because cached default-branch values can be stale.
+git fetch --quiet origin HEAD || abort_new "could not fetch origin's current default branch"
+base="$(git rev-parse --verify 'FETCH_HEAD^{commit}' 2>/dev/null)" \
+  || abort_new "could not resolve the fetched default-branch commit"
+echo "base: origin/HEAD at $base"
+# Pass --yes because an agent session has no terminal to answer the approval
+# prompt.
+exec wt switch --create "$name" --base "$base" --yes
+'''
+
+# `scripts/expo-run.mjs` calls this alias, so the Metro port has one definition.
+# hash_port returns a port from 10000 to 19999.
+#
+# The hash key includes the repository name. Without it, two repositories on
+# `main` get the same port.
+aliases.metro-port = '''
+printf '%s\n' {{ (repo ~ '-' ~ branch) | hash_port }}
+'''
+
+# These hooks delete the worktree's Simulator device and Xcode build folder.
+# Stale folders once held 11.8 GB. Neither hook blocks removal.
+pre-remove.simulator = '''
+# The post-start simulator hook must build the same name, or this hook finds
+# nothing.
+name="alfurqan {{ branch | default('') }}"
+# Delete every match. An unavailable device and its replacement can have the
+# same name.
+for udid in $(xcrun simctl list devices | grep -F "$name (" \
+  | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"); do
+  xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
+  xcrun simctl delete "$udid" >/dev/null 2>&1 || true
+  echo "removed Simulator device: $name ($udid)"
+done
+exit 0
+'''
+pre-remove.derived-data = '''
+# The folder name contains a hash of the project path. Match the WorkspacePath
+# value in info.plist instead.
+for dir in "$HOME/Library/Developer/Xcode/DerivedData"/AlFurqan-*; do
+  plist="$dir/info.plist"
+  [ -f "$plist" ] || continue
+  built="$(plutil -extract WorkspacePath raw "$plist" 2>/dev/null || true)"
+  case "$built" in
+    "{{ worktree_path }}"/*) rm -rf "$dir"; echo "removed build directory: $(basename "$dir")" ;;
+  esac
+done
+exit 0
+'''
+
+# Each [[post-start]] block starts after the previous block ends. A failure
+# stops the rest. Output goes to .git/wt/logs.
+[[post-start]]
+# A new worktree has no node_modules. An APFS clone of the primary worktree's
+# copy is faster than a fresh install.
+install = '''
+if [ ! -d node_modules ] && [ -d "{{ primary_worktree_path }}/node_modules" ]; then
+  cp -Rc "{{ primary_worktree_path }}/node_modules" node_modules 2>/dev/null || true
+fi
+npm install
+'''
+
+[[post-start]]
+# Each worktree gets its own Simulator device. All worktrees use one bundle
+# identifier. On one device, installs replace each other's app data.
+simulator = '''
+name="alfurqan {{ branch | default('') }}"
+# Only available devices count. A device whose runtime was removed stays listed
+# as unavailable and cannot boot.
+if xcrun simctl list devices available | grep -qF "$name ("; then
+  echo "Simulator device already exists: $name"
+  exit 0
+fi
+runtime="$(xcrun simctl list runtimes available | grep -v unavailable \
+  | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]+" | tail -1)"
+if [ -z "$runtime" ]; then
+  echo "no iOS Simulator runtime installed, skipping device creation" >&2
+  exit 0
+fi
+if ! udid="$(xcrun simctl create "$name" com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro "$runtime")" \
+  || [ -z "$udid" ]; then
+  echo "could not create Simulator device: $name on $runtime" >&2
+  exit 1
+fi
+echo "created Simulator device: $name ($udid)"
+echo "$udid" > .simulator-udid
+'''
