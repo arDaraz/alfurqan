@@ -1,0 +1,141 @@
+# Worktrunk project settings for alfurqan. Run `wt config approvals add` once per
+# clone, and again after a hook changes. Worktrunk runs no project hook until
+# then.
+#
+# worktree-path is a user setting, so it is not here. The usual user value puts
+# a worktree at ../worktrees/alfurqan/<branch>.
+#
+# Every dotted key must stay ABOVE the post-start array header below. A dotted
+# key written after it becomes a member of the last array element instead.
+
+# The two checks CI runs on every push, and the cheapest ones to run locally.
+pre-merge.types = "npx tsc --noEmit"
+pre-merge.test = "npm test -- --runInBand"
+
+# Branch naming: `<issue-number>-<slug>`, lowercase, and no type word. alfurqan
+# tracks work as GitHub issues only, so the number identifies the branch on its
+# own. `wt new 12` gives `12-unify-bookmark-flow`, `wt new 12 fix ports` gives
+# `12-fix-ports`.
+#
+# This is the env-prefix hook rather than an aliases.new override, because a
+# project alias can only add a NEW name. A name the global config already
+# defines keeps the global body, so a project `aliases.new` is silently ignored.
+# Tested 2026-08-21 with `wt config alias show new` in this repo. Keep this key
+# above the post-start array header, because a dotted key below that header
+# joins the array instead.
+#
+# The global alias puts the prefix first and drops the type word, which is the
+# shape alfurqan wants, so the "prefix" it returns is the issue number.
+#
+# The branch name also picks the Metro port. scripts/expo-run.mjs hashes the
+# worktree path, and the worktree path is built from this branch name.
+aliases.env-prefix = '''
+id=""
+words=""
+for a in {{ args }}; do
+  case "$a" in
+    --*) continue ;;
+    '#'[0-9]*)
+      echo "drop the hash: write 'wt new ${a#\#}', not 'wt new $a'." >&2
+      echo "The global alias reads '#12' as a ticket and would name the branch 12-12-slug." >&2
+      exit 3 ;;
+    [0-9]*) if [ -z "$id" ] && [ -z "$words" ]; then id="$a"; else words="$words $a"; fi ;;
+    *) words="$words $a" ;;
+  esac
+done
+# No number typed. Exit 2 is worktrunk's own "no such alias" code, and the global
+# alias reads it as "this repo has no prefix", so the plain slug convention applies.
+[ -n "$id" ] || exit 2
+# Slug words were typed, so return the number alone and let the global alias
+# build the rest of the name from those words.
+if [ -n "$words" ]; then printf '%s\n' "$id"; exit 0; fi
+title="$(gh issue view "$id" --repo arDaraz/alfurqan --json title -q .title 2>/dev/null || true)"
+if [ -z "$title" ]; then
+  echo "could not read issue $id from GitHub. Check gh auth status, or give the slug words yourself." >&2
+  exit 3
+fi
+echo "issue $id: $title" >&2
+words="$(printf 'Compress this issue title into AT MOST 4 lowercase words separated by spaces, the fewest distinctive words that identify the change. Drop project names, filler and punctuation. Output only the words.\n\n%s\n' "$title" \
+  | CLAUDECODE= MAX_THINKING_TOKENS=0 claude -p --no-session-persistence --model=haiku --tools='' --disable-slash-commands --setting-sources='' --system-prompt='' 2>/dev/null || true)"
+[ -n "$words" ] || words="$title"
+slug="$(printf '%s' "$words" | awk '{for(i=1;i<=4&&i<=NF;i++)printf "%s ",$i}' \
+  | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//' | cut -c1-48 | sed 's/-*$//')"
+printf '%s\n' "$id${slug:+-$slug}"
+'''
+
+# The Metro port for this worktree. `scripts/expo-run.mjs` calls this alias so the
+# port has one definition, shared with anything else that expands a worktrunk
+# template. hash_port lands in 10000-19999.
+#
+# The key is repo plus branch, not branch alone. Two different repos both sitting
+# on `main` would otherwise hash to the same port.
+aliases.metro-port = '''
+printf '%s\n' {{ (repo ~ '-' ~ branch) | hash_port }}
+'''
+
+# Removing a worktree also removes the Simulator device the post-start hook made
+# for it, and the Xcode build directory that device's builds filled. Neither is
+# reachable once the worktree is gone, and four stale build directories were
+# holding 11.8 GB before this hook existed. Never blocks removal.
+pre-remove.simulator = '''
+name="alfurqan $(basename "{{ worktree_path }}")"
+udid="$(xcrun simctl list devices | grep -F "$name (" \
+  | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}" | head -1)"
+if [ -n "$udid" ]; then
+  xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
+  xcrun simctl delete "$udid" >/dev/null 2>&1 || true
+  echo "removed Simulator device: $name"
+fi
+exit 0
+'''
+pre-remove.derived-data = '''
+# Xcode names the folder <Product>-<hash of the project path>, so the hash dies
+# with the worktree. Match on the path Xcode records inside the folder.
+for dir in "$HOME/Library/Developer/Xcode/DerivedData"/AlFurqan-*; do
+  [ -d "$dir" ] || continue
+  plist="$dir/info.plist"
+  [ -f "$plist" ] || continue
+  built="$(plutil -extract WorkspacePath raw "$plist" 2>/dev/null || true)"
+  case "$built" in
+    "{{ worktree_path }}"/*) rm -rf "$dir"; echo "removed build directory: $(basename "$dir")" ;;
+  esac
+done
+exit 0
+'''
+
+# The worktree bootstrap, an ordered pipeline: each block waits for the one
+# before it and a failure stops the rest. Runs in the background after the
+# worktree is created, output lands under .git/wt/logs.
+[[post-start]]
+# node_modules is 1.3 GB and gitignored, so `git worktree add` copies nothing and
+# no npm script runs until this finishes. An APFS clone from the primary worktree
+# shares the disk blocks, so it costs almost no space and takes seconds where a
+# fresh install takes minutes. npm install then reconciles any lockfile drift.
+install = '''
+if [ ! -d node_modules ] && [ -d "{{ primary_worktree_path }}/node_modules" ]; then
+  cp -Rc "{{ primary_worktree_path }}/node_modules" node_modules 2>/dev/null || true
+fi
+npm install
+'''
+
+[[post-start]]
+# One Simulator device per worktree. Two worktrees share a bundle identifier, so
+# on one device the second install overwrites the first app, its MMKV state and
+# its SQLite data. Separate devices are what make the worktrees independent, and
+# the Metro port alone does not.
+simulator = '''
+name="alfurqan $(basename "{{ worktree_path }}")"
+if xcrun simctl list devices | grep -qF "$name ("; then
+  echo "Simulator device already exists: $name"
+  exit 0
+fi
+runtime="$(xcrun simctl list runtimes | grep -E "^iOS " | tail -1 \
+  | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]+")"
+if [ -z "$runtime" ]; then
+  echo "no iOS Simulator runtime installed, skipping device creation" >&2
+  exit 0
+fi
+udid="$(xcrun simctl create "$name" com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro "$runtime")"
+echo "created Simulator device: $name ($udid)"
+echo "$udid" > .simulator-udid
+'''

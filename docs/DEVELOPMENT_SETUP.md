@@ -86,12 +86,11 @@ A single checkout needs none of these. The launch wrapper detects the primary ch
 
 Install with `brew install worktrunk gh watchman` (adjust to what you actually need).
 
-**Worktrunk alone is not enough.** The `wt new` and `wt metro-port` commands this repo's docs reference are aliases and hooks from a worktrunk *user config*, not part of worktrunk itself or of this repo. On a machine without that config, `wt metro-port` fails and the launch wrapper falls back to the error above; `ALFURQAN_METRO_PORT` is always the escape hatch. The config must define:
+**Worktrunk alone is not enough.** This repo's `.config/wt.toml` defines the `wt metro-port` alias, the `env-prefix` alias that names branches, and the worktree hooks. Worktrunk runs none of them until you approve them with `wt config approvals add`, once per clone and again after one of them changes. Until then, `wt metro-port` fails and the launch wrapper falls back to the error above. `ALFURQAN_METRO_PORT` is always the escape hatch.
 
-- `aliases.metro-port` printing `{{ (repo ~ '-' ~ branch) | hash_port }}`,
-- optionally `post-start` hooks that run `npm install` and create a per-worktree Simulator device, and `pre-remove` hooks that delete that device and the worktree's DerivedData.
+The `wt new` command is not part of worktrunk or of this repo. It is an alias from a worktrunk *user config*. That alias must call the project's `env-prefix` alias, put its output first in the branch name, and create the worktree.
 
-See section 13 for what those hooks do and why.
+See section 13 for what the hooks do and why.
 
 ## 3. Clone and install Al Furqan
 
@@ -453,7 +452,7 @@ Git worktrees are useful for keeping multiple branches checked out at the same t
 
 ### Create a worktree
 
-Prerequisite: the optional multi-worktree tools from section 2, including the worktrunk user config they describe. With them installed, one command does everything:
+Prerequisite: the optional multi-worktree tools from section 2, including the approval and the worktrunk user config they describe. With them installed, one command does everything:
 
 ```bash
 wt new 12               # branch 12-<slug from the GitHub issue title>
