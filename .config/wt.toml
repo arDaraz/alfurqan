@@ -15,52 +15,59 @@ pre-merge.test = "npm test -- --runInBand"
 # Branch naming: `<issue-number>-<slug>`, lowercase, and no type word. alfurqan
 # tracks work as GitHub issues only, so the number identifies the branch on its
 # own. `wt new 12` gives `12-unify-bookmark-flow`, `wt new 12 fix ports` gives
-# `12-fix-ports`.
+# `12-fix-ports`, and `wt new fix ports` gives `fix-ports`.
 #
-# This is the env-prefix hook rather than an aliases.new override, because a
-# project alias can only add a NEW name. A name the global config already
-# defines keeps the global body, so a project `aliases.new` is silently ignored.
-# Tested 2026-08-21 with `wt config alias show new` in this repo. Keep this key
-# above the post-start array header, because a dotted key below that header
-# joins the array instead.
-#
-# The global alias puts the prefix first and drops the type word, which is the
-# shape alfurqan wants, so the "prefix" it returns is the issue number.
+# A user config must not define `aliases.new` too. Worktrunk then runs both
+# bodies, the user one first, and this one fails because the branch exists.
 #
 # The branch name also picks the Metro port. scripts/expo-run.mjs hashes the
 # worktree path, and the worktree path is built from this branch name.
-aliases.env-prefix = '''
+aliases.new = '''
+set -e
+set -- {{ args }}
 id=""
 words=""
-for a in {{ args }}; do
+for a in "$@"; do
   case "$a" in
-    --*) continue ;;
+    --*) echo "note: $a ignored, set wt switch defaults in config instead" >&2 ;;
     '#'[0-9]*)
       echo "drop the hash: write 'wt new ${a#\#}', not 'wt new $a'." >&2
-      echo "The global alias reads '#12' as a ticket and would name the branch 12-12-slug." >&2
+      echo "Branch names in this repo start with the plain issue number." >&2
       exit 3 ;;
     [0-9]*) if [ -z "$id" ] && [ -z "$words" ]; then id="$a"; else words="$words $a"; fi ;;
     *) words="$words $a" ;;
   esac
 done
-# No number typed. Exit 2 is worktrunk's own "no such alias" code, and the global
-# alias reads it as "this repo has no prefix", so the plain slug convention applies.
-[ -n "$id" ] || exit 2
-# Slug words were typed, so return the number alone and let the global alias
-# build the rest of the name from those words.
-if [ -n "$words" ]; then printf '%s\n' "$id"; exit 0; fi
-title="$(gh issue view "$id" --repo arDaraz/alfurqan --json title -q .title 2>/dev/null || true)"
-if [ -z "$title" ]; then
-  echo "could not read issue $id from GitHub. Check gh auth status, or give the slug words yourself." >&2
-  exit 3
+if [ -n "$id" ] && [ -z "$words" ]; then
+  title="$(gh issue view "$id" --repo arDaraz/alfurqan --json title -q .title 2>/dev/null || true)"
+  if [ -z "$title" ]; then
+    echo "could not read issue $id from GitHub. Check gh auth status, or give the slug words yourself." >&2
+    exit 3
+  fi
+  echo "issue $id: $title"
+  words="$(printf 'Compress this issue title into AT MOST 4 lowercase words separated by spaces, the fewest distinctive words that identify the change. Drop project names, filler and punctuation. Output only the words.\n\n%s\n' "$title" \
+    | CLAUDECODE= MAX_THINKING_TOKENS=0 claude -p --no-session-persistence --model=haiku --tools='' --disable-slash-commands --setting-sources='' --system-prompt='' 2>/dev/null || true)"
+  [ -n "$words" ] || words="$title"
+  words="$(printf '%s' "$words" | awk '{for(i=1;i<=4&&i<=NF;i++)printf "%s ",$i}')"
 fi
-echo "issue $id: $title" >&2
-words="$(printf 'Compress this issue title into AT MOST 4 lowercase words separated by spaces, the fewest distinctive words that identify the change. Drop project names, filler and punctuation. Output only the words.\n\n%s\n' "$title" \
-  | CLAUDECODE= MAX_THINKING_TOKENS=0 claude -p --no-session-persistence --model=haiku --tools='' --disable-slash-commands --setting-sources='' --system-prompt='' 2>/dev/null || true)"
-[ -n "$words" ] || words="$title"
-slug="$(printf '%s' "$words" | awk '{for(i=1;i<=4&&i<=NF;i++)printf "%s ",$i}' \
-  | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//' | cut -c1-48 | sed 's/-*$//')"
-printf '%s\n' "$id${slug:+-$slug}"
+slug="$(printf '%s' "$words" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//' | cut -c1-48 | sed 's/-*$//')"
+if [ -n "$id" ]; then name="$id${slug:+-$slug}"; else name="$slug"; fi
+if [ -z "$name" ]; then
+  echo "usage: wt new [12] [slug words]" >&2
+  exit 2
+fi
+echo "branch: $name"
+abort_new() {
+  printf '%s; no worktree created\n' "$1" >&2
+  exit 1
+}
+# Fetch remote HEAD because cached default-branch values can be stale.
+git fetch --quiet origin HEAD || abort_new "could not fetch origin's current default branch"
+base="$(git rev-parse --verify 'FETCH_HEAD^{commit}' 2>/dev/null)" \
+  || abort_new "could not resolve the fetched default-branch commit"
+echo "base: origin/HEAD at $base"
+# --yes because an agent session has no terminal to answer the approval prompt.
+exec wt switch --create "$name" --base "$base" --yes
 '''
 
 # The Metro port for this worktree. `scripts/expo-run.mjs` calls this alias so the
