@@ -52,7 +52,7 @@ commit ahead of the clone's `main`.
   older `main`.
 - With `origin` pointed at a missing repository, `wt new 13 broken origin`
   exited 1 with "could not fetch origin's current default branch; no worktree
-  created". No branch was created.
+  created". It created no branch.
 - With a user config that also defined `new`, `wt new 9 dup` created the
   worktree through the user alias, and the project alias then failed with
   "Branch 9-dup already exists".
@@ -71,7 +71,7 @@ the worktree's name no longer blocks a new one.
 the fix, a stale device and its replacement can share one name. The old hook
 deleted only the first match and left the other behind.
 
-Verified with a stub `xcrun`, because this machine has no Xcode. The stub keeps
+The fix was tested with a stub `xcrun`, because this machine has no Xcode. The stub keeps
 its devices in a state file and lists unavailable ones under an `Unavailable`
 runtime header, the way `simctl` does.
 
@@ -82,3 +82,25 @@ runtime header, the way `simctl` does.
 - With two devices named `alfurqan 12-fix-ports` and one named
   `alfurqan 12-fix-ports-2`, the old `pre-remove` deleted one and left the
   other. The new one deleted both and kept `alfurqan 12-fix-ports-2`.
+
+## Quality passes
+
+These passes ran on the whole diff against `origin/main`.
+
+- The dead-code pass removed `[ -d "$dir" ] || continue` from
+  `pre-remove.derived-data`. The `[ -f "$plist" ]` test on the next line already
+  skips every path that is not a directory. It deferred `grep -v unavailable` in
+  the runtime lookup, because without Xcode nothing shows whether
+  `simctl list runtimes available` can print an unavailable runtime.
+- `simplify` dropped the `grep -E "^iOS "` stage from the runtime lookup. The
+  final `grep -oE` matches only iOS runtime IDs, and `tail -1` now runs after
+  it. It also added a comment on `pre-remove.simulator` saying that the
+  post-start hook must build the same device name.
+- A stub `xcrun` and a fake `DerivedData` folder gave the same results before
+  and after these edits. The runtime lookup still picks the newest iOS runtime
+  when a watchOS runtime is listed after it.
+- The comment pass cut each comment in `.config/wt.toml` to 22 words or fewer.
+  It also fixed the comment above `aliases.new`, which said that
+  `scripts/expo-run.mjs` hashes the worktree path. `wt metro-port` hashes the
+  repository and branch names. A `tomllib` comparison with comment lines
+  stripped showed that every command body is unchanged by that pass.
